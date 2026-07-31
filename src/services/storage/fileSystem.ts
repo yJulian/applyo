@@ -75,6 +75,36 @@ export class FileSystemService {
     }
   }
 
+  async checkPermissionState(handle?: FileSystemDirectoryHandle | null): Promise<'granted' | 'prompt' | 'denied'> {
+    let dirHandle = handle || this.rootHandle;
+    if (!dirHandle) {
+      dirHandle = await this.getStoredRootHandle();
+    }
+    if (!dirHandle) return 'denied';
+
+    try {
+      return await (dirHandle as any).queryPermission({ mode: 'readwrite' });
+    } catch (e) {
+      return 'prompt';
+    }
+  }
+
+  async requestRootPermission(handle?: FileSystemDirectoryHandle | null): Promise<boolean> {
+    let dirHandle = handle || this.rootHandle;
+    if (!dirHandle) {
+      dirHandle = await this.getStoredRootHandle();
+    }
+    if (!dirHandle) return false;
+
+    try {
+      const status = await (dirHandle as any).requestPermission({ mode: 'readwrite' });
+      return status === 'granted';
+    } catch (e) {
+      console.warn('Berechtigung konnte nicht angefragt werden:', e);
+      return false;
+    }
+  }
+
   async verifyPermission(handle: FileSystemDirectoryHandle, readWrite = true): Promise<boolean> {
     try {
       const options: { mode?: 'read' | 'readwrite' } = { mode: readWrite ? 'readwrite' : 'read' };
@@ -124,10 +154,10 @@ export class FileSystemService {
       const perm = await (dirHandle as any).queryPermission({ mode: 'read' });
       if (perm !== 'granted') {
         console.warn('Ordnerberechtigung muss vom Nutzer per Klick bestätigt werden.');
-        return this.loadFallbackJobs();
+        return [];
       }
     } catch (e) {
-      return this.loadFallbackJobs();
+      return [];
     }
 
     const jobs: JobMetadata[] = [];
@@ -231,6 +261,19 @@ export class FileSystemService {
     try {
       const companyHandle = await dirHandle.getDirectoryHandle(companyFolderName);
       await companyHandle.removeEntry(titleFolderName, { recursive: true });
+
+      // Check if the company folder has any remaining subfolders or files
+      let hasRemainingEntries = false;
+      for await (const _entry of (companyHandle as any).keys()) {
+        hasRemainingEntries = true;
+        break;
+      }
+
+      // If company folder is empty, delete the company folder too
+      if (!hasRemainingEntries) {
+        await dirHandle.removeEntry(companyFolderName, { recursive: true });
+      }
+
       return true;
     } catch (e) {
       console.error('Fehler beim Löschen des Ordners:', e);

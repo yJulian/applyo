@@ -16,6 +16,7 @@ import {
   FileCode,
   File,
   Eye,
+  Folder,
   Plus
 } from 'lucide-react';
 import { JobMetadata, JobFile, ApplicationStatus, STATUS_LABELS, EXPERIENCE_LABELS } from '../types/job';
@@ -23,6 +24,10 @@ import { fileSystemService } from '../services/storage/fileSystem';
 
 interface JobDetailViewProps {
   job: JobMetadata | null;
+  currentDirName: string | null;
+  needsPermission: boolean;
+  onSelectDirectory: () => void;
+  onGrantPermission: () => void;
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
@@ -30,18 +35,70 @@ interface JobDetailViewProps {
 
 export const JobDetailView: React.FC<JobDetailViewProps> = ({
   job,
+  currentDirName,
+  needsPermission,
+  onSelectDirectory,
+  onGrantPermission,
   onUpdateJob,
   onDeleteJob,
   onOpenAIAssistant,
 }) => {
   if (!job) {
+    if (needsPermission && currentDirName) {
+      return (
+        <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px' }}>
+          <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '460px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
+            <Folder size={56} color="#f59e0b" style={{ opacity: 0.8, marginBottom: '20px' }} />
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '10px', color: '#f59e0b' }}>Zugriff auf Ordner freigeben</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+              Der Browser benötigt nach dem Neuladen der Seite deine einmalige Bestätigung per Klick, um auf den Ordner <strong>"{currentDirName}"</strong> auf deiner Festplatte zuzugreifen.
+            </p>
+            <button
+              onClick={onGrantPermission}
+              className="btn"
+              style={{
+                width: '100%',
+                gap: '10px',
+                padding: '12px',
+                fontSize: '0.95rem',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: '#fff',
+                boxShadow: '0 0 20px rgba(245, 158, 11, 0.3)',
+              }}
+            >
+              <Folder size={18} />
+              <span>Zugriff auf '{currentDirName}' freigeben</span>
+            </button>
+          </div>
+        </main>
+      );
+    }
+
+    if (!currentDirName) {
+      return (
+        <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px' }}>
+          <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '460px' }}>
+            <Folder size={56} color="var(--accent-primary)" style={{ opacity: 0.6, marginBottom: '20px' }} />
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Bitte zuerst einen Ordner auswählen</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
+              Wähle bitte deinen Arbeitsordner auf der Festplatte aus, um Bewerbungen zu laden oder neue Stellen-Ordner anzulegen.
+            </p>
+            <button onClick={onSelectDirectory} className="btn btn-primary" style={{ width: '100%', gap: '10px', padding: '12px', fontSize: '0.95rem' }}>
+              <Folder size={18} />
+              <span>Lokalen Arbeitsordner wählen</span>
+            </button>
+          </div>
+        </main>
+      );
+    }
+
     return (
       <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px' }}>
         <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '420px' }}>
           <Briefcase size={54} color="var(--accent-primary)" style={{ opacity: 0.5, marginBottom: '16px' }} />
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Wähle eine Bewerbung aus</h2>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Keine Bewerbung ausgewählt</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Klicke in der linken Liste auf ein Stellenangebot oder füge oben rechts eine neue Bewerbung hinzu.
+            Klicke in der linken Liste auf eine Stelle oder erstelle oben rechts mit "+ Stelle hinzufügen" eine neue Bewerbung.
           </p>
         </div>
       </main>

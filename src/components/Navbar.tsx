@@ -1,10 +1,12 @@
 import React from 'react';
-import { Folder, FolderCheck, Plus, Settings, Sparkles, Briefcase } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Sparkles, Briefcase, Unlock } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 interface NavbarProps {
   currentDirName: string | null;
+  needsPermission: boolean;
   onSelectDirectory: () => void;
+  onGrantPermission: () => void;
   onOpenAddModal: () => void;
   onOpenSettingsModal: () => void;
   aiSettings: AISettings;
@@ -12,7 +14,9 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentDirName,
+  needsPermission,
   onSelectDirectory,
+  onGrantPermission,
   onOpenAddModal,
   onOpenSettingsModal,
   aiSettings,
@@ -48,25 +52,46 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Center: Directory Picker Indicator */}
-        <button
-          onClick={onSelectDirectory}
-          className="btn btn-secondary"
-          style={{ gap: '10px', padding: '8px 16px', borderRadius: '20px' }}
-          title="Lokalen Arbeitsordner auswählen oder wechseln"
-        >
-          {currentDirName ? (
-            <>
-              <FolderCheck size={18} color="#10b981" />
-              <span>Ordner: <strong style={{ color: 'var(--text-main)' }}>{currentDirName}</strong></span>
-            </>
+        {/* Center: Directory Picker & Permission Indicator */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {needsPermission && currentDirName ? (
+            <button
+              onClick={onGrantPermission}
+              className="btn"
+              style={{
+                background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                color: '#ffffff',
+                gap: '8px',
+                padding: '8px 18px',
+                borderRadius: '20px',
+                boxShadow: '0 0 16px rgba(245, 158, 11, 0.4)',
+              }}
+              title="Klicke hier, um dem Browser den Zugriff auf den Ordner wieder freizugeben"
+            >
+              <Unlock size={17} />
+              <span>Zugriff auf '<strong>{currentDirName}</strong>' freigeben (Klick)</span>
+            </button>
           ) : (
-            <>
-              <Folder size={18} color="#6366f1" />
-              <span style={{ color: '#a5b4fc' }}>Lokalen Ordner wählen</span>
-            </>
+            <button
+              onClick={onSelectDirectory}
+              className="btn btn-secondary"
+              style={{ gap: '10px', padding: '8px 16px', borderRadius: '20px' }}
+              title="Lokalen Arbeitsordner auswählen oder wechseln"
+            >
+              {currentDirName ? (
+                <>
+                  <FolderCheck size={18} color="#10b981" />
+                  <span>Ordner: <strong style={{ color: 'var(--text-main)' }}>{currentDirName}</strong></span>
+                </>
+              ) : (
+                <>
+                  <Folder size={18} color="#6366f1" />
+                  <span style={{ color: '#a5b4fc' }}>Lokalen Ordner wählen</span>
+                </>
+              )}
+            </button>
           )}
-        </button>
+        </div>
 
         {/* Right: Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

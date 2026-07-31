@@ -10,68 +10,11 @@ import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings } from './t
 import { fileSystemService } from './services/storage/fileSystem';
 import { aiService } from './services/ai/aiService';
 
-const DEMO_JOBS: JobMetadata[] = [
-  {
-    id: 'demo-1',
-    company: 'Applyo Tech GmbH',
-    title: 'Senior Frontend Engineer (React/PWA)',
-    url: 'https://linkedin.com/jobs/view/123456789',
-    status: 'interested',
-    experienceLevel: 'required',
-    requiresWorkExperience: true,
-    experienceDetails: 'Mindestens 4 Jahre praktische Berufserfahrung im Frontend gefordert',
-    summary: 'Verantwortlich für die Entwicklung moderner PWA-Webanwendungen mit React, TypeScript und direkter Dateisystem-Anbindung.',
-    tasks: [
-      'Entwicklung hochperformanter UI-Komponenten mit React und TypeScript',
-      'Integration von AI-Abstraktionsschichten (OpenAI, Gemini, Claude)',
-      'Optimierung von Offline-PWA Features und Web Access APIs',
-    ],
-    requirements: [
-      'Mindestens 4 Jahre Berufserfahrung im Frontend-Bereich',
-      'Sehr gute Kenntnisse in React, TypeScript und CSS Architecture',
-      'Erfahrung mit PWA Service Workern und modernen Browser APIs',
-    ],
-    benefits: ['100% Remote Option', '500€ Weiterbildungsbudget p.a.', 'Modernes Equipment (MacBook Pro)'],
-    salary: '75.000 € - 90.000 €',
-    location: 'Berlin / Remote',
-    createdDate: new Date().toISOString(),
-    updatedDate: new Date().toISOString(),
-    notes: 'Gespräch für nächste Woche Donnerstag geplant.',
-    relativePath: 'Applyo Tech GmbH/Senior Frontend Engineer (React/PWA)',
-  },
-  {
-    id: 'demo-2',
-    company: 'CloudVentures',
-    title: 'Junior AI Software Developer',
-    url: 'https://linkedin.com/jobs/view/987654321',
-    status: 'applied',
-    experienceLevel: 'junior',
-    requiresWorkExperience: false,
-    experienceDetails: 'Direkter Einstieg als Junior / Berufseinsteiger ohne Vorerfahrung möglich',
-    summary: 'Einstiegsposition für engagierte Entwickler zur Erstellung innovativer KI-Modulsysteme und Cloud-Backends.',
-    tasks: [
-      'Implementierung von REST/GraphQL Endpunkten für LLM Orchestrierung',
-      'Unterstützung bei der Datenextraktion und Prompt-Engineering',
-    ],
-    requirements: [
-      'Abgeschlossenes Studium der Informatik oder vergleichbare Ausbildung',
-      'Erste Erfahrungen mit Python, TypeScript oder Node.js',
-      'Begeisterung für Generative AI und LLM-Integration',
-    ],
-    benefits: ['Flexibles Gleitzeitmodell', 'Team-Events & Hackathons'],
-    salary: '50.000 € - 58.000 €',
-    location: 'München / Hybrid',
-    createdDate: new Date().toISOString(),
-    updatedDate: new Date().toISOString(),
-    notes: 'Bewerbung am 28.07. verschickt.',
-    relativePath: 'CloudVentures/Junior AI Software Developer',
-  },
-];
-
-export function App() {
-  const [jobs, setJobs] = useState<JobMetadata[]>(DEMO_JOBS);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>('demo-1');
+export default function App() {
+  const [jobs, setJobs] = useState<JobMetadata[]>([]);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [currentDirName, setCurrentDirName] = useState<string | null>(null);
+  const [needsPermission, setNeedsPermission] = useState<boolean>(false);
 
   // Filters
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<ApplicationStatus | 'all'>('all');
@@ -85,32 +28,60 @@ export function App() {
 
   const [aiSettings, setAiSettings] = useState<AISettings>(aiService.getSettings());
 
-  // Load directory & scan jobs on mount
+  // Load directory & check permission status on mount
   useEffect(() => {
     async function loadDirectory() {
       const handle = await fileSystemService.getStoredRootHandle();
       if (handle) {
         setCurrentDirName(handle.name);
-        const scannedJobs = await fileSystemService.scanDirectory(handle);
-        if (scannedJobs.length > 0) {
+        const permState = await fileSystemService.checkPermissionState(handle);
+        if (permState === 'granted') {
+          setNeedsPermission(false);
+          const scannedJobs = await fileSystemService.scanDirectory(handle);
           setJobs(scannedJobs);
-          setSelectedJobId(scannedJobs[0].id);
+          if (scannedJobs.length > 0) {
+            setSelectedJobId(scannedJobs[0].id);
+          }
+        } else {
+          // Permission is 'prompt' (requires user gesture click after reload)
+          setNeedsPermission(true);
         }
       }
     }
     loadDirectory();
   }, []);
 
+  const handleGrantPermission = async () => {
+    const handle = await fileSystemService.getStoredRootHandle();
+    if (!handle) {
+      await handleSelectDirectory();
+      return;
+    }
+
+    const granted = await fileSystemService.requestRootPermission(handle);
+    if (granted) {
+      setNeedsPermission(false);
+      const scannedJobs = await fileSystemService.scanDirectory(handle);
+      setJobs(scannedJobs);
+      if (scannedJobs.length > 0) {
+        setSelectedJobId(scannedJobs[0].id);
+      }
+    } else {
+      // If user cancelled or denied, open directory picker directly
+      await handleSelectDirectory();
+    }
+  };
+
   const handleSelectDirectory = async () => {
     const handle = await fileSystemService.selectRootDirectory();
     if (handle) {
       setCurrentDirName(handle.name);
+      setNeedsPermission(false);
       const scannedJobs = await fileSystemService.scanDirectory(handle);
       if (scannedJobs.length > 0) {
         setJobs(scannedJobs);
         setSelectedJobId(scannedJobs[0].id);
       } else {
-        // If empty directory, reset jobs
         setJobs([]);
         setSelectedJobId(null);
       }
@@ -118,10 +89,10 @@ export function App() {
   };
 
   const handleJobAdded = async (newJob: JobMetadata) => {
-    await fileSystemService.saveJob(newJob);
     const handle = await fileSystemService.getStoredRootHandle();
     if (handle) {
       setCurrentDirName(handle.name);
+      setNeedsPermission(false);
       const scannedJobs = await fileSystemService.scanDirectory(handle);
       if (scannedJobs.length > 0) {
         setJobs(scannedJobs);
@@ -141,9 +112,16 @@ export function App() {
   const handleDeleteJob = async (jobToDelete: JobMetadata) => {
     if (confirm(`Möchtest du die Bewerbung "${jobToDelete.title}" bei "${jobToDelete.company}" wirklich löschen?`)) {
       await fileSystemService.deleteJob(jobToDelete);
-      const filtered = jobs.filter((j) => j.id !== jobToDelete.id);
-      setJobs(filtered);
-      setSelectedJobId(filtered.length > 0 ? filtered[0].id : null);
+      const handle = await fileSystemService.getStoredRootHandle();
+      if (handle) {
+        const scannedJobs = await fileSystemService.scanDirectory(handle);
+        setJobs(scannedJobs);
+        setSelectedJobId(scannedJobs.length > 0 ? scannedJobs[0].id : null);
+      } else {
+        const filtered = jobs.filter((j) => j.id !== jobToDelete.id);
+        setJobs(filtered);
+        setSelectedJobId(filtered.length > 0 ? filtered[0].id : null);
+      }
     }
   };
 
@@ -154,13 +132,15 @@ export function App() {
       {/* Header */}
       <Navbar
         currentDirName={currentDirName}
+        needsPermission={needsPermission}
         onSelectDirectory={handleSelectDirectory}
+        onGrantPermission={handleGrantPermission}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         aiSettings={aiSettings}
       />
 
-      {/* Main Grid Layout */}
+      {/* Main Grid: Sidebar + Detail View */}
       <div className="main-layout">
         <Sidebar
           jobs={jobs}
@@ -172,10 +152,18 @@ export function App() {
           onSelectExpFilter={setSelectedExpFilter}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          currentDirName={currentDirName}
+          needsPermission={needsPermission}
+          onSelectDirectory={handleSelectDirectory}
+          onGrantPermission={handleGrantPermission}
         />
 
         <JobDetailView
           job={selectedJob}
+          currentDirName={currentDirName}
+          needsPermission={needsPermission}
+          onSelectDirectory={handleSelectDirectory}
+          onGrantPermission={handleGrantPermission}
           onUpdateJob={handleUpdateJob}
           onDeleteJob={handleDeleteJob}
           onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
@@ -192,7 +180,9 @@ export function App() {
       <SettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
-        onSettingsSaved={setAiSettings}
+        onSettingsSaved={(newSettings: AISettings) => {
+          setAiSettings(newSettings);
+        }}
       />
 
       <AIAssistantDrawer
@@ -203,5 +193,3 @@ export function App() {
     </div>
   );
 }
-
-export default App;
