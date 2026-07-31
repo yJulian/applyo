@@ -10,9 +10,6 @@ export class GeminiProvider implements IAIProvider {
 
 WICHTIGE REGEL FÜR BERUFSERFAHRUNG (requiresWorkExperience):
 Prüfe exakt, ob der Bewerber ZWINGEND VORHER SCHON IN EINER FIRMA / EINEM UNTERNEHMEN GEARBEITET HABEN MUSS oder ob man sich als Junior / Einsteiger ohne vorherige Firmen-Anstellung bewerben kann.
-- Berührung im Studium, Kurse oder Hobbyprojekte zählen NICHT als geforderte Firmen-Berufserfahrung.
-- requiresWorkExperience = true: Nur wenn ausdrücklich eine vorherige Festanstellung / Arbeitserfahrung in einer Firma gefordert ist.
-- requiresWorkExperience = false: Wenn ein Einstieg als Junior / Absolvent ohne bisherige Firmen-Anstellung möglich ist.
 
 Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit folgendem Schema:
 {
@@ -24,9 +21,9 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
   "benefits": ["Benefit 1"],
   "salary": "Gehaltsangabe falls vorhanden oder null",
   "location": "Standort oder null",
-  "requiresWorkExperience": false, // true = Zwingend Firmen-Vorerfahrung gefordert; false = Junior/Einstieg ohne Firmen-Anstellung möglich
+  "requiresWorkExperience": false,
   "experienceLevel": "junior" | "required" | "desired" | "none",
-  "experienceDetails": "Spezifische Angabe (z.B. 'Junior-Stelle: Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich' oder 'Zwingend vorherige Arbeitserfahrung in einem Unternehmen gefordert')"
+  "experienceDetails": "Spezifische Angabe (z.B. 'Junior-Stelle: Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich')"
 }`;
   }
 
@@ -66,7 +63,12 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     return JSON.parse(rawText) as ExtractedJobData;
   }
 
-  async generateResponse(prompt: string, contextJob: JobMetadata | null, config: AIProviderConfig): Promise<string> {
+  async generateResponse(
+    prompt: string,
+    contextJob: JobMetadata | null,
+    config: AIProviderConfig,
+    attachmentFile?: File | null
+  ): Promise<string> {
     if (!config.apiKey) {
       throw new Error('Google Gemini API Key fehlt.');
     }
@@ -79,15 +81,24 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
       context += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Berufserfahrung in einer Firma zwingend)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
     }
 
+    const parts: any[] = [];
+    if (attachmentFile && (attachmentFile.type === 'application/pdf' || attachmentFile.name.endsWith('.pdf'))) {
+      const base64 = await this.fileToBase64(attachmentFile);
+      parts.push({
+        inlineData: {
+          mimeType: 'application/pdf',
+          data: base64,
+        },
+      });
+    }
+
+    parts.push({ text: `${context}\n\nFrage/Auftrag: ${prompt}` });
+
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: `${context}\n\nFrage/Auftrag: ${prompt}` }]
-          }
-        ]
+        contents: [{ parts }]
       })
     });
 
@@ -98,5 +109,18 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
 
     const data = await response.json();
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+
+  private fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
   }
 }

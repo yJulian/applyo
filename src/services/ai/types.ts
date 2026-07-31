@@ -11,7 +11,7 @@ export interface ExtractedJobData {
   location?: string;
   experienceLevel: ExperienceLevel;
   requiresWorkExperience: boolean; // true = Berufserfahrung erforderlich, false = Junior / Einstieg ohne Erfahrung möglich
-  experienceDetails?: string;     // Konkrete Jahre & Details (z.B. "0-1 Jahre / Berufseinsteiger" oder "Mindestens 3 Jahre Berufserfahrung")
+  experienceDetails?: string;     // Konkrete Jahre & Details
 }
 
 export interface AIProviderConfig {
@@ -23,5 +23,10 @@ export interface IAIProvider {
   id: 'openai' | 'gemini' | 'claude';
   name: string;
   extractJobData(input: string, config: AIProviderConfig): Promise<ExtractedJobData>;
-  generateResponse(prompt: string, contextJob: JobMetadata | null, config: AIProviderConfig): Promise<string>;
+  generateResponse(
+    prompt: string,
+    contextJob: JobMetadata | null,
+    config: AIProviderConfig,
+    attachmentFile?: File | null
+  ): Promise<string>;
 }

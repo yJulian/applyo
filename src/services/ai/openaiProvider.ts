@@ -10,10 +10,6 @@ export class OpenAIProvider implements IAIProvider {
 
 WICHTIGE REGEL FÜR BERUFSERFAHRUNG (requiresWorkExperience):
 Analysiere strikt, ob für diese Stelle ZWINGEND VORHERIGE BERUFSERFAHRUNG IN EINER FIRMA / ANSTELLUNG erforderlich ist, oder ob sich Junioren / Berufseinsteiger ohne bisherige Firmen-Anstellung direkt bewerben können.
-- Es geht NICHT darum, ob man im Studium oder privat schon Berührung mit Technologien hatte.
-- Es geht EINZIG UND ALLEIN darum, ob man vorher schon fest in einem Unternehmen/einer Firma gearbeitet haben muss.
-- requiresWorkExperience = true: Wenn zwingend mindestens X Jahre Praxiserfahrung in einer Firma/Anstellung verlangt wird.
-- requiresWorkExperience = false: Wenn Direkteinstieg für Juniors, Absolventen oder ohne bisherige Firmen-Anstellung möglich ist.
 
 Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit folgendem Schema:
 {
@@ -25,9 +21,9 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
   "benefits": ["Benefit 1"],
   "salary": "Gehaltsangabe falls vorhanden oder null",
   "location": "Standort oder null",
-  "requiresWorkExperience": false, // true = Vorherige Festanstellung/Firmen-Erfahrung zwingend; false = Einstieg als Junior ohne bisherige Firmen-Anstellung möglich
+  "requiresWorkExperience": false,
   "experienceLevel": "junior" | "required" | "desired" | "none",
-  "experienceDetails": "Präzise Feststellung (z.B. 'Direkte Bewerbung für Berufseinsteiger ohne bisherige Firmen-Anstellung möglich' oder 'Zwingend vorherige Anstellung in einer Firma erforderlich (mind. 3 Jahre)')"
+  "experienceDetails": "Präzise Feststellung (z.B. 'Direkte Bewerbung für Berufseinsteiger ohne bisherige Firmen-Anstellung möglich')"
 }`;
   }
 
@@ -64,7 +60,12 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     return JSON.parse(rawContent) as ExtractedJobData;
   }
 
-  async generateResponse(prompt: string, contextJob: JobMetadata | null, config: AIProviderConfig): Promise<string> {
+  async generateResponse(
+    prompt: string,
+    contextJob: JobMetadata | null,
+    config: AIProviderConfig,
+    _attachmentFile?: File | null
+  ): Promise<string> {
     if (!config.apiKey) {
       throw new Error('OpenAI API Key fehlt.');
     }

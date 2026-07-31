@@ -74,7 +74,11 @@ class AIService {
     }
   }
 
-  async generateAssistantResponse(prompt: string, contextJob: JobMetadata | null): Promise<string> {
+  async generateAssistantResponse(
+    prompt: string,
+    contextJob: JobMetadata | null,
+    attachmentFile?: File | null
+  ): Promise<string> {
     const settings = this.getSettings();
     const activeProvider = this.providers[settings.activeProvider];
     const config = this.getConfigForProvider(settings.activeProvider, settings);
@@ -83,7 +87,7 @@ class AIService {
       throw new Error(`API Key für ${activeProvider.name} fehlt. Bitte in den Einstellungen eintragen.`);
     }
 
-    return await activeProvider.generateResponse(prompt, contextJob, config);
+    return await activeProvider.generateResponse(prompt, contextJob, config, attachmentFile);
   }
 
   private heuristicFallbackExtract(input: string): ExtractedJobData {

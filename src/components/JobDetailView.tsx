@@ -17,10 +17,14 @@ import {
   File,
   Eye,
   Folder,
-  Plus
+  Plus,
+  Wand2,
+  Loader2
 } from 'lucide-react';
 import { JobMetadata, JobFile, ApplicationStatus, STATUS_LABELS, EXPERIENCE_LABELS } from '../types/job';
 import { fileSystemService } from '../services/storage/fileSystem';
+import { profileService } from '../services/storage/profileService';
+import { aiService } from '../services/ai/aiService';
 
 interface JobDetailViewProps {
   job: JobMetadata | null;
@@ -110,13 +114,13 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   const [files, setFiles] = useState<JobFile[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [isGeneratingMarkdownCV, setIsGeneratingMarkdownCV] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadJobFiles = async () => {
     setIsLoadingFiles(true);
     const loadedFiles = await fileSystemService.listJobFiles(job);
-    // Filter out metadata.json so only real user documents are displayed
     setFiles(loadedFiles.filter((f) => f.name.toLowerCase() !== 'metadata.json'));
     setIsLoadingFiles(false);
   };
@@ -201,6 +205,43 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     }
   };
 
+  const handleGenerateTailoredMarkdownCV = async () => {
+    setIsGeneratingMarkdownCV(true);
+    try {
+      const profile = await profileService.getProfile();
+      const prompt = `Erstelle einen auf diese Stelle maßgeschneiderten Lebenslauf im Markdown-Format (Lebenslauf.md).
+
+BEWERBER-PROFIL (Name: ${profile.fullName}, E-Mail: ${profile.email}, Telefon: ${profile.phone}, Ort: ${profile.location}):
+${profile.markdownDescription || 'Keine Angabe'}
+
+STELLE:
+Firma: ${job.company}
+Titel: ${job.title}
+Anforderungen: ${job.requirements.join(', ')}
+Aufgaben: ${job.tasks.join(', ')}
+
+ANWEISUNG:
+Passe die Schwerpunkte, Reihenfolge und Formulierung des Lebenslaufs genau auf diese Stelle (${job.title} bei ${job.company}) an.
+Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebenslauf). Kein Erklärungstext drumherum.`;
+
+      const markdownResponse = await aiService.generateAssistantResponse(prompt, job);
+      const cleanedMd = markdownResponse.replace(/```markdown/g, '').replace(/```/g, '').trim();
+
+      const mdBlob = new Blob([cleanedMd], { type: 'text/markdown' });
+      const mdFile = new (window as any).File([mdBlob], 'Lebenslauf.md', { type: 'text/markdown' });
+      const success = await fileSystemService.addJobFile(job, mdFile);
+      if (success) {
+        alert(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
+        loadJobFiles();
+      }
+    } catch (e: any) {
+      console.error('Fehler bei Markdown Lebenslauf-Erstellung:', e);
+      alert(`Fehler beim Erstellen von Lebenslauf.md: ${e.message}`);
+    } finally {
+      setIsGeneratingMarkdownCV(false);
+    }
+  };
+
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -211,6 +252,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return <FileText size={18} color="#f87171" />;
     if (ext === 'docx' || ext === 'doc') return <FileText size={18} color="#60a5fa" />;
+    if (ext === 'md') return <FileText size={18} color="#34d399" />;
     if (ext === 'json') return <FileCode size={18} color="#fbbf24" />;
     return <File size={18} color="var(--text-muted)" />;
   };
@@ -314,6 +356,53 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
           </div>
         </div>
 
+        {/* Tailored Markdown Resume Generator Card */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '20px',
+            borderRadius: 'var(--radius-lg)',
+            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%)',
+            border: '1px solid rgba(16, 185, 129, 0.3)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+            <div>
+              <h3 style={{ fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Wand2 size={18} color="#34d399" />
+                Lebenslauf.md anpassen
+              </h3>
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '620px' }}>
+                Passe deinen globalen Lebenslauf per KI zielgerichtet auf diese Stelle an und speichere das Ergebnis direkt als <strong>Lebenslauf.md</strong> in diesen Ordner.
+              </p>
+            </div>
+
+            <button
+              onClick={handleGenerateTailoredMarkdownCV}
+              disabled={isGeneratingMarkdownCV}
+              className="btn btn-primary"
+              style={{
+                gap: '8px',
+                fontSize: '0.825rem',
+                padding: '10px 16px',
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+              }}
+            >
+              {isGeneratingMarkdownCV ? (
+                <>
+                  <Loader2 size={15} className="spin-icon" />
+                  <span>Passe Lebenslauf.md an...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={16} />
+                  <span>📄 Lebenslauf.md für diese Stelle anpassen</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Folder Documents & Files Drag & Drop Card */}
         <div
           className="glass-panel"
@@ -335,7 +424,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                 Dokumente & Ordner-Dateien ({job.company}/{job.title})
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Dateien (z.B. Lebenslauf, Anschreiben) einfach hierher hineinziehen (Drag & Drop)
+                Dateien (z.B. Lebenslauf.md, Anschreiben) einfach hierher hineinziehen (Drag & Drop)
               </span>
             </div>
 
@@ -376,7 +465,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                 {isDraggingOver ? 'Datei jetzt loslassen zum Speichern!' : 'Dateien per Drag & Drop hierher ziehen'}
               </p>
               <span style={{ fontSize: '0.75rem', display: 'block', marginTop: '4px' }}>
-                Oder klicke oben auf "+ Dokument hinzufügen" (z.B. <strong>Lebenslauf.pdf</strong>, <strong>Anschreiben.docx</strong>).
+                Oder klicke oben auf "+ Dokument hinzufügen" oder "Lebenslauf.md anpassen".
               </span>
             </div>
           ) : (
