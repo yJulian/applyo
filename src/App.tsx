@@ -127,6 +127,15 @@ export default function App() {
 
   const selectedJob = jobs.find((j) => j.id === selectedJobId) || null;
 
+  // Dynamic Browser Tab Title: Applyo: [Name des Jobs]
+  useEffect(() => {
+    if (selectedJob) {
+      document.title = `Applyo: ${selectedJob.title}`;
+    } else {
+      document.title = 'Applyo';
+    }
+  }, [selectedJob]);
+
   return (
     <div className="app-container">
       {/* Header */}

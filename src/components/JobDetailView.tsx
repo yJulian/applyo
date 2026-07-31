@@ -337,9 +337,30 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 </span>
 
                 {job.location && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    <MapPin size={14} /> {job.location}
-                  </span>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.location} ${job.company}`.trim())}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      fontSize: '0.8rem',
+                      color: 'var(--accent-cyan)',
+                      textDecoration: 'none',
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      background: 'rgba(6, 182, 212, 0.1)',
+                      border: '1px solid rgba(6, 182, 212, 0.25)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    title={`In Google Maps öffnen: ${job.location} (${job.company})`}
+                  >
+                    <MapPin size={14} color="var(--accent-cyan)" />
+                    <span style={{ fontWeight: 600 }}>{job.location}</span>
+                    <ExternalLink size={12} style={{ opacity: 0.7, marginLeft: '2px' }} />
+                  </a>
                 )}
 
                 {job.salary && (
