@@ -1,0 +1,106 @@
+import { IAIProvider, ExtractedJobData, AIProviderConfig } from './types';
+import { JobMetadata } from '../../types/job';
+
+export class ClaudeProvider implements IAIProvider {
+  id = 'claude' as const;
+  name = 'Anthropic Claude';
+
+  private buildSystemPrompt(): string {
+    return `Du bist ein präziser HR & Recruiter KI-Assistent. Deine Aufgabe ist es, aus einer Jobbeschreibung oder einem Stellentext die wichtigsten Daten auf Deutsch zu extrahieren.
+
+WICHTIGE REGEL FÜR BERUFSERFAHRUNG (requiresWorkExperience):
+Prüfe explizit, ob der Bewerber VORHER SCHON IN EINER FIRMA / EINEM UNTERNEHMEN ANGESTELLT WAR / GEARBEITET HAT.
+- Reines akademisches Wissen oder Berührung im Studium zählt NICHT als verlangte Firmen-Berufserfahrung.
+- requiresWorkExperience = true: Wenn zwingend eine vorherige berufliche Festanstellung in einem Unternehmen gefordert ist.
+- requiresWorkExperience = false: Wenn man sich als Junior / Absolvent ohne bisherige Firmen-Anstellung direkt bewerben kann.
+
+Antworte AUSSCHLIESSLICH im validen JSON-Format (kein Markdown, keine Erklärungstexte) mit folgendem Schema:
+{
+  "company": "Firmenname",
+  "title": "Stellentitel",
+  "summary": "Prägnante 2-3 Sätze Zusammenfassung der Position",
+  "tasks": ["Hauptaufgabe 1", "Hauptaufgabe 2"],
+  "requirements": ["Anforderung 1", "Anforderung 2"],
+  "benefits": ["Benefit 1"],
+  "salary": "Gehaltsangabe falls vorhanden oder null",
+  "location": "Standort oder null",
+  "requiresWorkExperience": false, // true = Zwingend vorherige Firmen-Anstellung gefordert; false = Einstieg für Juniors ohne Firmen-Vorerfahrung möglich
+  "experienceLevel": "junior" | "required" | "desired" | "none",
+  "experienceDetails": "Spezifische Angabe (z.B. 'Junior-Stelle: Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich' oder 'Zwingend vorherige Arbeitserfahrung in einer Firma gefordert')"
+}`;
+  }
+
+  async extractJobData(input: string, config: AIProviderConfig): Promise<ExtractedJobData> {
+    if (!config.apiKey) {
+      throw new Error('Anthropic Claude API Key fehlt. Bitte in den Einstellungen eintragen.');
+    }
+
+    const model = config.model || 'claude-haiku-4-5-20251001';
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: model,
+        max_tokens: 2048,
+        system: this.buildSystemPrompt(),
+        messages: [
+          { role: 'user', content: `Extrahiere die Struktur aus folgender Stellenbeschreibung:\n\n${input}` }
+        ],
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(`Claude Fehler (${response.status}): ${err.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const rawText = data.content?.[0]?.text || '{}';
+    const cleaned = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    return JSON.parse(cleaned) as ExtractedJobData;
+  }
+
+  async generateResponse(prompt: string, contextJob: JobMetadata | null, config: AIProviderConfig): Promise<string> {
+    if (!config.apiKey) {
+      throw new Error('Anthropic Claude API Key fehlt.');
+    }
+
+    const model = config.model || 'claude-haiku-4-5-20251001';
+    let system = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
+    if (contextJob) {
+      system += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Berufserfahrung in einer Firma zwingend)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
+    }
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': config.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: model,
+        max_tokens: 2048,
+        system: system,
+        messages: [
+          { role: 'user', content: prompt }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(`Claude Fehler (${response.status}): ${err.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    return data.content?.[0]?.text || '';
+  }
+}
