@@ -1,11 +1,10 @@
 import React from 'react';
-import { Folder, FolderCheck, Plus, Settings, Sparkles, Briefcase, TestTube } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Sparkles, Briefcase } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 interface NavbarProps {
   currentDirName: string | null;
   onSelectDirectory: () => void;
-  onCreateTestFolder: () => void;
   onOpenAddModal: () => void;
   onOpenSettingsModal: () => void;
   aiSettings: AISettings;
@@ -14,7 +13,6 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({
   currentDirName,
   onSelectDirectory,
-  onCreateTestFolder,
   onOpenAddModal,
   onOpenSettingsModal,
   aiSettings,
@@ -50,44 +48,25 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
         </div>
 
-        {/* Center: Directory Picker & Test Folder Buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={onSelectDirectory}
-            className="btn btn-secondary"
-            style={{ gap: '10px', padding: '8px 16px', borderRadius: '20px' }}
-            title="Lokalen Arbeitsordner auswählen oder wechseln"
-          >
-            {currentDirName ? (
-              <>
-                <FolderCheck size={18} color="#10b981" />
-                <span>Ordner: <strong style={{ color: 'var(--text-main)' }}>{currentDirName}</strong></span>
-              </>
-            ) : (
-              <>
-                <Folder size={18} color="#6366f1" />
-                <span style={{ color: '#a5b4fc' }}>Lokalen Ordner wählen</span>
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={onCreateTestFolder}
-            className="btn btn-secondary"
-            style={{
-              gap: '6px',
-              fontSize: '0.8rem',
-              padding: '6px 12px',
-              border: '1px solid rgba(16, 185, 129, 0.4)',
-              background: 'rgba(16, 185, 129, 0.1)',
-              color: '#34d399',
-            }}
-            title="Erstellt sofort einen Test-Ordner (TestFirma/TestStelle) auf deiner Festplatte"
-          >
-            <TestTube size={15} />
-            <span>🧪 Test-Ordner anlegen</span>
-          </button>
-        </div>
+        {/* Center: Directory Picker Indicator */}
+        <button
+          onClick={onSelectDirectory}
+          className="btn btn-secondary"
+          style={{ gap: '10px', padding: '8px 16px', borderRadius: '20px' }}
+          title="Lokalen Arbeitsordner auswählen oder wechseln"
+        >
+          {currentDirName ? (
+            <>
+              <FolderCheck size={18} color="#10b981" />
+              <span>Ordner: <strong style={{ color: 'var(--text-main)' }}>{currentDirName}</strong></span>
+            </>
+          ) : (
+            <>
+              <Folder size={18} color="#6366f1" />
+              <span style={{ color: '#a5b4fc' }}>Lokalen Ordner wählen</span>
+            </>
+          )}
+        </button>
 
         {/* Right: Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>

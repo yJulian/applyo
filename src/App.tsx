@@ -147,46 +147,6 @@ export function App() {
     }
   };
 
-  const handleCreateTestFolder = async () => {
-    let handle = await fileSystemService.getStoredRootHandle();
-    if (!handle) {
-      handle = await fileSystemService.selectRootDirectory();
-    }
-    if (!handle) return;
-
-    setCurrentDirName(handle.name);
-
-    const testJob: JobMetadata = {
-      id: crypto.randomUUID(),
-      company: 'TestFirma_Applyo',
-      title: 'Teststelle_Frontend_Developer',
-      status: 'interested',
-      experienceLevel: 'junior',
-      requiresWorkExperience: false,
-      experienceDetails: 'Test-Ordner Erstellung (Ohne Vorerfahrung)',
-      summary: 'Dieser Ordner wurde direkt über den Test-Button auf deiner Festplatte angelegt.',
-      tasks: ['Ordnerstruktur im lokalen Dateisystem verifizieren', 'Dateien hinzufügen & testen'],
-      requirements: ['Browser File System Access API Unterstützung'],
-      benefits: ['Automatisches Anlegen von metadata.json'],
-      createdDate: new Date().toISOString(),
-      updatedDate: new Date().toISOString(),
-      notes: 'Erstellt am ' + new Date().toLocaleString(),
-    };
-
-    const res = await fileSystemService.saveJob(testJob, handle);
-    if (res.success) {
-      alert(`✅ Test-Ordner "${res.path}" wurde erfolgreich auf deiner Festplatte angelegt!`);
-    } else {
-      alert(`Hinweis: Ordner konnte nicht angelegt werden (${res.message})`);
-    }
-
-    const scannedJobs = await fileSystemService.scanDirectory(handle);
-    if (scannedJobs.length > 0) {
-      setJobs(scannedJobs);
-      setSelectedJobId(testJob.id);
-    }
-  };
-
   const selectedJob = jobs.find((j) => j.id === selectedJobId) || null;
 
   return (
@@ -195,7 +155,6 @@ export function App() {
       <Navbar
         currentDirName={currentDirName}
         onSelectDirectory={handleSelectDirectory}
-        onCreateTestFolder={handleCreateTestFolder}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         aiSettings={aiSettings}
