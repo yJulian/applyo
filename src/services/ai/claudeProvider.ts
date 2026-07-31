@@ -8,11 +8,16 @@ export class ClaudeProvider implements IAIProvider {
   private buildSystemPrompt(): string {
     return `Du bist ein präziser HR & Recruiter KI-Assistent. Deine Aufgabe ist es, aus einer Jobbeschreibung oder einem Stellentext die wichtigsten Daten auf Deutsch zu extrahieren.
 
-WICHTIGE REGEL FÜR BERUFSERFAHRUNG (requiresWorkExperience):
-Prüfe explizit, ob der Bewerber VORHER SCHON IN EINER FIRMA / EINEM UNTERNEHMEN ANGESTELLT WAR / GEARBEITET HAT.
-- Reines akademisches Wissen oder Berührung im Studium zählt NICHT als verlangte Firmen-Berufserfahrung.
-- requiresWorkExperience = true: Wenn zwingend eine vorherige berufliche Festanstellung in einem Unternehmen gefordert ist.
-- requiresWorkExperience = false: Wenn man sich als Junior / Absolvent ohne bisherige Firmen-Anstellung direkt bewerben kann.
+STRIKTE REGELN FÜR ARBEITSERFAHRUNG (requiresWorkExperience & experienceLevel):
+1. STRIKTES ERFORDERNIS (requiresWorkExperience = true):
+   Setze requiresWorkExperience NUR DANN auf true, wenn EXPLIZIT und ZWINGEND mehrjährige Berufserfahrung in einer Firma / einem Unternehmen verlangt wird (z.B. "Mehrjährige Berufserfahrung", "Mindestens 3 Jahre relevante Praxiserfahrung in einem Unternehmen").
+   - Vage oder allgemeine Erwähnungen von "Erfahrung" / "Erfahrungen im Studium" reichen NICHT aus! Setze in diesen Fällen requiresWorkExperience auf false.
+
+2. JUNIOR / EINSTIEG VERVORHEBEN (experienceLevel = "junior"):
+   Falls in der Stelle EXPLIZIT "Junior", "Trainee", "Berufseinsteiger" oder "Absolvent" im Titel oder Text steht:
+   - Setze experienceLevel = "junior"
+   - Setze requiresWorkExperience = false
+   - Hebe in experienceDetails explizit hervor: "Junior-Stelle: Berufseinsteiger ohne bisherige Firmen-Anstellung ausdrücklich willkommen"
 
 Antworte AUSSCHLIESSLICH im validen JSON-Format (kein Markdown, keine Erklärungstexte) mit folgendem Schema:
 {
@@ -26,7 +31,7 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format (kein Markdown, keine Erklärung
   "location": "Standort oder null",
   "requiresWorkExperience": false,
   "experienceLevel": "junior" | "required" | "desired" | "none",
-  "experienceDetails": "Spezifische Angabe (z.B. 'Junior-Stelle: Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich')"
+  "experienceDetails": "Spezifische Angabe"
 }`;
   }
 
@@ -79,12 +84,11 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format (kein Markdown, keine Erklärung
     const model = config.model || 'claude-haiku-4-5-20251001';
     let system = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
     if (contextJob) {
-      system += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Berufserfahrung in einer Firma zwingend)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
+      system += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
     }
 
     let userMessagesContent: any = prompt;
 
-    // Attach PDF Document block directly to Claude API if uploaded!
     if (attachmentFile && (attachmentFile.type === 'application/pdf' || attachmentFile.name.endsWith('.pdf'))) {
       const base64 = await this.fileToBase64(attachmentFile);
       userMessagesContent = [

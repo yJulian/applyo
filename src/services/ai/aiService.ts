@@ -116,17 +116,24 @@ class AIService {
 
     // Work Experience Evaluation
     let requiresWorkExperience = false;
-    let expDetails = 'Junior / Einstieg: Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich';
+    let expLevel: any = 'none';
+    let expDetails = 'Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich';
 
-    if (
-      lowerText.includes('berufserfahrung') ||
-      lowerText.includes('einschlägige erfahrung') ||
-      lowerText.includes('jahre erfahrung') ||
-      lowerText.includes('senior') ||
-      lowerText.includes('lead')
-    ) {
+    const isJunior = lowerText.includes('junior') || lowerText.includes('trainee') || lowerText.includes('absolvent') || lowerText.includes('einsteiger');
+    const isExplicitSenior = lowerText.includes('mehrjährige berufserfahrung') || lowerText.includes('jahre berufserfahrung') || lowerText.includes('senior') || lowerText.includes('lead');
+
+    if (isJunior) {
+      expLevel = 'junior';
+      requiresWorkExperience = false;
+      expDetails = 'Junior-Stelle: Berufseinsteiger ohne bisherige Firmen-Anstellung ausdrücklich willkommen';
+    } else if (isExplicitSenior) {
+      expLevel = 'required';
       requiresWorkExperience = true;
-      expDetails = 'Vorherige Festanstellung / Praxiserfahrung in einer Firma gefordert';
+      expDetails = 'Explizit mehrjährige Firmen-Berufserfahrung gefordert';
+    } else {
+      expLevel = 'none';
+      requiresWorkExperience = false;
+      expDetails = 'Keine zwingende mehrjährige Firmen-Berufserfahrung explizit gefordert';
     }
 
     const tasks: string[] = [];
@@ -153,7 +160,7 @@ class AIService {
       salary: undefined,
       location: undefined,
       requiresWorkExperience,
-      experienceLevel: requiresWorkExperience ? 'required' : 'junior',
+      experienceLevel: expLevel,
       experienceDetails: expDetails,
     };
   }

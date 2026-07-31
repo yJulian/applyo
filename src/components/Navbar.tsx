@@ -1,5 +1,5 @@
 import React from 'react';
-import { Folder, FolderCheck, Plus, Settings, Sparkles, Briefcase, Unlock } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 interface NavbarProps {
@@ -19,14 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onGrantPermission,
   onOpenAddModal,
   onOpenSettingsModal,
-  aiSettings,
+  aiSettings: _aiSettings,
 }) => {
-  const providerNames: Record<string, string> = {
-    openai: 'OpenAI',
-    gemini: 'Google Gemini',
-    claude: 'Anthropic Claude',
-  };
-
   return (
     <header className="glass-panel" style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none', padding: '14px 24px', zIndex: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
@@ -99,11 +93,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             onClick={onOpenSettingsModal}
             className="btn btn-secondary"
             style={{ gap: '8px', fontSize: '0.85rem' }}
-            title="KI Provider & API Key Einstellungen"
+            title="Einstellungen & Profil"
           >
-            <Sparkles size={16} color="#c084fc" />
-            <span>KI: {providerNames[aiSettings.activeProvider]}</span>
-            <Settings size={15} style={{ marginLeft: '4px', opacity: 0.7 }} />
+            <Settings size={16} color="#c084fc" />
+            <span>Settings</span>
           </button>
 
           <button onClick={onOpenAddModal} className="btn btn-primary">

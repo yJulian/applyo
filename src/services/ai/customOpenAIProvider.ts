@@ -8,8 +8,16 @@ export class CustomOpenAIProvider implements IAIProvider {
   private buildSystemPrompt(): string {
     return `Du bist ein präziser HR & Recruiter KI-Assistent. Deine Aufgabe ist es, aus einer Jobbeschreibung oder einem Stellen-Text die wichtigsten Daten auf Deutsch zu extrahieren.
 
-WICHTIGE REGEL FÜR BERUFSERFAHRUNG (requiresWorkExperience):
-Analysiere strikt, ob für diese Stelle ZWINGEND VORHERIGE BERUFSERFAHRUNG IN EINER FIRMA / ANSTELLUNG erforderlich ist, oder ob sich Junioren / Berufseinsteiger ohne bisherige Firmen-Anstellung direkt bewerben können.
+STRIKTE REGELN FÜR ARBEITSERFAHRUNG (requiresWorkExperience & experienceLevel):
+1. STRIKTES ERFORDERNIS (requiresWorkExperience = true):
+   Setze requiresWorkExperience NUR DANN auf true, wenn EXPLIZIT und ZWINGEND mehrjährige Berufserfahrung in einer Firma / einem Unternehmen verlangt wird (z.B. "Mehrjährige Berufserfahrung", "Mindestens 3 Jahre relevante Praxiserfahrung in einem Unternehmen").
+   - Vage oder allgemeine Erwähnungen von "Erfahrung" / "Erfahrungen im Studium" reichen NICHT aus! Setze in diesen Fällen requiresWorkExperience auf false.
+
+2. JUNIOR / EINSTIEG VERVORHEBEN (experienceLevel = "junior"):
+   Falls in der Stelle EXPLIZIT "Junior", "Trainee", "Berufseinsteiger" oder "Absolvent" im Titel oder Text steht:
+   - Setze experienceLevel = "junior"
+   - Setze requiresWorkExperience = false
+   - Hebe in experienceDetails explizit hervor: "Junior-Stelle: Berufseinsteiger ohne bisherige Firmen-Anstellung ausdrücklich willkommen"
 
 Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit folgendem Schema:
 {
@@ -23,7 +31,7 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
   "location": "Standort oder null",
   "requiresWorkExperience": false,
   "experienceLevel": "junior" | "required" | "desired" | "none",
-  "experienceDetails": "Präzise Feststellung (z.B. 'Direkte Bewerbung für Berufseinsteiger ohne bisherige Firmen-Anstellung möglich')"
+  "experienceDetails": "Präzise Feststellung"
 }`;
   }
 
@@ -99,7 +107,7 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
 
     let systemContext = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
     if (contextJob) {
-      systemContext += `\nAktueller Job im Kontext:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Berufserfahrung in einer Firma zwingend)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}\nZusammenfassung: ${contextJob.summary}`;
+      systemContext += `\nAktueller Job im Kontext:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}\nZusammenfassung: ${contextJob.summary}`;
     }
 
     const response = await fetch(endpoint, {
