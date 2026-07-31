@@ -284,3 +284,48 @@ h1, h2, h3, h4 {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ReactMarkdown Container Styles */
+.markdown-preview-container h1 {
+  font-size: 1.5rem;
+  color: #6366f1;
+  margin: 18px 0 10px 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 6px;
+}
+.markdown-preview-container h2 {
+  font-size: 1.25rem;
+  color: #06b6d4;
+  margin: 16px 0 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 4px;
+}
+.markdown-preview-container h3 {
+  font-size: 1.05rem;
+  color: #34d399;
+  margin: 12px 0 6px 0;
+}
+.markdown-preview-container p {
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+.markdown-preview-container ul, .markdown-preview-container ol {
+  margin-bottom: 12px;
+  padding-left: 24px;
+}
+.markdown-preview-container li {
+  margin-bottom: 4px;
+  line-height: 1.5;
+}
+.markdown-preview-container strong {
+  color: #f8fafc;
+  font-weight: 700;
+}
+.markdown-preview-container code {
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #fbbf24;
+}

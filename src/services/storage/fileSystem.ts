@@ -334,6 +334,48 @@ export class FileSystemService {
     return files;
   }
 
+  async readTextFile(job: JobMetadata, fileName: string): Promise<string> {
+    const folderHandle = await this.getJobFolderHandle(job, null, false);
+    if (!folderHandle) return '';
+
+    try {
+      const fileHandle = await folderHandle.getFileHandle(fileName);
+      const fileObj = await fileHandle.getFile();
+      const arrayBuffer = await fileObj.arrayBuffer();
+      const decoder = new TextDecoder('utf-8');
+      return decoder.decode(arrayBuffer);
+    } catch (e) {
+      console.error('Fehler beim Lesen der Textdatei:', e);
+      return '';
+    }
+  }
+
+  async writeTextFile(job: JobMetadata, fileName: string, content: string): Promise<boolean> {
+    let folderHandle = await this.getJobFolderHandle(job, null, true);
+
+    if (!folderHandle) {
+      const root = await this.selectRootDirectory();
+      if (root) {
+        folderHandle = await this.getJobFolderHandle(job, root, true);
+      }
+    }
+
+    if (!folderHandle) return false;
+
+    try {
+      const fileHandle = await folderHandle.getFileHandle(fileName, { create: true });
+      const writable = await (fileHandle as any).createWritable();
+      const encoder = new TextEncoder();
+      const utf8Bytes = encoder.encode(content);
+      await writable.write(utf8Bytes);
+      await writable.close();
+      return true;
+    } catch (e) {
+      console.error('Fehler beim Schreiben der Textdatei mit UTF-8:', e);
+      return false;
+    }
+  }
+
   async addJobFile(job: JobMetadata, file: File): Promise<boolean> {
     let folderHandle = await this.getJobFolderHandle(job, null, true);
 

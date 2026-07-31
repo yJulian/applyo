@@ -25,6 +25,7 @@ import { JobMetadata, JobFile, ApplicationStatus, STATUS_LABELS, EXPERIENCE_LABE
 import { fileSystemService } from '../services/storage/fileSystem';
 import { profileService } from '../services/storage/profileService';
 import { aiService } from '../services/ai/aiService';
+import { MarkdownModal } from './MarkdownModal';
 
 interface JobDetailViewProps {
   job: JobMetadata | null;
@@ -116,6 +117,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [isGeneratingMarkdownCV, setIsGeneratingMarkdownCV] = useState(false);
 
+  // Markdown Viewer / Editor Modal State
+  const [selectedMdFile, setSelectedMdFile] = useState<string | null>(null);
+  const [isMdModalOpen, setIsMdModalOpen] = useState<boolean>(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const loadJobFiles = async () => {
@@ -190,6 +195,13 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   };
 
   const handleOpenFile = async (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (ext === 'md' || ext === 'txt') {
+      setSelectedMdFile(fileName);
+      setIsMdModalOpen(true);
+      return;
+    }
+
     const url = await fileSystemService.getJobFileUrl(job, fileName);
     if (url) {
       window.open(url, '_blank');
@@ -222,14 +234,14 @@ Aufgaben: ${job.tasks.join(', ')}
 
 ANWEISUNG:
 Passe die Schwerpunkte, Reihenfolge und Formulierung des Lebenslaufs genau auf diese Stelle (${job.title} bei ${job.company}) an.
+Achte zwingend auf korrektes UTF-8 Encoding mit sauberen Umlauten (ä, ö, ü, ß).
 Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebenslauf). Kein Erklärungstext drumherum.`;
 
       const markdownResponse = await aiService.generateAssistantResponse(prompt, job);
       const cleanedMd = markdownResponse.replace(/```markdown/g, '').replace(/```/g, '').trim();
 
-      const mdBlob = new Blob([cleanedMd], { type: 'text/markdown' });
-      const mdFile = new (window as any).File([mdBlob], 'Lebenslauf.md', { type: 'text/markdown' });
-      const success = await fileSystemService.addJobFile(job, mdFile);
+      // Write UTF-8 bytes to disk directly using TextEncoder
+      const success = await fileSystemService.writeTextFile(job, 'Lebenslauf.md', cleanedMd);
       if (success) {
         alert(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
         loadJobFiles();
@@ -500,10 +512,10 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                       onClick={() => handleOpenFile(file.name)}
                       className="btn btn-secondary"
                       style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
-                      title="Auf Windows / Browser öffnen"
+                      title="In Applyo ansehen oder bearbeiten"
                     >
                       <Eye size={13} />
-                      <span>Öffnen</span>
+                      <span>{file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
                     </button>
 
                     <button
@@ -669,6 +681,15 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
           />
         </div>
       </div>
+
+      {/* In-UI Markdown Viewer & Editor Modal */}
+      <MarkdownModal
+        isOpen={isMdModalOpen}
+        onClose={() => setIsMdModalOpen(false)}
+        job={job}
+        fileName={selectedMdFile}
+        onFileSaved={() => loadJobFiles()}
+      />
     </main>
   );
 };
