@@ -3,6 +3,7 @@ import { IAIProvider, ExtractedJobData, AIProviderConfig } from './types';
 import { OpenAIProvider } from './openaiProvider';
 import { GeminiProvider } from './geminiProvider';
 import { ClaudeProvider } from './claudeProvider';
+import { CustomOpenAIProvider } from './customOpenAIProvider';
 
 const SETTINGS_STORAGE_KEY = 'applyo_ai_settings';
 
@@ -14,6 +15,9 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   geminiModel: 'gemini-2.0-flash',
   claudeKey: '',
   claudeModel: 'claude-haiku-4-5-20251001',
+  customOpenaiBaseUrl: 'http://localhost:11434/v1',
+  customOpenaiKey: '',
+  customOpenaiModel: 'llama-3.3-70b-instruct',
 };
 
 class AIService {
@@ -21,6 +25,7 @@ class AIService {
     openai: new OpenAIProvider(),
     gemini: new GeminiProvider(),
     claude: new ClaudeProvider(),
+    custom_openai: new CustomOpenAIProvider(),
   };
 
   getSettings(): AISettings {
@@ -47,6 +52,12 @@ class AIService {
         return { apiKey: settings.geminiKey, model: settings.geminiModel };
       case 'claude':
         return { apiKey: settings.claudeKey, model: settings.claudeModel };
+      case 'custom_openai':
+        return {
+          apiKey: settings.customOpenaiKey,
+          model: settings.customOpenaiModel,
+          baseUrl: settings.customOpenaiBaseUrl,
+        };
     }
   }
 
@@ -55,8 +66,7 @@ class AIService {
     const activeProvider = this.providers[settings.activeProvider];
     const config = this.getConfigForProvider(settings.activeProvider, settings);
 
-    if (!config.apiKey) {
-      // Fallback: If no API key configured, extract mock/heuristic data so user experience is not broken
+    if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
       return this.heuristicFallbackExtract(input);
     }
 
@@ -64,10 +74,9 @@ class AIService {
       return await activeProvider.extractJobData(input, config);
     } catch (err: any) {
       console.warn(`KI Extraktion mit ${activeProvider.name} fehlgeschlagen, versuche Heuristik:`, err);
-      if (err.message.includes('Key fehlt')) {
+      if (err.message && err.message.includes('Key fehlt')) {
         throw err;
       }
-      // Return heuristic fallback if API fails
       const fallback = this.heuristicFallbackExtract(input);
       fallback.summary += ` (Hinweis: KI-Aufruf schlug fehl: ${err.message})`;
       return fallback;
@@ -83,7 +92,7 @@ class AIService {
     const activeProvider = this.providers[settings.activeProvider];
     const config = this.getConfigForProvider(settings.activeProvider, settings);
 
-    if (!config.apiKey) {
+    if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
       throw new Error(`API Key für ${activeProvider.name} fehlt. Bitte in den Einstellungen eintragen.`);
     }
 
@@ -91,45 +100,61 @@ class AIService {
   }
 
   private heuristicFallbackExtract(input: string): ExtractedJobData {
-    const lines = input.split('\n').map(l => l.trim()).filter(Boolean);
-    const titleCandidate = lines[0] || 'Unbenannte Stelle';
-    const companyCandidate = lines[1] ? lines[1].replace(/^(Firma|Company|bei):\s*/i, '') : 'Unbekannte Firma';
+    const lines = input.split('\n').map((l) => l.trim()).filter(Boolean);
 
-    const textLower = input.toLowerCase();
+    let title = 'Unbenannte Stelle';
+    let company = 'Unbekanntes Unternehmen';
 
-    let experienceLevel: ExtractedJobData['experienceLevel'] = 'none';
-    let requiresWorkExperience = false;
-    let experienceDetails = 'Keine konkreten Angaben zur Berufserfahrung im Text gefunden';
-
-    if (textLower.includes('junior') || textLower.includes('trainee') || textLower.includes('einsteiger') || textLower.includes('berufseinstieg')) {
-      experienceLevel = 'junior';
-      requiresWorkExperience = false;
-      experienceDetails = 'Junior-Stelle: Direkte Bewerbung ohne Vorerfahrung möglich';
-    } else if (textLower.includes('erfahrung erforderlich') || textLower.includes('jahre erfahrung') || textLower.includes('mindestens')) {
-      experienceLevel = 'required';
-      requiresWorkExperience = true;
-      experienceDetails = 'Berufserfahrung erforderlich (Praxiserfahrung zwingend gefordert)';
-    } else if (textLower.includes('erfahrung von vorteil') || textLower.includes('wünschenswert') || textLower.includes('bevorzugt')) {
-      experienceLevel = 'desired';
-      requiresWorkExperience = false;
-      experienceDetails = 'Erfahrung gewünscht / vom Vorteil, aber auch für engagierte Einsteiger möglich';
+    if (lines.length > 0) {
+      title = lines[0].length < 60 ? lines[0] : lines[0].substring(0, 57) + '...';
+    }
+    if (lines.length > 1 && lines[1].length < 40) {
+      company = lines[1];
     }
 
-    // Extract bullet points as tasks & requirements
-    const bullets = lines.filter(l => l.startsWith('-') || l.startsWith('*') || l.startsWith('•'));
-    const tasks = bullets.slice(0, Math.ceil(bullets.length / 2)).map(b => b.replace(/^[-*•]\s*/, ''));
-    const requirements = bullets.slice(Math.ceil(bullets.length / 2)).map(b => b.replace(/^[-*•]\s*/, ''));
+    const lowerText = input.toLowerCase();
+
+    // Work Experience Evaluation
+    let requiresWorkExperience = false;
+    let expDetails = 'Junior / Einstieg: Direkte Bewerbung ohne vorherige Firmen-Anstellung möglich';
+
+    if (
+      lowerText.includes('berufserfahrung') ||
+      lowerText.includes('einschlägige erfahrung') ||
+      lowerText.includes('jahre erfahrung') ||
+      lowerText.includes('senior') ||
+      lowerText.includes('lead')
+    ) {
+      requiresWorkExperience = true;
+      expDetails = 'Vorherige Festanstellung / Praxiserfahrung in einer Firma gefordert';
+    }
+
+    const tasks: string[] = [];
+    const requirements: string[] = [];
+
+    lines.forEach((line) => {
+      if (line.startsWith('-') || line.startsWith('•') || line.startsWith('*')) {
+        const clean = line.replace(/^[-•*]\s*/, '');
+        if (clean.toLowerCase().includes('erfahrung') || clean.toLowerCase().includes('kenntnisse') || clean.toLowerCase().includes('studium')) {
+          requirements.push(clean);
+        } else {
+          tasks.push(clean);
+        }
+      }
+    });
 
     return {
-      company: companyCandidate.length > 40 ? 'Neue Firma' : companyCandidate,
-      title: titleCandidate.length > 60 ? 'Stellenbezeichnung' : titleCandidate,
-      summary: lines.slice(0, 3).join(' ') || 'Keine nähere Beschreibung angegeben.',
-      tasks: tasks.length ? tasks : ['Tägliche Aufgaben gemäß Stellenbeschreibung bearbeiten', 'Projektfortschritt dokumentieren'],
-      requirements: requirements.length ? requirements : ['Einschlägige Kenntnisse im Fachbereich', 'Teamfähigkeit & Eigeninitiative'],
+      company,
+      title,
+      summary: `Manuell erstellte Zusammenfassung aus dem Text (${input.length} Zeichen).`,
+      tasks: tasks.length > 0 ? tasks.slice(0, 5) : ['Mitarbeit im Team', 'Umsetzung von Projekten'],
+      requirements: requirements.length > 0 ? requirements.slice(0, 5) : ['Motivation und Interesse am Fachgebiet'],
       benefits: ['Flexible Arbeitszeiten', 'Weiterbildungsmöglichkeiten'],
-      experienceLevel,
+      salary: undefined,
+      location: undefined,
       requiresWorkExperience,
-      experienceDetails,
+      experienceLevel: requiresWorkExperience ? 'required' : 'junior',
+      experienceDetails: expDetails,
     };
   }
 }

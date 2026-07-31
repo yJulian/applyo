@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Check, Cpu, User } from 'lucide-react';
+import { X, Key, Check, Cpu, User, Server } from 'lucide-react';
 import { AISettings, AIProviderId } from '../types/job';
 import { aiService } from '../services/ai/aiService';
 import { profileService, UserProfile } from '../services/storage/profileService';
@@ -57,7 +57,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <div>
               <h2 style={{ fontSize: '1.2rem' }}>Einstellungen & Profil</h2>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Globaler Lebenslauf & KI-Anbieter konfigurieren
+                Globaler Lebenslauf & KI-Anbieter / Custom Endpunkte konfigurieren
               </span>
             </div>
           </div>
@@ -74,7 +74,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
           >
             <User size={16} />
-            <span>👤 Globaler Lebenslauf (Markdown)</span>
+            <span>👤 Globaler Lebenslauf</span>
           </button>
           <button
             onClick={() => setActiveTab('ai')}
@@ -82,7 +82,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
           >
             <Cpu size={16} />
-            <span>⚙️ KI Provider & Keys</span>
+            <span>⚙️ KI Provider & Custom API</span>
           </button>
         </div>
 
@@ -163,17 +163,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
 
         {/* Tab 2: AI Settings */}
         {activeTab === 'ai' && (
-          <div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }}>
             {/* Active Provider Selector */}
-            <div style={{ marginBottom: '20px' }}>
+            <div>
               <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '8px' }}>
                 Aktiver KI-Anbieter für Extraktion, Assistent & Lebenslauf-Anpassung:
               </label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
                 {[
                   { id: 'gemini', name: 'Google Gemini' },
                   { id: 'openai', name: 'OpenAI' },
                   { id: 'claude', name: 'Anthropic Claude' },
+                  { id: 'custom_openai', name: 'Custom OpenAI (Local/Ollama)' },
                 ].map((p) => {
                   const isActive = settings.activeProvider === p.id;
                   return (
@@ -181,7 +182,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                       key={p.id}
                       onClick={() => setSettings({ ...settings, activeProvider: p.id as AIProviderId })}
                       className={`btn ${isActive ? 'btn-primary' : 'btn-secondary'}`}
-                      style={{ fontSize: '0.8rem', padding: '10px 6px', textAlign: 'center' }}
+                      style={{ fontSize: '0.8rem', padding: '10px 8px', textAlign: 'center' }}
                     >
                       {p.name}
                     </button>
@@ -190,10 +191,64 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </div>
             </div>
 
-            <hr style={{ borderColor: 'var(--border-color)', margin: '20px 0' }} />
+            <hr style={{ borderColor: 'var(--border-color)', margin: '10px 0' }} />
+
+            {/* Custom OpenAI Endpoint Config */}
+            <div
+              style={{
+                background: settings.activeProvider === 'custom_openai' ? 'rgba(52, 211, 153, 0.08)' : 'rgba(255,255,255,0.02)',
+                padding: '14px',
+                borderRadius: 'var(--radius-md)',
+                border: settings.activeProvider === 'custom_openai' ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid var(--border-color)',
+              }}
+            >
+              <h4 style={{ fontSize: '0.9rem', color: '#34d399', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Server size={15} /> Custom OpenAI-Kompatibler Endpunkt (Ollama, OpenRouter, LM Studio)
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                    Base URL / API Endpunkt
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="z.B. https://ki-toolbox.scc.kit.edu/api/v1 oder http://localhost:11434/v1"
+                    value={settings.customOpenaiBaseUrl}
+                    onChange={(e) => setSettings({ ...settings, customOpenaiBaseUrl: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                    Modell Name (Freitext-Eingabe)
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="z.B. azure.gpt-4.1-mini, gpt-oss:120b, llama-3.3-70b-instruct"
+                    value={settings.customOpenaiModel}
+                    onChange={(e) => setSettings({ ...settings, customOpenaiModel: e.target.value })}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                    API Key (Optional bei lokalen Servern wie Ollama)
+                  </label>
+                  <input
+                    type="password"
+                    className="input-field"
+                    placeholder="API Key falls erforderlich (z.B. sk-or-v1-...)"
+                    value={settings.customOpenaiKey}
+                    onChange={(e) => setSettings({ ...settings, customOpenaiKey: e.target.value })}
+                  />
+                </div>
+              </div>
+            </div>
 
             {/* Google Gemini Config */}
-            <div style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-cyan)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Key size={14} /> Google Gemini Konfiguration
               </h4>
@@ -217,7 +272,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
 
             {/* OpenAI Config */}
-            <div style={{ marginBottom: '16px', background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Key size={14} /> OpenAI Konfiguration
               </h4>
@@ -241,7 +296,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             </div>
 
             {/* Anthropic Claude Config */}
-            <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
               <h4 style={{ fontSize: '0.9rem', color: 'var(--accent-secondary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Key size={14} /> Anthropic Claude Konfiguration
               </h4>
@@ -258,8 +313,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   value={settings.claudeModel}
                   onChange={(e) => setSettings({ ...settings, claudeModel: e.target.value })}
                 >
-                  <option value="claude-haiku-4-5-20251001">Modell: Claude Haiku 4.5 (Empfohlen - Schnell & Präzise)</option>
-                  <option value="claude-3-5-sonnet-20241022">Modell: Claude 3.5 Sonnet (Hervorragende Dokumente)</option>
+                  <option value="claude-haiku-4-5-20251001">Modell: Claude Haiku 4.5 (Empfohlen)</option>
+                  <option value="claude-3-5-sonnet-20241022">Modell: Claude 3.5 Sonnet</option>
                   <option value="claude-3-5-haiku-20241022">Modell: Claude 3.5 Haiku</option>
                 </select>
               </div>

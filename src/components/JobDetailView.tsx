@@ -221,7 +221,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     setIsGeneratingMarkdownCV(true);
     try {
       const profile = await profileService.getProfile();
-      const prompt = `Erstelle einen auf diese Stelle maßgeschneiderten Lebenslauf im Markdown-Format (Lebenslauf.md).
+      let cleanedMd = '';
+
+      try {
+        const prompt = `Erstelle einen auf diese Stelle maßgeschneiderten Lebenslauf im Markdown-Format (Lebenslauf.md).
 
 BEWERBER-PROFIL (Name: ${profile.fullName}, E-Mail: ${profile.email}, Telefon: ${profile.phone}, Ort: ${profile.location}):
 ${profile.markdownDescription || 'Keine Angabe'}
@@ -237,10 +240,21 @@ Passe die Schwerpunkte, Reihenfolge und Formulierung des Lebenslaufs genau auf d
 Achte zwingend auf korrektes UTF-8 Encoding mit sauberen Umlauten (ä, ö, ü, ß).
 Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebenslauf). Kein Erklärungstext drumherum.`;
 
-      const markdownResponse = await aiService.generateAssistantResponse(prompt, job);
-      const cleanedMd = markdownResponse.replace(/```markdown/g, '').replace(/```/g, '').trim();
+        const markdownResponse = await aiService.generateAssistantResponse(prompt, job);
+        cleanedMd = markdownResponse.replace(/```markdown/g, '').replace(/```/g, '').trim();
+      } catch (err: any) {
+        console.warn('KI-Aufruf für Lebenslauf.md fehlgeschlagen, erstelle Basis-Vorlage:', err);
+        
+        let hint = err.message || 'Verbindungsfehler';
+        if (err.message?.includes('Failed to fetch')) {
+          hint = 'Netzwerkfehler (Failed to fetch).\n• Wenn du Ollama / lokalen Server nutzt: Prüfe ob der Server läuft und CORS erlaubt (OLLAMA_ORIGINS=*).\n• Wenn du Cloud-APIs nutzt: Prüfe deine Internetverbindung & API-Keys in den Einstellungen.';
+        }
+        alert(`Hinweis zur KI-Generierung:\n${hint}\n\nEs wurde dein globales Profil als Basis in Lebenslauf.md gespeichert.`);
 
-      // Write UTF-8 bytes to disk directly using TextEncoder
+        cleanedMd = `# Lebenslauf — ${profile.fullName || 'Bewerber'}\n\n**Zielstelle:** ${job.title} bei ${job.company}\n**Kontakt:** ${profile.email || ''} | ${profile.phone || ''} | ${profile.location || ''}\n\n${profile.markdownDescription || 'Kein globales Profil hinterlegt.'}`;
+      }
+
+      // Write UTF-8 bytes to disk directly
       const success = await fileSystemService.writeTextFile(job, 'Lebenslauf.md', cleanedMd);
       if (success) {
         alert(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
@@ -248,7 +262,7 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
       }
     } catch (e: any) {
       console.error('Fehler bei Markdown Lebenslauf-Erstellung:', e);
-      alert(`Fehler beim Erstellen von Lebenslauf.md: ${e.message}`);
+      alert(`Fehler beim Schreiben von Lebenslauf.md: ${e.message}`);
     } finally {
       setIsGeneratingMarkdownCV(false);
     }
@@ -433,7 +447,7 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
             <div>
               <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <FolderOpen size={18} color="var(--accent-cyan)" />
-                Dokumente & Ordner-Dateien ({job.company}/{job.title})
+                Dokumente & Ordner
               </h3>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                 Dateien (z.B. Lebenslauf.md, Anschreiben) einfach hierher hineinziehen (Drag & Drop)
@@ -562,17 +576,24 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '42px',
+                  height: '42px',
+                  minWidth: '42px',
+                  minHeight: '42px',
+                  flexShrink: 0,
                   borderRadius: '50%',
-                  background: job.requiresWorkExperience ? 'rgba(244, 63, 94, 0.2)' : 'rgba(52, 211, 153, 0.2)',
+                  background: job.requiresWorkExperience ? 'rgba(244, 63, 94, 0.15)' : 'rgba(52, 211, 153, 0.15)',
+                  border: job.requiresWorkExperience ? '1px solid rgba(244, 63, 94, 0.4)' : '1px solid rgba(52, 211, 153, 0.4)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.2rem',
                 }}
               >
-                {job.requiresWorkExperience ? '🔴' : '🟢'}
+                {job.requiresWorkExperience ? (
+                  <Building2 size={20} color="#fb7185" />
+                ) : (
+                  <CheckCircle2 size={20} color="#34d399" />
+                )}
               </div>
               <div>
                 <h3 style={{ fontSize: '1.05rem', color: job.requiresWorkExperience ? '#fb7185' : '#34d399' }}>

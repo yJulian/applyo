@@ -41,7 +41,7 @@ export interface JobFile {
   handle?: FileSystemFileHandle;
 }
 
-export type AIProviderId = 'openai' | 'gemini' | 'claude';
+export type AIProviderId = 'openai' | 'gemini' | 'claude' | 'custom_openai';
 
 export interface AISettings {
   activeProvider: AIProviderId;
@@ -51,6 +51,9 @@ export interface AISettings {
   geminiModel: string;
   claudeKey: string;
   claudeModel: string;
+  customOpenaiBaseUrl: string;
+  customOpenaiKey: string;
+  customOpenaiModel: string;
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {
@@ -63,8 +66,8 @@ export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: st
 };
 
 export const EXPERIENCE_LABELS: Record<ExperienceLevel, { label: string; tagClass: string; entryBadge: string }> = {
-  junior: { label: 'Junior / Einstieg möglich', tagClass: 'tag-junior', entryBadge: '🟢 Junior / Ohne Vorerfahrung möglich' },
-  required: { label: 'Erfahrung Erforderlich', tagClass: 'tag-required', entryBadge: '🔴 Berufserfahrung zwingend erforderlich' },
-  desired: { label: 'Erfahrung Gewünscht', tagClass: 'tag-desired', entryBadge: '🟡 Erfahrung gewünscht (Vorteil)' },
-  none: { label: 'Keine Angabe zur Erfahrung', tagClass: 'tag-none', entryBadge: '⚪ Keine Angabe im Text' },
+  junior: { label: 'Junior / Berufseinsteiger', tagClass: 'badge-emerald', entryBadge: '🟢 Junior Einstieg' },
+  required: { label: 'Berufserfahrung erforderlich', tagClass: 'badge-rose', entryBadge: '🔴 Erfahrung erforderlich' },
+  desired: { label: 'Berufserfahrung gewünscht', tagClass: 'badge-amber', entryBadge: '🟡 Erfahrung gewünscht' },
+  none: { label: 'Keine Angabe zur Erfahrung', tagClass: 'badge-sky', entryBadge: '⚪ k.A.' },
 };

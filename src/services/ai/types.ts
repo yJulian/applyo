@@ -17,10 +17,11 @@ export interface ExtractedJobData {
 export interface AIProviderConfig {
   apiKey: string;
   model: string;
+  baseUrl?: string;
 }
 
 export interface IAIProvider {
-  id: 'openai' | 'gemini' | 'claude';
+  id: 'openai' | 'gemini' | 'claude' | 'custom_openai';
   name: string;
   extractJobData(input: string, config: AIProviderConfig): Promise<ExtractedJobData>;
   generateResponse(

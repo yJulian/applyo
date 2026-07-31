@@ -19,6 +19,16 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      '/kit-api': {
+        target: 'https://ki-toolbox.scc.kit.edu',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/kit-api/, ''),
+        secure: false,
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
