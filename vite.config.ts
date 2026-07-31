@@ -19,6 +19,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: './',
   server: {
     proxy: {
       '/kit-api': {
