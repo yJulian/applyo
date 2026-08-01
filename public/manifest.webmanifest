@@ -1,0 +1,17 @@
+{
+  "name": "Applyo",
+  "short_name": "Applyo",
+  "description": "Verwalte deine Bewerbungen mit KI-Unterstützung und lokaler Dateisystem-Integration",
+  "icons": [
+    {
+      "src": "vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#090d16",
+  "background_color": "#090d16",
+  "display": "standalone",
+  "start_url": ".",
+  "scope": "."
+}
