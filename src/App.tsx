@@ -8,6 +8,7 @@ import { JobDetailModal } from './components/JobDetailModal';
 import { AddJobModal } from './components/AddJobModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
+import { CVEditorModal } from './components/CVEditorModal';
 
 import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings } from './types/job';
 import { fileSystemService } from './services/storage/fileSystem';
@@ -33,6 +34,7 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isCVEditorOpen, setIsCVEditorOpen] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
 
   const [aiSettings, setAiSettings] = useState<AISettings>(aiService.getSettings());
@@ -171,6 +173,7 @@ export default function App() {
         onGrantPermission={handleGrantPermission}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onOpenCVEditor={() => setIsCVEditorOpen(true)}
         aiSettings={aiSettings}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -205,6 +208,7 @@ export default function App() {
             onUpdateJob={handleUpdateJob}
             onDeleteJob={handleDeleteJob}
             onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
+            onOpenCVEditor={() => setIsCVEditorOpen(true)}
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
             cardLayoutConfig={aiSettings.cardLayoutConfig}
           />
@@ -247,6 +251,14 @@ export default function App() {
         onSettingsSaved={(newSettings: AISettings) => {
           setAiSettings(newSettings);
         }}
+      />
+
+      <CVEditorModal
+        isOpen={isCVEditorOpen}
+        onClose={() => setIsCVEditorOpen(false)}
+        jobs={jobs}
+        selectedJob={selectedJob}
+        onSelectJob={(j) => setSelectedJobId(j.id)}
       />
 
       <JobDetailModal

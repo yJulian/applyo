@@ -19,7 +19,6 @@ import {
   Folder,
   Plus,
   Wand2,
-  Loader2,
   Clock,
   Calendar,
   RotateCcw,
@@ -38,7 +37,6 @@ import {
   DEFAULT_CARD_SECTIONS,
 } from '../types/job';
 import { fileSystemService } from '../services/storage/fileSystem';
-import { profileService } from '../services/storage/profileService';
 import { aiService } from '../services/ai/aiService';
 import { MarkdownModal } from './MarkdownModal';
 import {
@@ -57,6 +55,7 @@ interface JobDetailViewProps {
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
+  onOpenCVEditor?: () => void;
   feedbackThresholdWeeks?: number;
   cardLayoutConfig?: CardSectionConfig[];
 }
@@ -70,6 +69,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   onUpdateJob,
   onDeleteJob,
   onOpenAIAssistant: _onOpenAIAssistant,
+  onOpenCVEditor,
   feedbackThresholdWeeks = 6,
   cardLayoutConfig,
 }) => {
@@ -140,7 +140,6 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   const [files, setFiles] = useState<JobFile[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [isGeneratingMarkdownCV, setIsGeneratingMarkdownCV] = useState(false);
 
   // Markdown Viewer / Editor Modal State
   const [selectedMdFile, setSelectedMdFile] = useState<string | null>(null);
@@ -269,57 +268,6 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     if (confirm(`Datei "${fileName}" aus dem Ordner löschen?`)) {
       await fileSystemService.deleteJobFile(job, fileName);
       loadJobFiles();
-    }
-  };
-
-  const handleGenerateTailoredMarkdownCV = async () => {
-    setIsGeneratingMarkdownCV(true);
-    try {
-      const profile = await profileService.getProfile();
-      let cleanedMd = '';
-
-      try {
-        const prompt = `Erstelle einen auf diese Stelle maßgeschneiderten Lebenslauf im Markdown-Format (Lebenslauf.md).
-
-BEWERBER-PROFIL (Name: ${profile.fullName}, E-Mail: ${profile.email}, Telefon: ${profile.phone}, Ort: ${profile.location}):
-${profile.markdownDescription || 'Keine Angabe'}
-
-STELLE:
-Firma: ${job.company}
-Titel: ${job.title}
-Anforderungen: ${job.requirements.join(', ')}
-Aufgaben: ${job.tasks.join(', ')}
-
-ANWEISUNG:
-Passe die Schwerpunkte, Reihenfolge und Formulierung des Lebenslaufs genau auf diese Stelle (${job.title} bei ${job.company}) an.
-Achte zwingend auf korrektes UTF-8 Encoding mit sauberen Umlauten (ä, ö, ü, ß).
-Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebenslauf). Kein Erklärungstext drumherum.`;
-
-        const markdownResponse = await aiService.generateAssistantResponse(prompt, job);
-        cleanedMd = markdownResponse.replace(/```markdown/g, '').replace(/```/g, '').trim();
-      } catch (err: any) {
-        console.warn('KI-Aufruf für Lebenslauf.md fehlgeschlagen, erstelle Basis-Vorlage:', err);
-        
-        let hint = err.message || 'Verbindungsfehler';
-        if (err.message?.includes('Failed to fetch')) {
-          hint = 'Netzwerkfehler (Failed to fetch).\n• Wenn du Ollama / lokalen Server nutzt: Prüfe ob der Server läuft und CORS erlaubt (OLLAMA_ORIGINS=*).\n• Wenn du Cloud-APIs nutzt: Prüfe deine Internetverbindung & API-Keys in den Einstellungen.';
-        }
-        aiService.notifyUser(`Hinweis zur KI-Generierung:\n${hint}\n\nEs wurde dein globales Profil als Basis in Lebenslauf.md gespeichert.`);
-
-        cleanedMd = `# Lebenslauf — ${profile.fullName || 'Bewerber'}\n\n**Zielstelle:** ${job.title} bei ${job.company}\n**Kontakt:** ${profile.email || ''} | ${profile.phone || ''} | ${profile.location || ''}\n\n${profile.markdownDescription || 'Kein globales Profil hinterlegt.'}`;
-      }
-
-      // Write UTF-8 bytes to disk directly
-      const success = await fileSystemService.writeTextFile(job, 'Lebenslauf.md', cleanedMd);
-      if (success) {
-        aiService.notifyUser(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
-        loadJobFiles();
-      }
-    } catch (e: any) {
-      console.error('Fehler bei Markdown Lebenslauf-Erstellung:', e);
-      aiService.notifyUser(`Fehler beim Schreiben von Lebenslauf.md: ${e.message}`);
-    } finally {
-      setIsGeneratingMarkdownCV(false);
     }
   };
 
@@ -808,16 +756,15 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                       <div>
                         <h3 style={{ fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Wand2 size={18} color="#34d399" />
-                          Lebenslauf.md anpassen
+                          Lebenslauf Editor & PDF Generator
                         </h3>
                         <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '620px' }}>
-                          Passe deinen globalen Lebenslauf per KI zielgerichtet auf diese Stelle an und speichere das Ergebnis direkt als <strong>Lebenslauf.md</strong> in diesen Ordner.
+                          Erstelle und bearbeite einen maßgeschneiderten Lebenslauf für diese Stelle mit KI-Unterstützung, Live-Vorschau und PDF-Export.
                         </p>
                       </div>
 
                       <button
-                        onClick={handleGenerateTailoredMarkdownCV}
-                        disabled={isGeneratingMarkdownCV}
+                        onClick={onOpenCVEditor}
                         className="btn btn-primary"
                         style={{
                           gap: '8px',
@@ -826,17 +773,8 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                         }}
                       >
-                        {isGeneratingMarkdownCV ? (
-                          <>
-                            <Loader2 size={15} className="spin-icon" />
-                            <span>Passe Lebenslauf.md an...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={16} />
-                            <span>📄 Lebenslauf.md für diese Stelle anpassen</span>
-                          </>
-                        )}
+                        <Sparkles size={16} />
+                        <span>📄 Lebenslauf Editor öffnen & PDF erstellen</span>
                       </button>
                     </div>
                   </div>

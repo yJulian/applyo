@@ -5,7 +5,9 @@ import { GeminiProvider } from './geminiProvider';
 import { ClaudeProvider } from './claudeProvider';
 import { CustomOpenAIProvider } from './customOpenAIProvider';
 import { fileSystemService } from '../storage/fileSystem';
-import { profileService } from '../storage/profileService';
+import { profileService, UserProfile } from '../storage/profileService';
+import { CVData } from '../../types/cv';
+import { buildFallbackCV } from './cvGenerator';
 
 const AI_GLOBAL_STORAGE_KEY = 'applyo_global_ai_settings';
 
@@ -185,6 +187,150 @@ class AIService {
     }
 
     return await activeProvider.generateResponse(prompt, contextJob, config, attachmentFile);
+  }
+
+  async generateTailoredCV(userProfile: UserProfile, job: JobMetadata | null): Promise<CVData> {
+    const fallback = buildFallbackCV(userProfile, job);
+    const settings = this.getSettings();
+    const config = this.getConfigForProvider(settings.activeProvider, settings);
+
+    if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
+      return fallback;
+    }
+
+    const systemPrompt = `Du bist ein erfahrener HR- & Lebenslauf-Spezialist. Erstelle aus dem Profil des Bewerbers und der Stellenbeschreibung einen perfekt angepassten Lebenslauf im validen JSON-Format.
+Antworte AUSSCHLIESSLICH als beliebiges valides JSON ohne Markdown-Codeblöcke mit folgendem exakten Schema:
+{
+  "header": {
+    "fullName": "Name",
+    "title": "Stellentitel",
+    "email": "E-Mail",
+    "phone": "Telefon",
+    "location": "Ort",
+    "website": null,
+    "github": null,
+    "linkedin": null
+  },
+  "summary": "Zusammenfassung (2-3 Sätze)",
+  "experiences": [
+    {
+      "id": "exp-1",
+      "company": "Firma",
+      "position": "Rolle",
+      "location": "Ort",
+      "startDate": "YYYY",
+      "endDate": "Heute",
+      "isCurrent": true,
+      "summary": "Beschreibung",
+      "highlights": ["Erfolg 1", "Erfolg 2"]
+    }
+  ],
+  "education": [
+    {
+      "id": "edu-1",
+      "institution": "Hochschule",
+      "degree": "Abschluss",
+      "fieldOfStudy": "Fachrichtung",
+      "startDate": "YYYY",
+      "endDate": "YYYY",
+      "description": "Details"
+    }
+  ],
+  "skillCategories": [
+    {
+      "id": "cat-1",
+      "category": "Kategorie",
+      "skills": ["Skill 1", "Skill 2"]
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "title": "Projektname",
+      "description": "Projektbeschreibung",
+      "techStack": ["Tech 1"],
+      "link": null
+    }
+  ],
+  "languages": ["Deutsch", "Englisch"]
+}`;
+
+    const promptText = `PROFIL DES BEWERBERS:
+Name: ${userProfile.fullName}
+E-Mail: ${userProfile.email}
+Telefon: ${userProfile.phone}
+Wortlaut / Werdegang:
+${userProfile.markdownDescription}
+
+ZIEL-STELLENAUSSCHREIBUNG:
+Stelle: ${job ? job.title : 'Unbekannt'} bei ${job ? job.company : 'Unbekannt'}
+Zusammenfassung: ${job ? job.summary : ''}
+Aufgaben: ${job ? job.tasks.join(', ') : ''}
+Anforderungen: ${job ? job.requirements.join(', ') : ''}
+
+Erstelle nun das angepasste JSON für den Lebenslauf:`;
+
+    try {
+      const responseText = await this.generateAssistantResponse(
+        `${systemPrompt}\n\n${promptText}`,
+        job
+      );
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as CVData;
+        return {
+          ...fallback,
+          ...parsed,
+          header: { ...fallback.header, ...(parsed.header || {}) },
+        };
+      }
+      return fallback;
+    } catch (e) {
+      console.warn('Fehler bei KI-Lebenslauf-Generierung, nutze Fallback:', e);
+      return fallback;
+    }
+  }
+
+  async refineCV(currentCV: CVData, userInstruction: string, job: JobMetadata | null): Promise<CVData> {
+    const settings = this.getSettings();
+    const config = this.getConfigForProvider(settings.activeProvider, settings);
+
+    if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
+      return currentCV;
+    }
+
+    const systemPrompt = `Du bist ein Lebenslauf-Editor Assistent. Wende den folgenden Änderungswunsch des Nutzers auf das bestehende Lebenslauf-JSON an und gib das aktualisierte JSON im selben Format zurück.
+Antworte AUSSCHLIESSLICH als valides JSON ohne Erklärungen oder Markdown-Codeblöcke.`;
+
+    const promptText = `BEARBEITUNGSWUNSCH DES NUTZERS:
+"${userInstruction}"
+
+AKTUELLES LEBENSLAUF-JSON:
+${JSON.stringify(currentCV, null, 2)}
+
+ZIEL-STELLE: ${job ? `${job.title} bei ${job.company}` : 'Allgemein'}
+
+Erstelle das aktualisierte Lebenslauf-JSON:`;
+
+    try {
+      const responseText = await this.generateAssistantResponse(
+        `${systemPrompt}\n\n${promptText}`,
+        job
+      );
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as CVData;
+        return {
+          ...currentCV,
+          ...parsed,
+          header: { ...currentCV.header, ...(parsed.header || {}) },
+        };
+      }
+      return currentCV;
+    } catch (e) {
+      console.warn('Fehler bei KI-Lebenslauf-Verfeinerung:', e);
+      return currentCV;
+    }
   }
 
   private heuristicFallbackExtract(input: string): ExtractedJobData {
