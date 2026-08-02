@@ -19,6 +19,7 @@ export interface CVExperience {
   isCurrent: boolean;
   summary?: string;
   highlights: string[];
+  hidden?: boolean;
 }
 
 export interface CVEducation {
@@ -29,12 +30,14 @@ export interface CVEducation {
   startDate: string;
   endDate: string;
   description?: string;
+  hidden?: boolean;
 }
 
 export interface CVSkillCategory {
   id: string;
   category: string;
   skills: string[];
+  hidden?: boolean;
 }
 
 export interface CVProject {
@@ -43,6 +46,7 @@ export interface CVProject {
   description: string;
   techStack: string[];
   link?: string;
+  hidden?: boolean;
 }
 
 export interface CVData {

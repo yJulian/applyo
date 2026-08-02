@@ -19,6 +19,12 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
 
   const isMinimal = templateId === 'minimal_clean';
 
+  // Filter out items that are toggled off / hidden for this specific resume
+  const visibleExperiences = (data.experiences || []).filter(e => !e.hidden);
+  const visibleEducation = (data.education || []).filter(e => !e.hidden);
+  const visibleSkills = (data.skillCategories || []).filter(s => !s.hidden);
+  const visibleProjects = (data.projects || []).filter(p => !p.hidden);
+
   return (
     <div
       id={targetId}
@@ -111,11 +117,11 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
           /* MINIMAL CLEAN: SINGLE COLUMN (Header -> Summary -> Experience -> Education -> Skills -> Projects -> Languages) */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Berufserfahrung */}
-            {data.experiences && data.experiences.length > 0 && (
+            {visibleExperiences.length > 0 && (
               <div>
                 <MinimalSection title="Berufserfahrung" accentColor={accentColor} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {data.experiences.map((exp) => (
+                  {visibleExperiences.map((exp) => (
                     <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                         <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
@@ -140,11 +146,11 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
             )}
 
             {/* Ausbildung & Abschlüsse */}
-            {data.education && data.education.length > 0 && (
+            {visibleEducation.length > 0 && (
               <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <MinimalSection title="Ausbildung & Abschlüsse" accentColor={accentColor} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {data.education.map((edu) => (
+                  {visibleEducation.map((edu) => (
                     <div key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                         <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{edu.degree}</strong>
@@ -159,11 +165,11 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
             )}
 
             {/* Kenntnisse & Fähigkeiten */}
-            {data.skillCategories && data.skillCategories.length > 0 && (
+            {visibleSkills.length > 0 && (
               <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <MinimalSection title="Kenntnisse & Fähigkeiten" accentColor={accentColor} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {data.skillCategories.map((cat) => (
+                  {visibleSkills.map((cat) => (
                     <div key={cat.id} style={{ fontSize: '0.825rem', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <strong style={{ color: '#0f172a', display: 'inline-block', minWidth: '150px' }}>{cat.category}: </strong>
                       <span style={{ color: '#475569' }}>{cat.skills.join(', ')}</span>
@@ -174,11 +180,11 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
             )}
 
             {/* Ausgewählte Projekte */}
-            {showProjects && data.projects && data.projects.length > 0 && (
+            {showProjects && visibleProjects.length > 0 && (
               <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <MinimalSection title="Ausgewählte Projekte" accentColor={accentColor} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {data.projects.map((p) => (
+                  {visibleProjects.map((p) => (
                     <div key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                         {p.title}

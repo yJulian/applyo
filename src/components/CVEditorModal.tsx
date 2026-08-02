@@ -18,6 +18,8 @@ import {
   Check,
   Send,
   Upload,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { JobMetadata } from '../types/job';
 import { CVData, CVStyleOptions, DEFAULT_CV_STYLE, CVTemplateId, CVAccentColor } from '../types/cv';
@@ -54,9 +56,61 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   const [isExportingPDF, setIsExportingPDF] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
-
   // AI Refinement Prompt state
   const [refinePrompt, setRefinePrompt] = useState('');
+
+  // Merge CV data with master global libraries from UserProfile
+  const mergeWithGlobalProfile = (cv: CVData, profile: any): CVData => {
+    const merged = { ...cv };
+
+    // Sync contact header
+    merged.header.fullName = profile.fullName || merged.header.fullName;
+    merged.header.email = profile.email || merged.header.email;
+    merged.header.phone = profile.phone || merged.header.phone;
+    merged.header.location = profile.location || merged.header.location;
+
+    // Merge Experiences
+    const currentExpKeys = new Set((merged.experiences || []).map((e) => `${e.company}-${e.position}`.toLowerCase()));
+    const extraExperiences = (profile.globalExperiences || [])
+      .filter((ge: any) => !currentExpKeys.has(`${ge.company}-${ge.position}`.toLowerCase()))
+      .map((ge: any) => ({ ...ge, hidden: true }));
+    merged.experiences = [...(merged.experiences || []), ...extraExperiences];
+
+    // Merge Education
+    const currentEduKeys = new Set((merged.education || []).map((e) => `${e.institution}-${e.degree}`.toLowerCase()));
+    const extraEducation = (profile.globalEducation || [])
+      .filter((ge: any) => !currentEduKeys.has(`${ge.institution}-${ge.degree}`.toLowerCase()))
+      .map((ge: any) => ({ ...ge, hidden: true }));
+    merged.education = [...(merged.education || []), ...extraEducation];
+
+    // Merge Skill Categories
+    const currentSkillKeys = new Set((merged.skillCategories || []).map((s) => s.category.toLowerCase()));
+    const extraSkills = (profile.globalSkillCategories || [])
+      .filter((gs: any) => !currentSkillKeys.has(gs.category.toLowerCase()))
+      .map((gs: any) => ({ ...gs, hidden: true }));
+    merged.skillCategories = [...(merged.skillCategories || []), ...extraSkills];
+
+    // Merge Projects
+    const currentProjKeys = new Set((merged.projects || []).map((p) => p.title.toLowerCase()));
+    const extraProjects = (profile.globalProjects || [])
+      .filter((gp: any) => !currentProjKeys.has(gp.title.toLowerCase()))
+      .map((gp: any) => ({ ...gp, hidden: true }));
+    merged.projects = [...(merged.projects || []), ...extraProjects];
+
+    return merged;
+  };
+
+  // Sync current items back to master global libraries
+  const syncToGlobalProfile = async (data: CVData) => {
+    const profile = await profileService.getProfile();
+    await profileService.saveProfile({
+      ...profile,
+      globalExperiences: data.experiences || [],
+      globalEducation: data.education || [],
+      globalSkillCategories: data.skillCategories || [],
+      globalProjects: data.projects || [],
+    });
+  };
 
   // Initial Load
   useEffect(() => {
@@ -92,12 +146,10 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
         loadedCV = await aiService.generateTailoredCV(profile, selectedJob);
       }
 
-      // Always sync global contact details (fullName, email, phone, location) from profile config
+      // Always merge with global master profile libraries so items from all resumes are available
       if (loadedCV && profile) {
-        loadedCV.header.fullName = profile.fullName || loadedCV.header.fullName;
-        loadedCV.header.email = profile.email || loadedCV.header.email;
-        loadedCV.header.phone = profile.phone || loadedCV.header.phone;
-        loadedCV.header.location = profile.location || loadedCV.header.location;
+        loadedCV = mergeWithGlobalProfile(loadedCV, profile);
+        await syncToGlobalProfile(loadedCV);
       }
 
       setCvData(loadedCV);
@@ -150,9 +202,16 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
       // Persist current style inside the CV Data JSON
       const dataToSave: CVData = { ...cvData, styleOptions };
 
-      // Save style globally
+      // Save style & master libraries globally
       const profile = await profileService.getProfile();
-      await profileService.saveProfile({ ...profile, lastUsedCVStyle: styleOptions });
+      await profileService.saveProfile({
+        ...profile,
+        lastUsedCVStyle: styleOptions,
+        globalExperiences: cvData.experiences || [],
+        globalEducation: cvData.education || [],
+        globalSkillCategories: cvData.skillCategories || [],
+        globalProjects: cvData.projects || [],
+      });
 
       // 1. Save JSON representation
       await fileSystemService.writeTextFile(targetJob, 'Lebenslauf.json', JSON.stringify(dataToSave, null, 2));
@@ -177,7 +236,7 @@ ${cvData.skillCategories.map(cat => `**${cat.category}:** ${cat.skills.join(', '
 ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.startDate}-${edu.endDate})`).join('\n')}
 `;
       await fileSystemService.writeTextFile(targetJob, 'Lebenslauf.md', markdownCV);
-      aiService.notifyUser(`✅ Lebenslauf.md und Lebenslauf.json (inkl. Vorlage) erfolgreich im Ordner "${targetJob.company}" gespeichert!`);
+      aiService.notifyUser(`✅ Lebenslauf.md und Lebenslauf.json (inkl. Vorlage & globale Bibliothek) erfolgreich im Ordner "${targetJob.company}" gespeichert!`);
     } else {
       aiService.notifyUser('Wähle zuerst eine Stelle aus, um den Lebenslauf auf der Festplatte zu speichern.');
     }
@@ -211,14 +270,18 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
-        const parsed = JSON.parse(evt.target?.result as string) as CVData;
+        let parsed = JSON.parse(evt.target?.result as string) as CVData;
+        const profile = await profileService.getProfile();
+        parsed = mergeWithGlobalProfile(parsed, profile);
+        await syncToGlobalProfile(parsed);
+
         setCvData(parsed);
         if (parsed.styleOptions) {
           handleStyleChange(parsed.styleOptions);
         }
-        aiService.notifyUser('✅ Lebenslauf.json (inkl. Vorlage) erfolgreich geladen!');
+        aiService.notifyUser('✅ Lebenslauf.json (inkl. Vorlage & globale Bibliothek) erfolgreich geladen!');
       } catch (err) {
         aiService.notifyUser('Fehler beim Einlesen der JSON-Datei.');
       }
@@ -379,7 +442,7 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               {/* Accordion Tabs Header */}
               <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)', marginBottom: '12px', flexShrink: 0 }}>
                 <button onClick={() => setActiveTab('profile')} className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <User size={12} /> Profil & Ziel
+                  <User size={12} /> Profil
                 </button>
                 <button onClick={() => setActiveTab('experiences')} className={`btn ${activeTab === 'experiences' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
                   <Briefcase size={12} /> Erfahrung
@@ -435,18 +498,34 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                 {activeTab === 'experiences' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     {cvData.experiences.map((exp, idx) => (
-                      <div key={exp.id} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
-                          <button
-                            onClick={() => {
-                              const filtered = cvData.experiences.filter((_, i) => i !== idx);
-                              setCvData({ ...cvData, experiences: filtered });
-                            }}
-                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                      <div key={exp.id} style={{ padding: '10px', borderRadius: '8px', background: exp.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: exp.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: exp.hidden ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              onClick={() => {
+                                const updated = [...cvData.experiences];
+                                updated[idx].hidden = !updated[idx].hidden;
+                                setCvData({ ...cvData, experiences: updated });
+                              }}
+                              className={`btn ${exp.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                              title={exp.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                            >
+                              {exp.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                              <span>{exp.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                const filtered = cvData.experiences.filter((_, i) => i !== idx);
+                                setCvData({ ...cvData, experiences: filtered });
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                              title="Löschen"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
                         <input type="text" className="input-field" style={{ marginBottom: '6px', fontSize: '0.8rem' }} placeholder="Position" value={exp.position} onChange={(e) => {
                           const updated = [...cvData.experiences];
@@ -495,13 +574,20 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                           endDate: 'Heute',
                           isCurrent: true,
                           highlights: ['Aufgabe / Erfolg'],
+                          hidden: false,
                         };
-                        setCvData({ ...cvData, experiences: [...cvData.experiences, newExp] });
+                        const updatedList = [...cvData.experiences, newExp];
+                        setCvData({ ...cvData, experiences: updatedList });
+
+                        // Sync globally to userProfile
+                        profileService.getProfile().then(p => {
+                          profileService.saveProfile({ ...p, globalExperiences: updatedList });
+                        });
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Erfahrung hinzufügen
+                      <Plus size={13} /> Erfahrung hinzufügen (auch global)
                     </button>
                   </div>
                 )}
@@ -509,18 +595,34 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                 {activeTab === 'education' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {cvData.education.map((edu, idx) => (
-                      <div key={edu.id} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
-                          <button
-                            onClick={() => {
-                              const filtered = cvData.education.filter((_, i) => i !== idx);
-                              setCvData({ ...cvData, education: filtered });
-                            }}
-                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                      <div key={edu.id} style={{ padding: '10px', borderRadius: '8px', background: edu.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: edu.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: edu.hidden ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              onClick={() => {
+                                const updated = [...cvData.education];
+                                updated[idx].hidden = !updated[idx].hidden;
+                                setCvData({ ...cvData, education: updated });
+                              }}
+                              className={`btn ${edu.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                              title={edu.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                            >
+                              {edu.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                              <span>{edu.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                const filtered = cvData.education.filter((_, i) => i !== idx);
+                                setCvData({ ...cvData, education: filtered });
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                              title="Löschen"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
                         <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem' }} placeholder="Abschluss (Master, Bachelor...)" value={edu.degree} onChange={(e) => {
                           const updated = [...cvData.education];
@@ -556,13 +658,19 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                           fieldOfStudy: 'Fachrichtung',
                           startDate: '2019',
                           endDate: '2022',
+                          hidden: false,
                         };
-                        setCvData({ ...cvData, education: [...cvData.education, newEdu] });
+                        const updatedList = [...cvData.education, newEdu];
+                        setCvData({ ...cvData, education: updatedList });
+
+                        profileService.getProfile().then(p => {
+                          profileService.saveProfile({ ...p, globalEducation: updatedList });
+                        });
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Bildung hinzufügen
+                      <Plus size={13} /> Bildung hinzufügen (auch global)
                     </button>
                   </div>
                 )}
@@ -570,18 +678,34 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                 {activeTab === 'skills' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {cvData.skillCategories.map((cat, idx) => (
-                      <div key={cat.id} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Kategorie #{idx + 1}</span>
-                          <button
-                            onClick={() => {
-                              const filtered = cvData.skillCategories.filter((_, i) => i !== idx);
-                              setCvData({ ...cvData, skillCategories: filtered });
-                            }}
-                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                      <div key={cat.id} style={{ padding: '10px', borderRadius: '8px', background: cat.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: cat.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: cat.hidden ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cat.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Kategorie #{idx + 1}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              onClick={() => {
+                                const updated = [...cvData.skillCategories];
+                                updated[idx].hidden = !updated[idx].hidden;
+                                setCvData({ ...cvData, skillCategories: updated });
+                              }}
+                              className={`btn ${cat.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                              title={cat.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                            >
+                              {cat.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                              <span>{cat.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                const filtered = cvData.skillCategories.filter((_, i) => i !== idx);
+                                setCvData({ ...cvData, skillCategories: filtered });
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                              title="Löschen"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
                         <input
                           type="text"
@@ -615,13 +739,19 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                           id: `cat-${Date.now()}`,
                           category: 'Neue Skill-Kategorie',
                           skills: ['Skill A', 'Skill B'],
+                          hidden: false,
                         };
-                        setCvData({ ...cvData, skillCategories: [...cvData.skillCategories, newCat] });
+                        const updatedList = [...cvData.skillCategories, newCat];
+                        setCvData({ ...cvData, skillCategories: updatedList });
+
+                        profileService.getProfile().then(p => {
+                          profileService.saveProfile({ ...p, globalSkillCategories: updatedList });
+                        });
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Skill-Kategorie hinzufügen
+                      <Plus size={13} /> Skill-Kategorie hinzufügen (auch global)
                     </button>
                   </div>
                 )}
@@ -629,18 +759,34 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                 {activeTab === 'projects' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {(cvData.projects || []).map((proj, idx) => (
-                      <div key={proj.id} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>Projekt #{idx + 1}</span>
-                          <button
-                            onClick={() => {
-                              const filtered = (cvData.projects || []).filter((_, i) => i !== idx);
-                              setCvData({ ...cvData, projects: filtered });
-                            }}
-                            style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={13} />
-                          </button>
+                      <div key={proj.id} style={{ padding: '10px', borderRadius: '8px', background: proj.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: proj.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: proj.hidden ? 0.6 : 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: proj.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Projekt #{idx + 1}</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button
+                              onClick={() => {
+                                const updated = [...(cvData.projects || [])];
+                                updated[idx].hidden = !updated[idx].hidden;
+                                setCvData({ ...cvData, projects: updated });
+                              }}
+                              className={`btn ${proj.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                              title={proj.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                            >
+                              {proj.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                              <span>{proj.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                            </button>
+                            <button
+                              onClick={() => {
+                                const filtered = (cvData.projects || []).filter((_, i) => i !== idx);
+                                setCvData({ ...cvData, projects: filtered });
+                              }}
+                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                              title="Löschen"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
                         <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem', fontWeight: 700 }} placeholder="Projektname" value={proj.title} onChange={(e) => {
                           const updated = [...(cvData.projects || [])];
@@ -667,13 +813,19 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                           title: 'Neues Projekt',
                           description: 'Beschreibung des Projekts',
                           techStack: ['React', 'TypeScript'],
+                          hidden: false,
                         };
-                        setCvData({ ...cvData, projects: [...(cvData.projects || []), newProj] });
+                        const updatedList = [...(cvData.projects || []), newProj];
+                        setCvData({ ...cvData, projects: updatedList });
+
+                        profileService.getProfile().then(p => {
+                          profileService.saveProfile({ ...p, globalProjects: updatedList });
+                        });
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Projekt hinzufügen
+                      <Plus size={13} /> Projekt hinzufügen (auch global)
                     </button>
                   </div>
                 )}
