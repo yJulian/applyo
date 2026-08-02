@@ -31,6 +31,7 @@ export interface JobMetadata {
   updatedDate: string;
   notes?: string;
   relativePath?: string; // e.g. "AcmeCorp/Senior Fullstack Developer"
+  feedbackHistory?: string[]; // Stack of ISO timestamp strings for last received feedback
 }
 
 export interface JobFile {
@@ -56,6 +57,7 @@ export interface AISettings {
   customOpenaiModel: string;
   corsProxyUrl?: string;
   corsProxyToken?: string;
+  feedbackThresholdWeeks?: number; // Frist in Wochen für den Status "Lange her" (Standard: 6)
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {

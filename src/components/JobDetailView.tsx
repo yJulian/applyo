@@ -19,13 +19,23 @@ import {
   Folder,
   Plus,
   Wand2,
-  Loader2
+  Loader2,
+  Clock,
+  Calendar,
+  RotateCcw,
+  CalendarPlus,
 } from 'lucide-react';
 import { JobMetadata, JobFile, ApplicationStatus, STATUS_LABELS, EXPERIENCE_LABELS } from '../types/job';
 import { fileSystemService } from '../services/storage/fileSystem';
 import { profileService } from '../services/storage/profileService';
 import { aiService } from '../services/ai/aiService';
 import { MarkdownModal } from './MarkdownModal';
+import {
+  getLatestFeedbackDate,
+  pushFeedbackTimestamp,
+  popFeedbackTimestamp,
+  getFeedbackBadgeInfo,
+} from '../utils/feedback';
 
 interface JobDetailViewProps {
   job: JobMetadata | null;
@@ -36,6 +46,7 @@ interface JobDetailViewProps {
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
+  feedbackThresholdWeeks?: number;
 }
 
 export const JobDetailView: React.FC<JobDetailViewProps> = ({
@@ -46,7 +57,8 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   onGrantPermission,
   onUpdateJob,
   onDeleteJob,
-  onOpenAIAssistant,
+  onOpenAIAssistant: _onOpenAIAssistant,
+  feedbackThresholdWeeks = 6,
 }) => {
   if (!job) {
     if (needsPermission && currentDirName) {
@@ -120,6 +132,32 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   // Markdown Viewer / Editor Modal State
   const [selectedMdFile, setSelectedMdFile] = useState<string | null>(null);
   const [isMdModalOpen, setIsMdModalOpen] = useState<boolean>(false);
+
+  // Feedback tracking state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customDateTime, setCustomDateTime] = useState('');
+
+  const latestFeedback = getLatestFeedbackDate(job);
+  const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
+
+  const handleSetFeedbackToday = () => {
+    const updated = pushFeedbackTimestamp(job, new Date().toISOString());
+    onUpdateJob(updated);
+  };
+
+  const handleSetCustomFeedback = () => {
+    if (!customDateTime) return;
+    const isoDate = new Date(customDateTime).toISOString();
+    const updated = pushFeedbackTimestamp(job, isoDate);
+    onUpdateJob(updated);
+    setShowDatePicker(false);
+    setCustomDateTime('');
+  };
+
+  const handleUndoFeedback = () => {
+    const updated = popFeedbackTimestamp(job);
+    onUpdateJob(updated);
+  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -290,9 +328,26 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
     <main style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header Card */}
-        <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)' }}>
+        <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', position: 'relative' }}>
+          {/* Top-Right Delete Button */}
+          <button
+            onClick={() => onDeleteJob(job)}
+            className="btn-icon"
+            style={{
+              position: 'absolute',
+              top: '20px',
+              right: '20px',
+              color: '#f87171',
+              borderColor: 'rgba(248,113,113,0.3)',
+              background: 'rgba(248, 113, 113, 0.08)',
+            }}
+            title="Bewerbung löschen"
+          >
+            <Trash2 size={16} />
+          </button>
+
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
-            <div>
+            <div style={{ paddingRight: '40px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan)', fontWeight: 600, fontSize: '0.95rem' }}>
                   <Building2 size={18} />
@@ -307,7 +362,8 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
 
               <h1 style={{ fontSize: '1.8rem', lineHeight: 1.2, marginBottom: '14px' }}>{job.title}</h1>
 
-              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              {/* Row 3: Status & Location & Salary */}
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
                 {/* Status Selector */}
                 <select
                   value={job.status}
@@ -331,11 +387,7 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                   ))}
                 </select>
 
-                {/* Experience Tag */}
-                <span className={`badge ${expMeta.tagClass}`} style={{ fontSize: '0.75rem', padding: '6px 12px' }}>
-                  {expMeta.label}
-                </span>
-
+                {/* Location */}
                 {job.location && (
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.location} ${job.company}`.trim())}`}
@@ -369,11 +421,51 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                   </span>
                 )}
               </div>
+
+              {/* Row 4: All Tags (Experience Level, Feedback Badge, etc.) */}
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                {/* Experience Tag Card */}
+                <span
+                  className={`badge ${expMeta.tagClass}`}
+                  style={{
+                    fontSize: '0.75rem',
+                    padding: '6px 12px',
+                    borderRadius: '20px',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  {expMeta.entryBadge}
+                </span>
+
+                {/* Feedback Badge if available */}
+                {feedbackBadge && (
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontWeight: 700,
+                      background: feedbackBadge.bg,
+                      color: feedbackBadge.color,
+                      border: `1px solid ${feedbackBadge.border}`,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <Clock size={13} />
+                    {feedbackBadge.label}
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Quick Actions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {job.url && (
+            {/* Quick Actions (e.g. LinkedIn / External URL) */}
+            {job.url && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
                 <a
                   href={job.url}
                   target="_blank"
@@ -384,23 +476,131 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                   <ExternalLink size={15} />
                   <span>LinkedIn / Link</span>
                 </a>
-              )}
+              </div>
+            )}
+          </div>
+        </div>
 
-              <button onClick={onOpenAIAssistant} className="btn btn-primary" style={{ gap: '6px', fontSize: '0.85rem' }}>
-                <Sparkles size={16} />
-                <span>KI Assistent</span>
+        {/* Feedback Tracking Control Card */}
+        <div
+          className="glass-panel"
+          style={{
+            padding: '20px',
+            borderRadius: 'var(--radius-lg)',
+            background: 'rgba(255, 255, 255, 0.02)',
+            border: '1px solid var(--border-color)',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+            <div>
+              <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Clock size={18} color="var(--accent-cyan)" />
+                Letzte Rückmeldung verwalten
+              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                {feedbackBadge ? (
+                  <span
+                    style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      padding: '4px 10px',
+                      borderRadius: '12px',
+                      background: feedbackBadge.bg,
+                      color: feedbackBadge.color,
+                      border: `1px solid ${feedbackBadge.border}`,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    {feedbackBadge.label}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    Noch keine Rückmeldung zu dieser Stelle erfasst.
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons: Today, Datetime Picker, Undo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <button
+                onClick={handleSetFeedbackToday}
+                className="btn btn-primary"
+                style={{ gap: '6px', fontSize: '0.825rem', padding: '8px 14px' }}
+                title="Rückmeldung auf das heutige Datum setzen"
+              >
+                <Calendar size={15} />
+                <span>Rückmeldung heute</span>
               </button>
 
               <button
-                onClick={() => onDeleteJob(job)}
-                className="btn-icon"
-                style={{ color: '#f87171', borderColor: 'rgba(248,113,113,0.3)' }}
-                title="Bewerbung löschen"
+                onClick={() => setShowDatePicker(!showDatePicker)}
+                className="btn btn-secondary"
+                style={{ gap: '6px', fontSize: '0.825rem', padding: '8px 14px' }}
+                title="Datum und Uhrzeit manuell auswählen"
               >
-                <Trash2 size={16} />
+                <CalendarPlus size={15} color="var(--accent-cyan)" />
+                <span>Datum & Uhrzeit wählen</span>
               </button>
+
+              {job.feedbackHistory && job.feedbackHistory.length > 0 && (
+                <button
+                  onClick={handleUndoFeedback}
+                  className="btn btn-secondary"
+                  style={{ gap: '4px', fontSize: '0.825rem', padding: '8px 12px', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)' }}
+                  title="Letzten Stempel löschen (Rückgängig)"
+                >
+                  <RotateCcw size={14} />
+                  <span>Rückgängig ({job.feedbackHistory.length})</span>
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Custom Date & Time Picker Popover/Inline Input */}
+          {showDatePicker && (
+            <div
+              style={{
+                marginTop: '14px',
+                padding: '14px',
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(15, 23, 42, 0.7)',
+                border: '1px solid var(--accent-cyan)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                Datum & Uhrzeit wählen:
+              </label>
+              <input
+                type="datetime-local"
+                className="input-field"
+                style={{ width: 'auto', padding: '6px 10px', fontSize: '0.85rem' }}
+                value={customDateTime}
+                onChange={(e) => setCustomDateTime(e.target.value)}
+              />
+              <button
+                onClick={handleSetCustomFeedback}
+                disabled={!customDateTime}
+                className="btn btn-primary"
+                style={{ fontSize: '0.8rem', padding: '6px 14px' }}
+              >
+                Speichern
+              </button>
+              <button
+                onClick={() => setShowDatePicker(false)}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+              >
+                Abbrechen
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Tailored Markdown Resume Generator Card */}

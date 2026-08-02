@@ -20,6 +20,7 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   customOpenaiModel: 'llama-3.3-70b-instruct',
   corsProxyUrl: '',
   corsProxyToken: '',
+  feedbackThresholdWeeks: 6,
 };
 
 class AIService {

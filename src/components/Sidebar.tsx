@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock } from 'lucide-react';
+import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock, Clock } from 'lucide-react';
 import { JobMetadata, ApplicationStatus, ExperienceLevel, STATUS_LABELS, EXPERIENCE_LABELS } from '../types/job';
+import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
 interface SidebarProps {
   jobs: JobMetadata[];
@@ -16,6 +17,7 @@ interface SidebarProps {
   needsPermission: boolean;
   onSelectDirectory: () => void;
   onGrantPermission: () => void;
+  feedbackThresholdWeeks?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -32,6 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   needsPermission,
   onSelectDirectory,
   onGrantPermission,
+  feedbackThresholdWeeks = 6,
 }) => {
   const [groupByCompany, setGroupByCompany] = useState<boolean>(true);
 
@@ -273,6 +276,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     const isSelected = job.id === selectedJobId;
                     const statusMeta = STATUS_LABELS[job.status] || STATUS_LABELS.interested;
                     const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
+                    const latestFeedback = getLatestFeedbackDate(job);
+                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
 
                     return (
                       <div
@@ -311,6 +316,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <span className={`badge ${expMeta.tagClass}`} style={{ fontSize: '0.65rem' }}>
                             {expMeta.label}
                           </span>
+                          {feedbackBadge && (
+                            <span
+                              style={{
+                                fontSize: '0.65rem',
+                                padding: '2px 7px',
+                                borderRadius: '10px',
+                                fontWeight: 600,
+                                background: feedbackBadge.bg,
+                                color: feedbackBadge.color,
+                                border: `1px solid ${feedbackBadge.border}`,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              <Clock size={10} />
+                              {feedbackBadge.shortLabel}
+                            </span>
+                          )}
                         </div>
                       </div>
                     );
@@ -326,6 +350,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
               const isSelected = job.id === selectedJobId;
               const statusMeta = STATUS_LABELS[job.status] || STATUS_LABELS.interested;
               const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
+              const latestFeedback = getLatestFeedbackDate(job);
+              const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
 
               return (
                 <div
@@ -364,6 +390,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className={`badge ${expMeta.tagClass}`} style={{ fontSize: '0.65rem' }}>
                       {expMeta.label}
                     </span>
+                    {feedbackBadge && (
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          padding: '2px 7px',
+                          borderRadius: '10px',
+                          fontWeight: 600,
+                          background: feedbackBadge.bg,
+                          color: feedbackBadge.color,
+                          border: `1px solid ${feedbackBadge.border}`,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        <Clock size={10} />
+                        {feedbackBadge.shortLabel}
+                      </span>
+                    )}
                   </div>
                 </div>
               );

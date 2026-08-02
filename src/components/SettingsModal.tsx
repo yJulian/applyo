@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Check, Cpu, User, Server } from 'lucide-react';
+import { X, Key, Check, Cpu, User, Server, Clock } from 'lucide-react';
 import { AISettings, AIProviderId } from '../types/job';
 import { aiService } from '../services/ai/aiService';
 import { profileService, UserProfile } from '../services/storage/profileService';
@@ -13,7 +13,7 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSettingsSaved }) => {
   if (!isOpen) return null;
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'ai'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'feedback' | 'ai'>('profile');
   const [settings, setSettings] = useState<AISettings>(aiService.getSettings());
   const [profile, setProfile] = useState<UserProfile>({
     fullName: '',
@@ -52,12 +52,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(99,102,241,0.15)', color: 'var(--accent-primary)' }}>
-              {activeTab === 'profile' ? <User size={20} /> : <Cpu size={20} />}
+              {activeTab === 'profile' ? <User size={20} /> : activeTab === 'feedback' ? <Clock size={20} /> : <Cpu size={20} />}
             </div>
             <div>
               <h2 style={{ fontSize: '1.2rem' }}>Einstellungen & Profil</h2>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Globaler Lebenslauf & KI-Anbieter / Custom Endpunkte konfigurieren
+                Globaler Lebenslauf, Rückmeldungs-Fristen & KI-Anbieter konfigurieren
               </span>
             </div>
           </div>
@@ -74,7 +74,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
           >
             <User size={16} />
-            <span>👤 Globaler Lebenslauf</span>
+            <span>Lebenslauf</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('feedback')}
+            className={`btn ${activeTab === 'feedback' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
+          >
+            <Clock size={16} />
+            <span>Rückmeldung & Fristen</span>
           </button>
           <button
             onClick={() => setActiveTab('ai')}
@@ -82,7 +90,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
           >
             <Cpu size={16} />
-            <span>⚙️ KI Provider & Custom API</span>
+            <span>KI Provider</span>
           </button>
         </div>
 
@@ -161,7 +169,54 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
         )}
 
-        {/* Tab 2: AI Settings */}
+        {/* Tab 2: Feedback & Deadline Settings */}
+        {activeTab === 'feedback' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div
+              style={{
+                background: 'rgba(255,255,255,0.02)',
+                padding: '16px',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+              }}
+            >
+              <h4 style={{ fontSize: '0.95rem', color: 'var(--accent-cyan)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={16} /> Frist für Rückmeldung-Erinnerungen
+              </h4>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: '16px' }}>
+                Wenn du bei einer Stelle einträgst, wann du das letzte Mal Rückmeldung bekommen hast, wird automatisch geprüft, wie viel Zeit seitdem vergangen ist. Verstreicht mehr Zeit als unten angegeben, wird der Status auf <strong>"Lange her"</strong> gesetzt.
+              </p>
+
+              <div>
+                <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)', display: 'block', marginBottom: '6px' }}>
+                  Frist für Status "Lange her" (in Wochen)
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input
+                    type="number"
+                    min={1}
+                    max={52}
+                    className="input-field"
+                    style={{ width: '120px' }}
+                    value={settings.feedbackThresholdWeeks ?? 6}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        feedbackThresholdWeeks: Math.max(1, parseInt(e.target.value) || 1),
+                      })
+                    }
+                  />
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Wochen</span>
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '6px', display: 'block' }}>
+                  Standardwert: 6 Wochen. Ist die letzte Rückmeldung älter, wird der Badge rot hervorgehoben und als "⚠️ Lange her" dargestellt.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 3: AI Settings */}
         {activeTab === 'ai' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }}>
             {/* Active Provider Selector */}

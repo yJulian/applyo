@@ -8,6 +8,7 @@ import {
   Folder,
   Unlock,
   X,
+  Clock,
 } from 'lucide-react';
 import {
   JobMetadata,
@@ -15,6 +16,7 @@ import {
   ExperienceLevel,
   STATUS_LABELS,
 } from '../types/job';
+import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
 interface BoardViewProps {
   jobs: JobMetadata[];
@@ -31,6 +33,7 @@ interface BoardViewProps {
   onSelectDirectory: () => void;
   onGrantPermission: () => void;
   onOpenDetailModal: (job: JobMetadata) => void;
+  feedbackThresholdWeeks?: number;
 }
 
 const BOARD_COLUMNS: ApplicationStatus[] = [
@@ -57,6 +60,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
   onSelectDirectory,
   onGrantPermission,
   onOpenDetailModal,
+  feedbackThresholdWeeks = 6,
 }) => {
   // Drag & Drop State
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
@@ -447,6 +451,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
                 ) : (
                   columnJobs.map((job) => {
                     const isDraggingThis = draggedJobId === job.id;
+                    const latestFeedback = getLatestFeedbackDate(job);
+                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
 
                     return (
                       <div
@@ -522,6 +528,29 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                 {job.salary}
                               </span>
                             )}
+                          </div>
+                        )}
+
+                        {/* Feedback Badge */}
+                        {feedbackBadge && (
+                          <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+                            <span
+                              style={{
+                                fontSize: '0.7rem',
+                                padding: '3px 8px',
+                                borderRadius: '10px',
+                                fontWeight: 600,
+                                background: feedbackBadge.bg,
+                                color: feedbackBadge.color,
+                                border: `1px solid ${feedbackBadge.border}`,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              <Clock size={11} />
+                              {feedbackBadge.shortLabel}
+                            </span>
                           </div>
                         )}
 

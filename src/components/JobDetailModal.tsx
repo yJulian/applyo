@@ -14,6 +14,7 @@ interface JobDetailModalProps {
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
+  feedbackThresholdWeeks?: number;
 }
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({
@@ -27,6 +28,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   onUpdateJob,
   onDeleteJob,
   onOpenAIAssistant,
+  feedbackThresholdWeeks = 6,
 }) => {
   if (!isOpen || !job) return null;
 
@@ -94,6 +96,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               onClose();
             }}
             onOpenAIAssistant={onOpenAIAssistant}
+            feedbackThresholdWeeks={feedbackThresholdWeeks}
           />
         </div>
       </div>
