@@ -217,6 +217,27 @@ h1, h2, h3, h4 {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
+/* Select & Option Dropdown Fixes */
+select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
+  box-shadow: none;
+}
+
+select::-ms-expand {
+  display: none;
+}
+
+select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  background-image: none !important;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+}
+
 /* Modal Backdrop & Animations */
 .modal-backdrop {
   position: fixed;

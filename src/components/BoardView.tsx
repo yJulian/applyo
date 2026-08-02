@@ -649,7 +649,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                               });
                             }}
                             style={{
-                              background: 'rgba(15, 23, 42, 0.7)',
+                              backgroundColor: '#0f172a',
                               color: statusMeta.color,
                               border: `1px solid ${statusMeta.color}60`,
                               borderRadius: '12px',
@@ -661,7 +661,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                             }}
                           >
                             {Object.entries(STATUS_LABELS).map(([k, meta]) => (
-                              <option key={k} value={k} style={{ background: 'var(--bg-card-solid)', color: meta.color }}>
+                              <option key={k} value={k}>
                                 {meta.label}
                               </option>
                             ))}

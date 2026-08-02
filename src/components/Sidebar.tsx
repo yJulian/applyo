@@ -203,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 value={selectedExpFilter}
                 onChange={(e) => onSelectExpFilter(e.target.value as ExperienceLevel | 'all')}
                 style={{
-                  background: 'transparent',
+                  backgroundColor: 'transparent',
                   border: 'none',
                   color: 'var(--text-muted)',
                   fontSize: '0.75rem',
@@ -211,10 +211,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                <option value="all" style={{ background: 'var(--bg-card-solid)' }}>Filter: Alle Stellen</option>
-                <option value="junior" style={{ background: 'var(--bg-card-solid)' }}>🟢 Junior / Ohne Vorerfahrung</option>
-                <option value="required" style={{ background: 'var(--bg-card-solid)' }}>🔴 Berufserfahrung erforderlich</option>
-                <option value="desired" style={{ background: 'var(--bg-card-solid)' }}>🟡 Erfahrung gewünscht</option>
+                <option value="all">Filter: Alle Stellen</option>
+                <option value="junior">🟢 Junior / Ohne Vorerfahrung</option>
+                <option value="required">🔴 Berufserfahrung erforderlich</option>
+                <option value="desired">🟡 Erfahrung gewünscht</option>
               </select>
             </div>
 
@@ -224,7 +224,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
                 style={{
-                  background: 'transparent',
+                  backgroundColor: 'transparent',
                   border: 'none',
                   color: 'var(--text-muted)',
                   fontSize: '0.75rem',
@@ -232,9 +232,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   cursor: 'pointer',
                 }}
               >
-                <option value="date" style={{ background: 'var(--bg-card-solid)' }}>Sortierung: Datum</option>
-                <option value="rating" style={{ background: 'var(--bg-card-solid)' }}>Sortierung: Rangliste ⭐</option>
-                <option value="knowledge" style={{ background: 'var(--bg-card-solid)' }}>Sortierung: Vorwissen 🧠</option>
+                <option value="date">Sortierung: Datum</option>
+                <option value="rating">Sortierung: Rangliste ⭐</option>
+                <option value="knowledge">Sortierung: Vorwissen 🧠</option>
               </select>
             </div>
           </div>

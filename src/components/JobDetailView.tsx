@@ -388,19 +388,18 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                   className="badge"
                   style={{
                     padding: '0 24px 0 12px',
-                    background: statusMeta.bg,
+                    backgroundColor: statusMeta.bg,
                     color: statusMeta.color,
                     border: `1px solid ${statusMeta.color}`,
                     outline: 'none',
                     cursor: 'pointer',
-                    appearance: 'none',
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(statusMeta.color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 8px center',
                   }}
                 >
                   {Object.entries(STATUS_LABELS).map(([key, meta]) => (
-                    <option key={key} value={key} style={{ background: 'var(--bg-card-solid)', color: meta.color }}>
+                    <option key={key} value={key}>
                       Status: {meta.label}
                     </option>
                   ))}
@@ -410,7 +409,7 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 <span
                   className="badge"
                   style={{
-                    background: 'rgba(245, 158, 11, 0.12)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.12)',
                     color: '#fbbf24',
                     border: '1px solid rgba(251, 191, 36, 0.3)',
                   }}
@@ -471,27 +470,26 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                       className="badge"
                       style={{
                         padding: '0 24px 0 12px',
-                        background: bg,
+                        backgroundColor: bg,
                         color: color,
                         border: `1px solid ${border}`,
                         outline: 'none',
                         cursor: 'pointer',
-                        appearance: 'none',
                         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
                         backgroundRepeat: 'no-repeat',
                         backgroundPosition: 'right 8px center',
                       }}
                       title="Vorwissen-Skala: 0 (Nichts), 1-7 (Skills/Vorkenntnisse), 8-9 (Zwingend Firmen-Arbeitserfahrung)"
                     >
-                      <option value="" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-muted)' }}>🧠 Vorwissen: k.A. / Einstufen...</option>
-                      <option value={0} style={{ background: 'var(--bg-card-solid)', color: '#34d399' }}>🧠 Vorwissen: 0/9 (Keine Vorkenntnisse)</option>
+                      <option value="">🧠 Vorwissen: k.A. / Einstufen...</option>
+                      <option value={0}>🧠 Vorwissen: 0/9 (Keine Vorkenntnisse)</option>
                       {[1, 2, 3, 4, 5, 6, 7].map((lvl) => (
-                        <option key={lvl} value={lvl} style={{ background: 'var(--bg-card-solid)', color: '#38bdf8' }}>
+                        <option key={lvl} value={lvl}>
                           🧠 Vorwissen: {lvl}/9 (Skills & Vorkenntnisse)
                         </option>
                       ))}
-                      <option value={8} style={{ background: 'var(--bg-card-solid)', color: '#fb7185' }}>🧠 Vorwissen: 8/9 (Firmen-Erfahrung gefordert)</option>
-                      <option value={9} style={{ background: 'var(--bg-card-solid)', color: '#fb7185' }}>🧠 Vorwissen: 9/9 (Experte & Firmen-Erfahrung)</option>
+                      <option value={8}>🧠 Vorwissen: 8/9 (Firmen-Erfahrung gefordert)</option>
+                      <option value={9}>🧠 Vorwissen: 9/9 (Experte & Firmen-Erfahrung)</option>
                     </select>
                   );
                 })()}
