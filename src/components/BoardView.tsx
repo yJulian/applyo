@@ -17,6 +17,7 @@ import {
   ApplicationStatus,
   ExperienceLevel,
   STATUS_LABELS,
+  EXPERIENCE_LABELS,
 } from '../types/job';
 import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
@@ -95,40 +96,36 @@ export const BoardView: React.FC<BoardViewProps> = ({
     setColumnSearches((prev) => ({ ...prev, [status]: query }));
   };
 
-  // Helper to render experience level as a colored dot with tooltip
+  // Helper to render experience level badge using standard CSS tag classes
   const renderExperienceDot = (expLevel: ExperienceLevel) => {
-    let color = '#64748b';
-    let shadow = 'none';
-    let tooltip = 'Keine Angabe zur Erfahrung';
+    let className = 'badge tag-none';
+    let label = 'k.A.';
 
     if (expLevel === 'required') {
-      color = '#f43f5e';
-      shadow = '0 0 8px rgba(244, 63, 94, 0.8)';
-      tooltip = '🔴 Berufserfahrung erforderlich';
+      className = 'badge tag-required';
+      label = 'Erforderlich';
     } else if (expLevel === 'junior') {
-      color = '#10b981';
-      shadow = '0 0 8px rgba(16, 185, 129, 0.8)';
-      tooltip = '🟢 Junior / Ohne Vorerfahrung möglich';
+      className = 'badge tag-junior';
+      label = 'Junior';
     } else if (expLevel === 'desired') {
-      color = '#f59e0b';
-      shadow = '0 0 8px rgba(245, 158, 11, 0.8)';
-      tooltip = '🟡 Berufserfahrung gewünscht';
+      className = 'badge tag-desired';
+      label = 'Gewünscht';
     }
 
     return (
-      <div
-        title={tooltip}
+      <span
+        className={className}
         style={{
-          width: '10px',
-          height: '10px',
-          borderRadius: '50%',
-          backgroundColor: color,
-          boxShadow: shadow,
-          cursor: 'help',
-          flexShrink: 0,
-          transition: 'transform 0.15s ease',
+          fontSize: '0.675rem',
+          height: '20px',
+          minHeight: '20px',
+          padding: '0 8px',
+          borderRadius: '12px',
         }}
-      />
+        title={EXPERIENCE_LABELS[expLevel]?.label || 'Erfahrung'}
+      >
+        {label}
+      </span>
     );
   };
 
@@ -505,11 +502,15 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
                         {/* Title */}
                         <h4
+                          title={job.title}
                           style={{
                             fontSize: '0.95rem',
                             fontWeight: 700,
                             color: 'var(--text-main)',
                             lineHeight: 1.35,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
                           }}
                         >
                           {job.title}
@@ -519,9 +520,20 @@ export const BoardView: React.FC<BoardViewProps> = ({
                         {(job.location || job.salary) && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                             {job.location && (
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                <MapPin size={12} color="var(--accent-cyan)" />
-                                {job.location}
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  whiteSpace: 'nowrap',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  maxWidth: '100%',
+                                }}
+                                title={job.location}
+                              >
+                                <MapPin size={12} color="var(--accent-cyan)" style={{ flexShrink: 0 }} />
+                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{job.location}</span>
                               </span>
                             )}
                             {job.salary && (
@@ -537,11 +549,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
                           {job.personalRating ? (
                             <span
-                              className="badge"
+                              className="badge badge-amber"
                               style={{
-                                background: 'rgba(245, 158, 11, 0.12)',
-                                color: '#fbbf24',
-                                border: '1px solid rgba(251, 191, 36, 0.3)',
                                 fontSize: '0.7rem',
                                 height: '22px',
                                 minHeight: '22px',
@@ -556,27 +565,18 @@ export const BoardView: React.FC<BoardViewProps> = ({
                           {(() => {
                             if (job.priorKnowledgeLevel === undefined || job.priorKnowledgeLevel === null) return null;
                             const level = job.priorKnowledgeLevel;
-                            let bg = 'rgba(6, 182, 212, 0.12)';
-                            let color = '#38bdf8';
-                            let border = 'rgba(6, 182, 212, 0.3)';
+                            let badgeClass = 'badge badge-sky';
 
                             if (level === 0) {
-                              bg = 'rgba(52, 211, 153, 0.12)';
-                              color = '#34d399';
-                              border = 'rgba(52, 211, 153, 0.3)';
+                              badgeClass = 'badge badge-emerald';
                             } else if (level >= 8) {
-                              bg = 'rgba(244, 63, 94, 0.15)';
-                              color = '#fb7185';
-                              border = 'rgba(244, 63, 94, 0.4)';
+                              badgeClass = 'badge badge-rose';
                             }
 
                             return (
                               <span
-                                className="badge"
+                                className={badgeClass}
                                 style={{
-                                  background: bg,
-                                  color: color,
-                                  border: `1px solid ${border}`,
                                   fontSize: '0.7rem',
                                   height: '22px',
                                   minHeight: '22px',

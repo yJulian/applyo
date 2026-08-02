@@ -46,6 +46,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [scrollLeftState, setScrollLeftState] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
+  React.useEffect(() => {
+    updateScrollFade();
+    window.addEventListener('resize', updateScrollFade);
+    return () => window.removeEventListener('resize', updateScrollFade);
+  }, []);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!filterScrollRef.current) return;
     setIsMouseDown(true);
@@ -62,6 +68,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     setIsMouseDown(false);
   };
 
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const updateScrollFade = () => {
+    if (!filterScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = filterScrollRef.current;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  };
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isMouseDown || !filterScrollRef.current) return;
     const x = e.pageX - filterScrollRef.current.offsetLeft;
@@ -70,6 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       setIsDragging(true);
     }
     filterScrollRef.current.scrollLeft = scrollLeftState - walk;
+    updateScrollFade();
   };
 
   // Apply filters & sorting
@@ -155,13 +172,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
+          onScroll={updateScrollFade}
           style={{
             display: 'flex',
             gap: '6px',
             overflowX: 'auto',
             paddingBottom: '4px',
+            paddingLeft: '2px',
+            paddingRight: '2px',
             cursor: isMouseDown ? 'grabbing' : 'grab',
             userSelect: 'none',
+            WebkitMaskImage: `linear-gradient(to right, ${canScrollLeft ? 'transparent 0, #000 16px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 16px), transparent 100%' : '#000 100%'})`,
+            maskImage: `linear-gradient(to right, ${canScrollLeft ? 'transparent 0, #000 16px' : '#000 0'}, ${canScrollRight ? '#000 calc(100% - 16px), transparent 100%' : '#000 100%'})`,
           }}
         >
           {statusOptions.map((s) => {
@@ -340,53 +362,65 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <ChevronRight size={14} color="var(--text-dim)" />
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
                           <span
                             className="badge"
                             style={{
                               background: statusMeta.bg,
                               color: statusMeta.color,
+                              fontSize: '0.675rem',
+                              height: '20px',
+                              minHeight: '20px',
+                              padding: '0 8px',
                             }}
                           >
                             {statusMeta.label}
                           </span>
-                          <span className={`badge ${expMeta.tagClass}`}>
+                          <span
+                            className={`badge ${expMeta.tagClass}`}
+                            style={{
+                              fontSize: '0.675rem',
+                              height: '20px',
+                              minHeight: '20px',
+                              padding: '0 8px',
+                            }}
+                          >
                             {expMeta.label}
                           </span>
                           {job.personalRating ? (
                             <span
-                              className="badge"
+                              className="badge badge-amber"
                               style={{
-                                background: 'rgba(245, 158, 11, 0.12)',
-                                color: '#fbbf24',
-                                border: '1px solid rgba(251, 191, 36, 0.3)',
+                                fontSize: '0.675rem',
+                                height: '20px',
+                                minHeight: '20px',
+                                padding: '0 8px',
                               }}
                             >
-                              <Star size={10} fill="#fbbf24" color="#fbbf24" />
+                              <Star size={9} fill="#fbbf24" color="#fbbf24" />
                               <span>{job.personalRating}/5</span>
                             </span>
                           ) : null}
                           {(() => {
                             if (job.priorKnowledgeLevel === undefined || job.priorKnowledgeLevel === null) return null;
                             const level = job.priorKnowledgeLevel;
-                            let bg = 'rgba(6, 182, 212, 0.12)';
-                            let color = '#38bdf8';
-                            let border = 'rgba(6, 182, 212, 0.3)';
+                            let badgeClass = 'badge badge-sky';
 
                             if (level === 0) {
-                              bg = 'rgba(52, 211, 153, 0.12)';
-                              color = '#34d399';
-                              border = 'rgba(52, 211, 153, 0.3)';
+                              badgeClass = 'badge badge-emerald';
                             } else if (level >= 8) {
-                              bg = 'rgba(244, 63, 94, 0.15)';
-                              color = '#fb7185';
-                              border = 'rgba(244, 63, 94, 0.4)';
+                              badgeClass = 'badge badge-rose';
                             }
 
                             return (
                               <span
-                                className="badge"
-                                style={{ background: bg, color: color, border: `1px solid ${border}` }}
+                                className={badgeClass}
+                                style={{
+                                  fontSize: '0.675rem',
+                                  height: '20px',
+                                  minHeight: '20px',
+                                  padding: '0 8px',
+                                }}
                                 title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
                               >
                                 🧠 {level}/9
@@ -401,9 +435,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 background: 'rgba(139, 92, 246, 0.15)',
                                 color: '#c084fc',
                                 border: '1px solid rgba(192, 132, 252, 0.3)',
+                                fontSize: '0.675rem',
+                                height: '20px',
+                                minHeight: '20px',
+                                padding: '0 8px',
                               }}
                             >
-                              <Tag size={10} />
+                              <Tag size={9} />
                               <span>{tag}</span>
                             </span>
                           ))}
@@ -414,9 +452,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 background: feedbackBadge.bg,
                                 color: feedbackBadge.color,
                                 border: `1px solid ${feedbackBadge.border}`,
+                                fontSize: '0.675rem',
+                                height: '20px',
+                                minHeight: '20px',
+                                padding: '0 8px',
                               }}
                             >
-                              <Clock size={10} />
+                              <Clock size={9} />
                               {feedbackBadge.shortLabel}
                             </span>
                           )}
