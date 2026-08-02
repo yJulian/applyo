@@ -1,13 +1,31 @@
-import { AISettings, AIProviderId, JobMetadata } from '../../types/job';
+import { AISettings, AIProviderId, JobMetadata, DEFAULT_CARD_SECTIONS, CardSectionConfig } from '../../types/job';
 import { IAIProvider, ExtractedJobData, AIProviderConfig } from './types';
 import { OpenAIProvider } from './openaiProvider';
 import { GeminiProvider } from './geminiProvider';
 import { ClaudeProvider } from './claudeProvider';
 import { CustomOpenAIProvider } from './customOpenAIProvider';
+import { fileSystemService } from '../storage/fileSystem';
+import { profileService } from '../storage/profileService';
 
-const SETTINGS_STORAGE_KEY = 'applyo_ai_settings';
+const AI_GLOBAL_STORAGE_KEY = 'applyo_global_ai_settings';
 
-export const DEFAULT_AI_SETTINGS: AISettings = {
+export interface GlobalAISettings {
+  activeProvider: AIProviderId;
+  openaiKey: string;
+  openaiModel: string;
+  geminiKey: string;
+  geminiModel: string;
+  claudeKey: string;
+  claudeModel: string;
+  customOpenaiBaseUrl: string;
+  customOpenaiKey: string;
+  customOpenaiModel: string;
+  corsProxyUrl?: string;
+  corsProxyToken?: string;
+  showSystemAlerts?: boolean;
+}
+
+export const DEFAULT_GLOBAL_AI_SETTINGS: GlobalAISettings = {
   activeProvider: 'gemini',
   openaiKey: '',
   openaiModel: 'gpt-4o-mini',
@@ -20,9 +38,23 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   customOpenaiModel: 'llama-3.3-70b-instruct',
   corsProxyUrl: '',
   corsProxyToken: '',
+  showSystemAlerts: true,
+};
+
+export const DEFAULT_AI_SETTINGS: AISettings = {
+  ...DEFAULT_GLOBAL_AI_SETTINGS,
+  feedbackThresholdWeeks: 6,
+  cardLayoutConfig: DEFAULT_CARD_SECTIONS,
+  showSystemAlerts: true,
 };
 
 class AIService {
+  private globalAiSettings: GlobalAISettings = { ...DEFAULT_GLOBAL_AI_SETTINGS };
+  private rootMeta: { feedbackThresholdWeeks: number; cardLayoutConfig: CardSectionConfig[] } = {
+    feedbackThresholdWeeks: 6,
+    cardLayoutConfig: DEFAULT_CARD_SECTIONS,
+  };
+
   private providers: Record<AIProviderId, IAIProvider> = {
     openai: new OpenAIProvider(),
     gemini: new GeminiProvider(),
@@ -30,20 +62,69 @@ class AIService {
     custom_openai: new CustomOpenAIProvider(),
   };
 
-  getSettings(): AISettings {
-    try {
-      const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-      if (saved) {
-        return { ...DEFAULT_AI_SETTINGS, ...JSON.parse(saved) };
-      }
-    } catch (e) {
-      console.error('Fehler beim Laden der AI Einstellungen:', e);
-    }
-    return DEFAULT_AI_SETTINGS;
+  constructor() {
+    this.loadGlobalAiSettings();
   }
 
-  saveSettings(settings: AISettings): void {
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  loadGlobalAiSettings(): GlobalAISettings {
+    try {
+      const saved = localStorage.getItem(AI_GLOBAL_STORAGE_KEY) || localStorage.getItem('applyo_ai_settings');
+      if (saved) {
+        this.globalAiSettings = { ...DEFAULT_GLOBAL_AI_SETTINGS, ...JSON.parse(saved) };
+      }
+    } catch (e) {
+      console.warn('Fehler beim Laden der globalen AI Einstellungen:', e);
+    }
+    return this.globalAiSettings;
+  }
+
+  saveGlobalAiSettings(settings: Partial<GlobalAISettings>): void {
+    this.globalAiSettings = { ...this.globalAiSettings, ...settings };
+    try {
+      localStorage.setItem(AI_GLOBAL_STORAGE_KEY, JSON.stringify(this.globalAiSettings));
+    } catch (e) {
+      console.error('Fehler beim Speichern der globalen AI Einstellungen in localStorage:', e);
+    }
+  }
+
+  setRootMeta(feedbackThresholdWeeks: number, cardLayoutConfig: CardSectionConfig[]) {
+    this.rootMeta = { feedbackThresholdWeeks, cardLayoutConfig };
+  }
+
+  notifyUser(message: string): void {
+    if (this.getSettings().showSystemAlerts !== false) {
+      alert(message);
+    }
+  }
+
+  getSettings(): AISettings {
+    return {
+      ...this.globalAiSettings,
+      feedbackThresholdWeeks: this.rootMeta.feedbackThresholdWeeks,
+      cardLayoutConfig: this.rootMeta.cardLayoutConfig,
+    };
+  }
+
+  async saveSettings(settings: AISettings): Promise<void> {
+    // 1. Save device-global AI settings to localStorage
+    this.saveGlobalAiSettings(settings);
+
+    // 2. Save root metadata (feedbackThresholdWeeks & cardLayoutConfig) to root metadata.json
+    this.rootMeta = {
+      feedbackThresholdWeeks: settings.feedbackThresholdWeeks ?? 6,
+      cardLayoutConfig: settings.cardLayoutConfig || DEFAULT_CARD_SECTIONS,
+    };
+
+    try {
+      const profile = await profileService.getProfile();
+      await fileSystemService.saveRootMetadata({
+        profile,
+        feedbackThresholdWeeks: this.rootMeta.feedbackThresholdWeeks,
+        cardLayoutConfig: this.rootMeta.cardLayoutConfig,
+      });
+    } catch (e) {
+      console.error('Fehler beim Speichern der root metadata.json:', e);
+    }
   }
 
   private getConfigForProvider(providerId: AIProviderId, settings: AISettings): AIProviderConfig {

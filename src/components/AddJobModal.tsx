@@ -101,7 +101,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
 
     const res = await fileSystemService.saveJob(newJob, handle);
     if (res.success) {
-      alert(`✅ Ordner "${res.path}" wurde erfolgreich auf deiner Festplatte angelegt!`);
+      aiService.notifyUser(`✅ Ordner "${res.path}" wurde erfolgreich auf deiner Festplatte angelegt!`);
     }
 
     onJobAdded(newJob);
@@ -139,7 +139,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
 
     const res = await fileSystemService.saveJob(newJob, handle);
     if (res.success) {
-      alert(`✅ Ordner "${res.path}" wurde erfolgreich auf deiner Festplatte angelegt!`);
+      aiService.notifyUser(`✅ Ordner "${res.path}" wurde erfolgreich auf deiner Festplatte angelegt!`);
     }
 
     onJobAdded(newJob);

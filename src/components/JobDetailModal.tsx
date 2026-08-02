@@ -1,7 +1,7 @@
 import React from 'react';
 import { X } from 'lucide-react';
 import { JobDetailView } from './JobDetailView';
-import { JobMetadata } from '../types/job';
+import { JobMetadata, CardSectionConfig } from '../types/job';
 
 interface JobDetailModalProps {
   isOpen: boolean;
@@ -14,6 +14,8 @@ interface JobDetailModalProps {
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
+  feedbackThresholdWeeks?: number;
+  cardLayoutConfig?: CardSectionConfig[];
 }
 
 export const JobDetailModal: React.FC<JobDetailModalProps> = ({
@@ -27,6 +29,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   onUpdateJob,
   onDeleteJob,
   onOpenAIAssistant,
+  feedbackThresholdWeeks = 6,
+  cardLayoutConfig,
 }) => {
   if (!isOpen || !job) return null;
 
@@ -60,21 +64,13 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             background: 'rgba(15, 23, 42, 0.8)',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-              {job.company}
-            </span>
-            <span style={{ color: 'var(--text-dim)' }}>•</span>
-            <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
-              {job.title}
-            </span>
-          </div>
-
+          <span style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+            Stelle-Details
+          </span>
           <button
             onClick={onClose}
             className="btn-icon"
-            style={{ width: '32px', height: '32px', borderRadius: '50%' }}
-            title="Schließen (Esc)"
+            style={{ width: '32px', height: '32px' }}
           >
             <X size={18} color="var(--text-muted)" />
           </button>
@@ -94,6 +90,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               onClose();
             }}
             onOpenAIAssistant={onOpenAIAssistant}
+            feedbackThresholdWeeks={feedbackThresholdWeeks}
+            cardLayoutConfig={cardLayoutConfig}
           />
         </div>
       </div>

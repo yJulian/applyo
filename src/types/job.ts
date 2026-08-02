@@ -31,6 +31,7 @@ export interface JobMetadata {
   updatedDate: string;
   notes?: string;
   relativePath?: string; // e.g. "AcmeCorp/Senior Fullstack Developer"
+  feedbackHistory?: string[]; // Stack of ISO timestamp strings for last received feedback
 }
 
 export interface JobFile {
@@ -42,6 +43,33 @@ export interface JobFile {
 }
 
 export type AIProviderId = 'openai' | 'gemini' | 'claude' | 'custom_openai';
+
+export type CardSectionId =
+  | 'feedback'
+  | 'tailored_cv'
+  | 'documents'
+  | 'summary'
+  | 'experience_check'
+  | 'tasks_requirements'
+  | 'benefits'
+  | 'notes';
+
+export interface CardSectionConfig {
+  id: CardSectionId;
+  title: string;
+  visible: boolean;
+}
+
+export const DEFAULT_CARD_SECTIONS: CardSectionConfig[] = [
+  { id: 'feedback', title: 'Letzte Rückmeldung verwalten', visible: true },
+  { id: 'tailored_cv', title: 'Lebenslauf.md anpassen', visible: true },
+  { id: 'documents', title: 'Dokumente & Ordner', visible: true },
+  { id: 'summary', title: 'Zusammenfassung', visible: true },
+  { id: 'experience_check', title: 'Berufserfahrung & Einstieg Check', visible: true },
+  { id: 'tasks_requirements', title: 'Aufgaben & Anforderungen', visible: true },
+  { id: 'benefits', title: 'Benefits & Vorteile', visible: true },
+  { id: 'notes', title: 'Notizen & Notizen zum Gespräch', visible: true },
+];
 
 export interface AISettings {
   activeProvider: AIProviderId;
@@ -56,6 +84,9 @@ export interface AISettings {
   customOpenaiModel: string;
   corsProxyUrl?: string;
   corsProxyToken?: string;
+  feedbackThresholdWeeks?: number; // Frist in Wochen für den Status "Lange her" (Standard: 6)
+  cardLayoutConfig?: CardSectionConfig[]; // Anpassbare Kartenanordnung im Job-Detail
+  showSystemAlerts?: boolean; // Bestätigungs-Popups / Alerts aktivieren (Standard: true)
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {
@@ -67,9 +98,9 @@ export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: st
   rejected: { label: 'Abgesagt', color: '#f87171', bg: 'rgba(248, 113, 113, 0.12)' },
 };
 
-export const EXPERIENCE_LABELS: Record<ExperienceLevel, { label: string; tagClass: string; entryBadge: string }> = {
-  junior: { label: 'Junior / Berufseinsteiger', tagClass: 'badge-emerald', entryBadge: '🟢 Junior Einstieg' },
-  required: { label: 'Berufserfahrung erforderlich', tagClass: 'badge-rose', entryBadge: '🔴 Erfahrung erforderlich' },
-  desired: { label: 'Berufserfahrung gewünscht', tagClass: 'badge-amber', entryBadge: '🟡 Erfahrung gewünscht' },
-  none: { label: 'Keine Angabe zur Erfahrung', tagClass: 'badge-sky', entryBadge: '⚪ k.A.' },
+export const EXPERIENCE_LABELS: Record<ExperienceLevel, { label: string; tagClass: string; entryBadge: string; color: string; bg: string; borderColor: string }> = {
+  junior: { label: 'Junior / Berufseinsteiger', tagClass: 'badge-emerald', entryBadge: '🟢 Junior Einstieg', color: '#34d399', bg: 'rgba(52, 211, 153, 0.12)', borderColor: 'rgba(52, 211, 153, 0.3)' },
+  required: { label: 'Berufserfahrung erforderlich', tagClass: 'badge-rose', entryBadge: '🔴 Erfahrung erforderlich', color: '#fb7185', bg: 'rgba(244, 63, 94, 0.12)', borderColor: 'rgba(244, 63, 94, 0.3)' },
+  desired: { label: 'Berufserfahrung gewünscht', tagClass: 'badge-amber', entryBadge: '🟡 Erfahrung gewünscht', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.12)', borderColor: 'rgba(251, 191, 36, 0.3)' },
+  none: { label: 'Keine Angabe zur Erfahrung', tagClass: 'badge-sky', entryBadge: '⚪ k.A.', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.12)', borderColor: 'rgba(148, 163, 184, 0.3)' },
 };

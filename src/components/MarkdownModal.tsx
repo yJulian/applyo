@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Eye, Edit3, Save, Check, FileText } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { fileSystemService } from '../services/storage/fileSystem';
+import { aiService } from '../services/ai/aiService';
 import { JobMetadata } from '../types/job';
 
 interface MarkdownModalProps {
@@ -48,7 +49,7 @@ export const MarkdownModal: React.FC<MarkdownModalProps> = ({
       if (onFileSaved) onFileSaved();
       setTimeout(() => setSaveSuccess(false), 2000);
     } else {
-      alert('Fehler beim Speichern der Datei.');
+      aiService.notifyUser('Fehler beim Speichern der Datei.');
     }
   };
 

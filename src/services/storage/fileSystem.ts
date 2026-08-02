@@ -1,10 +1,18 @@
 import { openDB } from 'idb';
-import { JobMetadata, JobFile } from '../../types/job';
+import { JobMetadata, JobFile, CardSectionConfig, DEFAULT_CARD_SECTIONS } from '../../types/job';
+import { UserProfile, DEFAULT_PROFILE } from './profileService';
+import { aiService } from '../ai/aiService';
 
 const DB_NAME = 'applyo_filesystem_db';
 const STORE_NAME = 'handles';
 const HANDLE_KEY = 'root_dir_handle';
 const LOCAL_STORAGE_FALLBACK_KEY = 'applyo_jobs_fallback';
+
+export interface RootMetadata {
+  profile: UserProfile;
+  feedbackThresholdWeeks: number;
+  cardLayoutConfig: CardSectionConfig[];
+}
 
 export function sanitizeFolderName(str: string, maxLength = 45): string {
   if (!str) return 'Unbenannt';
@@ -73,6 +81,73 @@ export class FileSystemService {
     } catch (e) {
       console.warn('Fehler beim Speichern des Ordner-Handles in DB:', e);
     }
+  }
+
+  async saveRootMetadata(metadata: RootMetadata, handle?: FileSystemDirectoryHandle | null): Promise<void> {
+    let dirHandle = handle || this.rootHandle;
+    if (!dirHandle) {
+      dirHandle = await this.getStoredRootHandle();
+    }
+    if (!dirHandle) return;
+
+    const dataToWrite: RootMetadata = {
+      profile: metadata.profile,
+      feedbackThresholdWeeks: metadata.feedbackThresholdWeeks ?? 6,
+      cardLayoutConfig: metadata.cardLayoutConfig || DEFAULT_CARD_SECTIONS,
+    };
+
+    try {
+      const fileHandle = await dirHandle.getFileHandle('metadata.json', { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(JSON.stringify(dataToWrite, null, 2));
+      await writable.close();
+    } catch (e) {
+      console.warn('Fehler beim Speichern der root metadata.json:', e);
+    }
+  }
+
+  async loadRootMetadata(handle?: FileSystemDirectoryHandle | null): Promise<RootMetadata> {
+    let dirHandle = handle || this.rootHandle;
+    if (!dirHandle) {
+      dirHandle = await this.getStoredRootHandle();
+    }
+
+    let rootMeta: Partial<RootMetadata> = {};
+    let fileFound = false;
+
+    if (dirHandle) {
+      try {
+        const fileHandle = await dirHandle.getFileHandle('metadata.json', { create: false });
+        const file = await fileHandle.getFile();
+        const text = await file.text();
+        rootMeta = JSON.parse(text);
+        fileFound = true;
+      } catch (e) {
+        fileFound = false;
+      }
+    }
+
+    let profile: UserProfile = rootMeta.profile || DEFAULT_PROFILE;
+    let feedbackThresholdWeeks: number = rootMeta.feedbackThresholdWeeks ?? 6;
+    let cardLayoutConfig: CardSectionConfig[] = rootMeta.cardLayoutConfig || DEFAULT_CARD_SECTIONS;
+
+    // Migration for missing metadata.json
+    if (!fileFound) {
+      try {
+        const legacyProfileStr = localStorage.getItem('applyo_user_profile') || localStorage.getItem('applyo_profile_data');
+        if (legacyProfileStr) {
+          profile = { ...DEFAULT_PROFILE, ...JSON.parse(legacyProfileStr) };
+        }
+      } catch (err) {
+        console.warn('Fehler beim Auslesen von Alt-Profil aus localStorage:', err);
+      }
+
+      if (dirHandle) {
+        await this.saveRootMetadata({ profile, feedbackThresholdWeeks, cardLayoutConfig }, dirHandle);
+      }
+    }
+
+    return { profile, feedbackThresholdWeeks, cardLayoutConfig };
   }
 
   async checkPermissionState(handle?: FileSystemDirectoryHandle | null): Promise<'granted' | 'prompt' | 'denied'> {
@@ -387,7 +462,7 @@ export class FileSystemService {
     }
 
     if (!folderHandle) {
-      alert('Bitte wähle zuerst oben in der Leiste einen Arbeitsordner auf deiner Festplatte aus.');
+      aiService.notifyUser('Bitte wähle zuerst oben in der Leiste einen Arbeitsordner auf deiner Festplatte aus.');
       return false;
     }
 
@@ -399,7 +474,7 @@ export class FileSystemService {
       return true;
     } catch (e) {
       console.error('Fehler beim Speichern der Datei im Ordner:', e);
-      alert(`Datei konnte nicht im Ordner gespeichert werden: ${(e as Error).message}`);
+      aiService.notifyUser(`Datei konnte nicht im Ordner gespeichert werden: ${(e as Error).message}`);
       return false;
     }
   }
