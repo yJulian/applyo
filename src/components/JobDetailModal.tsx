@@ -35,10 +35,25 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   if (!isOpen || !job) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1100 }}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          (e.currentTarget as any)._mouseDownOnBackdrop = true;
+        } else {
+          (e.currentTarget as any)._mouseDownOnBackdrop = false;
+        }
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && (e.currentTarget as any)._mouseDownOnBackdrop) {
+          onClose();
+        }
+        (e.currentTarget as any)._mouseDownOnBackdrop = false;
+      }}
+      style={{ zIndex: 1100 }}
+    >
       <div
         className="glass-panel"
-        onClick={(e) => e.stopPropagation()}
         style={{
           width: '95%',
           maxWidth: '1100px',

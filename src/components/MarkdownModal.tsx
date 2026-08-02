@@ -57,8 +57,23 @@ export const MarkdownModal: React.FC<MarkdownModalProps> = ({
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '850px', width: '90vw', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          (e.currentTarget as any)._mouseDownOnBackdrop = true;
+        } else {
+          (e.currentTarget as any)._mouseDownOnBackdrop = false;
+        }
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && (e.currentTarget as any)._mouseDownOnBackdrop) {
+          onClose();
+        }
+        (e.currentTarget as any)._mouseDownOnBackdrop = false;
+      }}
+    >
+      <div className="modal-card glass-panel" style={{ maxWidth: '800px', height: '80vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '14px', borderBottom: '1px solid var(--border-color)', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden', flex: 1 }}>

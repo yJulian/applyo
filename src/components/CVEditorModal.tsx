@@ -293,7 +293,22 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
   const accentColors: CVAccentColor[] = ['#6366f1', '#10b981', '#06b6d4', '#8b5cf6', '#f43f5e', '#f59e0b'];
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          (e.currentTarget as any)._mouseDownOnBackdrop = true;
+        } else {
+          (e.currentTarget as any)._mouseDownOnBackdrop = false;
+        }
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && (e.currentTarget as any)._mouseDownOnBackdrop) {
+          onClose();
+        }
+        (e.currentTarget as any)._mouseDownOnBackdrop = false;
+      }}
+    >
       <div
         className="modal-card glass-panel"
         onClick={(e) => e.stopPropagation()}

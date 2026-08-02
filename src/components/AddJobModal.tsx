@@ -169,8 +169,23 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) {
+          (e.currentTarget as any)._mouseDownOnBackdrop = true;
+        } else {
+          (e.currentTarget as any)._mouseDownOnBackdrop = false;
+        }
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && (e.currentTarget as any)._mouseDownOnBackdrop) {
+          onClose();
+        }
+        (e.currentTarget as any)._mouseDownOnBackdrop = false;
+      }}
+    >
+      <div className="modal-card glass-panel" style={{ maxWidth: '640px' }}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
