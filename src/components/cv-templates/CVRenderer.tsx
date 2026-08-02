@@ -85,28 +85,28 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
               {data.header.title}
             </h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '0.8rem', color: '#64748b' }}>
-              {data.header.email && <a href={`mailto:${data.header.email}`} style={{ color: 'inherit', textDecoration: 'none' }}>✉ {data.header.email}</a>}
-              {data.header.phone && <a href={`tel:${data.header.phone}`} style={{ color: 'inherit', textDecoration: 'none' }}>📞 {data.header.phone}</a>}
-              {data.header.location && <span>📍 {data.header.location}</span>}
-              {data.header.citizenship && (data.header.showCitizenship ?? true) && <span>🚩 {data.header.citizenship}</span>}
+              {data.header.email && <a href={`mailto:${data.header.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'inherit', textDecoration: 'none' }}><Mail size={13} color={accentColor} />{data.header.email}</a>}
+              {data.header.phone && <a href={`tel:${data.header.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'inherit', textDecoration: 'none' }}><Phone size={13} color={accentColor} />{data.header.phone}</a>}
+              {data.header.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} color={accentColor} />{data.header.location}</span>}
+              {data.header.citizenship && (data.header.showCitizenship ?? true) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Flag size={13} color={accentColor} />{data.header.citizenship}</span>}
               {data.header.linkedin && (data.header.showLinkedin ?? true) && (
-                <a href={data.header.linkedin.startsWith('http') ? data.header.linkedin : `https://${data.header.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
-                  🔗 LinkedIn
+                <a href={data.header.linkedin.startsWith('http') ? data.header.linkedin : `https://${data.header.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
+                  <Globe size={13} color={accentColor} />LinkedIn
                 </a>
               )}
               {data.header.github && (data.header.showGithub ?? true) && (
-                <a href={data.header.github.startsWith('http') ? data.header.github : `https://${data.header.github}`} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
-                  💻 GitHub
+                <a href={data.header.github.startsWith('http') ? data.header.github : `https://${data.header.github}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
+                  <Code2 size={13} color={accentColor} />GitHub
                 </a>
               )}
               {data.header.xing && (data.header.showXing ?? true) && (
-                <a href={data.header.xing.startsWith('http') ? data.header.xing : `https://${data.header.xing}`} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
-                  💼 XING
+                <a href={data.header.xing.startsWith('http') ? data.header.xing : `https://${data.header.xing}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
+                  <Briefcase size={13} color={accentColor} />XING
                 </a>
               )}
               {data.header.website && (data.header.showWebsite ?? true) && (
-                <a href={data.header.website.startsWith('http') ? data.header.website : `https://${data.header.website}`} target="_blank" rel="noopener noreferrer" style={{ color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
-                  🌐 Website
+                <a href={data.header.website.startsWith('http') ? data.header.website : `https://${data.header.website}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>
+                  <Globe size={13} color={accentColor} />Website
                 </a>
               )}
             </div>
