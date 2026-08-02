@@ -378,18 +378,9 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 <select
                   value={job.status}
                   onChange={(e) => handleStatusChange(e.target.value as ApplicationStatus)}
+                  className="badge"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    height: '28px',
-                    minHeight: '28px',
-                    maxHeight: '28px',
-                    boxSizing: 'border-box',
                     padding: '0 24px 0 12px',
-                    borderRadius: '20px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    lineHeight: '26px',
                     background: statusMeta.bg,
                     color: statusMeta.color,
                     border: `1px solid ${statusMeta.color}`,
@@ -399,7 +390,6 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(statusMeta.color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 8px center',
-                    margin: 0,
                   }}
                 >
                   {Object.entries(STATUS_LABELS).map(([key, meta]) => (
@@ -411,23 +401,11 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
 
                 {/* Experience Level Tag */}
                 <span
+                  className="badge"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    height: '28px',
-                    minHeight: '28px',
-                    maxHeight: '28px',
-                    boxSizing: 'border-box',
-                    padding: '0 12px',
-                    borderRadius: '20px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    lineHeight: '26px',
-                    gap: '6px',
                     background: expMeta.bg,
                     color: expMeta.color,
                     border: `1px solid ${expMeta.borderColor}`,
-                    margin: 0,
                   }}
                 >
                   {expMeta.entryBadge}
@@ -439,25 +417,13 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.location} ${job.company}`.trim())}`}
                     target="_blank"
                     rel="noreferrer"
+                    className="badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      height: '28px',
-                      minHeight: '28px',
-                      maxHeight: '28px',
-                      boxSizing: 'border-box',
-                      padding: '0 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      lineHeight: '26px',
-                      gap: '5px',
                       color: 'var(--accent-cyan)',
                       textDecoration: 'none',
                       background: 'rgba(6, 182, 212, 0.1)',
                       border: '1px solid rgba(6, 182, 212, 0.25)',
                       transition: 'all 0.2s ease',
-                      margin: 0,
                     }}
                     title={`In Google Maps öffnen: ${job.location} (${job.company})`}
                   >
@@ -470,23 +436,11 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 {/* Salary Tag */}
                 {job.salary && (
                   <span
+                    className="badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      height: '28px',
-                      minHeight: '28px',
-                      maxHeight: '28px',
-                      boxSizing: 'border-box',
-                      padding: '0 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      lineHeight: '26px',
-                      gap: '5px',
                       color: 'var(--accent-emerald)',
                       background: 'rgba(16, 185, 129, 0.1)',
                       border: '1px solid rgba(16, 185, 129, 0.25)',
-                      margin: 0,
                     }}
                   >
                     <CircleDollarSign size={13} />
@@ -497,23 +451,11 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 {/* Feedback Badge Tag */}
                 {feedbackBadge && (
                   <span
+                    className="badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      height: '28px',
-                      minHeight: '28px',
-                      maxHeight: '28px',
-                      boxSizing: 'border-box',
-                      padding: '0 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      lineHeight: '26px',
-                      gap: '6px',
                       background: feedbackBadge.bg,
                       color: feedbackBadge.color,
                       border: `1px solid ${feedbackBadge.border}`,
-                      margin: 0,
                     }}
                   >
                     <Clock size={13} />

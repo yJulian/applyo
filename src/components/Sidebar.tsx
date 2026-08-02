@@ -310,7 +310,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           >
                             {statusMeta.label}
                           </span>
-                          <span className={`badge ${expMeta.tagClass}`} style={{ fontSize: '0.65rem' }}>
+                          <span className={`badge ${expMeta.tagClass}`}>
                             {expMeta.label}
                           </span>
                           {feedbackBadge && (
@@ -374,7 +374,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     >
                       {statusMeta.label}
                     </span>
-                    <span className={`badge ${expMeta.tagClass}`} style={{ fontSize: '0.65rem' }}>
+                    <span className={`badge ${expMeta.tagClass}`}>
                       {expMeta.label}
                     </span>
                     {feedbackBadge && (
