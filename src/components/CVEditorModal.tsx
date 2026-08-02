@@ -34,7 +34,7 @@ interface CVEditorModalProps {
   onClose: () => void;
   jobs: JobMetadata[];
   selectedJob: JobMetadata | null;
-  onSelectJob: (job: JobMetadata) => void;
+  onSelectJob?: (job: JobMetadata) => void;
 }
 
 export const CVEditorModal: React.FC<CVEditorModalProps> = ({
@@ -42,7 +42,6 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   onClose,
   jobs,
   selectedJob,
-  onSelectJob,
 }) => {
   if (!isOpen) return null;
 
@@ -334,26 +333,6 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>AI Lebenslauf Editor</h2>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Profil & Stelle verknüpfen, anpassen und als PDF exportieren</p>
             </div>
-
-            {/* Job Selector */}
-            <div style={{ marginLeft: '10px' }}>
-              <select
-                value={selectedJob?.id || ''}
-                onChange={(e) => {
-                  const found = jobs.find((j) => j.id === e.target.value);
-                  if (found) onSelectJob(found);
-                }}
-                className="input-field"
-                style={{ padding: '6px 12px', fontSize: '0.8rem', background: 'rgba(15, 23, 42, 0.8)', border: '1px solid var(--accent-primary)', color: '#fff', width: '220px' }}
-              >
-                <option value="">Stelle wählen...</option>
-                {jobs.map((j) => (
-                  <option key={j.id} value={j.id}>
-                    {j.company} - {j.title}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
           {/* Template & Color Selector Controls */}
@@ -368,8 +347,6 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               >
                 <option value="modern_glass">Vorlage: Modern Glass</option>
                 <option value="minimal_clean">Vorlage: Minimal Clean</option>
-                <option value="tech_slate">Vorlage: Tech Slate</option>
-                <option value="classic_executive">Vorlage: Executive Classic</option>
               </select>
             </div>
 

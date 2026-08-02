@@ -13,9 +13,7 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
 
   const fontScale = fontSize === 'small' ? '0.825rem' : fontSize === 'large' ? '1rem' : '0.9rem';
   const headingScale = fontSize === 'small' ? '1.1rem' : fontSize === 'large' ? '1.4rem' : '1.25rem';
-  const fontFamily = templateId === 'classic_executive'
-    ? "'Georgia', 'Times New Roman', serif"
-    : "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
+  const fontFamily = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
 
   const isMinimal = templateId === 'minimal_clean';
 
@@ -122,7 +120,7 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
         {data.summary && (
           <div style={{ marginBottom: '20px', paddingBottom: '12px', borderBottom: `1px solid ${accentColor}20`, pageBreakInside: 'avoid', breakInside: 'avoid' }}>
             <p style={{ fontStyle: isMinimal ? 'normal' : 'italic', color: '#334155', margin: 0, fontSize: '0.875rem', lineHeight: 1.55 }}>
-              "{data.summary}"
+              {data.summary}
             </p>
           </div>
         )}
@@ -183,14 +181,20 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
             {visibleSkills.length > 0 && (
               <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                 <MinimalSection title="Kenntnisse & Fähigkeiten" accentColor={accentColor} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {visibleSkills.map((cat) => (
-                    <div key={cat.id} style={{ fontSize: '0.825rem', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <strong style={{ color: '#0f172a', display: 'inline-block', minWidth: '150px' }}>{getSkillCat(cat)}: </strong>
-                      <span style={{ color: '#475569' }}>{getSkillList(cat).join(', ')}</span>
-                    </div>
-                  ))}
-                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
+                  <tbody>
+                    {visibleSkills.map((cat) => (
+                      <tr key={cat.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                        <td style={{ width: '1%', whiteSpace: 'nowrap', fontWeight: 700, color: '#0f172a', paddingRight: '16px', paddingBottom: '6px', verticalAlign: 'top' }}>
+                          {getSkillCat(cat)}:
+                        </td>
+                        <td style={{ color: '#475569', paddingBottom: '6px', verticalAlign: 'top' }}>
+                          {getSkillList(cat).join(', ')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
 

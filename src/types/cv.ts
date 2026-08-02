@@ -78,7 +78,7 @@ export interface CVData {
   styleOptions?: CVStyleOptions;
 }
 
-export type CVTemplateId = 'modern_glass' | 'minimal_clean' | 'tech_slate' | 'classic_executive';
+export type CVTemplateId = 'modern_glass' | 'minimal_clean';
 
 export type CVAccentColor = '#6366f1' | '#10b981' | '#06b6d4' | '#8b5cf6' | '#f43f5e' | '#f59e0b';
 
