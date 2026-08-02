@@ -46,7 +46,7 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
 
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [styleOptions, setStyleOptions] = useState<CVStyleOptions>(DEFAULT_CV_STYLE);
-  const [activeTab, setActiveTab] = useState<'header' | 'summary' | 'experiences' | 'skills' | 'education' | 'projects'>('header');
+  const [activeTab, setActiveTab] = useState<'profile' | 'experiences' | 'skills' | 'education' | 'projects'>('profile');
   
   // Loading & Saving States
   const [isGenerating, setIsGenerating] = useState(false);
@@ -69,18 +69,18 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
         setStyleOptions(profile.lastUsedCVStyle);
       }
 
+      let loadedCV: CVData | null = null;
+
       // Check if job already has a saved Lebenslauf.json or Lebenslauf.md
       if (selectedJob) {
         const savedJson = await fileSystemService.readTextFile(selectedJob, 'Lebenslauf.json');
         if (savedJson) {
           try {
             const parsed = JSON.parse(savedJson) as CVData;
-            setCvData(parsed);
+            loadedCV = parsed;
             if (parsed.styleOptions) {
               setStyleOptions(parsed.styleOptions);
             }
-            setIsGenerating(false);
-            return;
           } catch (e) {
             console.warn('Lebenslauf.json konnte nicht gelesen werden, erstelle neu:', e);
           }
@@ -88,8 +88,19 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
       }
 
       // Otherwise generate tailored CV
-      const generated = await aiService.generateTailoredCV(profile, selectedJob);
-      setCvData(generated);
+      if (!loadedCV) {
+        loadedCV = await aiService.generateTailoredCV(profile, selectedJob);
+      }
+
+      // Always sync global contact details (fullName, email, phone, location) from profile config
+      if (loadedCV && profile) {
+        loadedCV.header.fullName = profile.fullName || loadedCV.header.fullName;
+        loadedCV.header.email = profile.email || loadedCV.header.email;
+        loadedCV.header.phone = profile.phone || loadedCV.header.phone;
+        loadedCV.header.location = profile.location || loadedCV.header.location;
+      }
+
+      setCvData(loadedCV);
       setIsGenerating(false);
     }
 
@@ -367,11 +378,8 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, overflow: 'hidden', background: 'rgba(15, 23, 42, 0.5)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border-color)', padding: '14px' }}>
               {/* Accordion Tabs Header */}
               <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)', marginBottom: '12px', flexShrink: 0 }}>
-                <button onClick={() => setActiveTab('header')} className={`btn ${activeTab === 'header' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <User size={12} /> Header
-                </button>
-                <button onClick={() => setActiveTab('summary')} className={`btn ${activeTab === 'summary' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <FileText size={12} /> Profil
+                <button onClick={() => setActiveTab('profile')} className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
+                  <User size={12} /> Profil & Ziel
                 </button>
                 <button onClick={() => setActiveTab('experiences')} className={`btn ${activeTab === 'experiences' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
                   <Briefcase size={12} /> Erfahrung
@@ -389,37 +397,38 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
 
               {/* Tab Form Content */}
               <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {activeTab === 'header' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Vollständiger Name</label>
-                    <input type="text" className="input-field" value={cvData.header.fullName} onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, fullName: e.target.value } })} />
-                    <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Angestrebter Stellentitel</label>
-                    <input type="text" className="input-field" value={cvData.header.title} onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, title: e.target.value } })} />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                      <div>
-                        <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>E-Mail</label>
-                        <input type="text" className="input-field" value={cvData.header.email} onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, email: e.target.value } })} />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Telefon</label>
-                        <input type="text" className="input-field" value={cvData.header.phone} onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, phone: e.target.value } })} />
-                      </div>
+                {activeTab === 'profile' && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      ℹ Personendaten (<strong style={{ color: '#fff' }}>{cvData.header.fullName}</strong>, <strong style={{ color: '#fff' }}>{cvData.header.email}</strong>, <strong style={{ color: '#fff' }}>{cvData.header.phone}</strong>) werden aus deinem globalen Profil übernommen.
                     </div>
-                    <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Wohnort</label>
-                    <input type="text" className="input-field" value={cvData.header.location} onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, location: e.target.value } })} />
-                  </div>
-                )}
 
-                {activeTab === 'summary' && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Professionelle Zusammenfassung</label>
-                    <textarea
-                      rows={6}
-                      className="input-field"
-                      style={{ lineHeight: 1.5, resize: 'vertical' }}
-                      value={cvData.summary}
-                      onChange={(e) => setCvData({ ...cvData, summary: e.target.value })}
-                    />
+                    <div>
+                      <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                        Angestrebter Stellentitel
+                      </label>
+                      <input
+                        type="text"
+                        className="input-field"
+                        placeholder="z.B. Senior Fullstack Developer & Cloud Architect"
+                        value={cvData.header.title}
+                        onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, title: e.target.value } })}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                        Professionelle Zusammenfassung
+                      </label>
+                      <textarea
+                        rows={6}
+                        className="input-field"
+                        style={{ lineHeight: 1.5, resize: 'vertical' }}
+                        placeholder="Kurze Zusammenfassung deines Werdegangs und deiner Schwerpunkte..."
+                        value={cvData.summary}
+                        onChange={(e) => setCvData({ ...cvData, summary: e.target.value })}
+                      />
+                    </div>
                   </div>
                 )}
 
