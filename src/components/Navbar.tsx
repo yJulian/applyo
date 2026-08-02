@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays, BarChart3 } from 'lucide-react';
 import { AISettings } from '../types/job';
 
-type ViewMode = 'list' | 'board' | 'calendar';
+type ViewMode = 'list' | 'board' | 'calendar' | 'stats';
 
 interface NavbarProps {
   currentDirName: string | null;
@@ -18,9 +18,10 @@ interface NavbarProps {
 }
 
 const TABS: { id: ViewMode; label: string; icon: React.ReactNode; title: string }[] = [
-  { id: 'list',     label: 'Liste',    icon: <LayoutList size={14} />,   title: 'Listenansicht' },
-  { id: 'board',    label: 'Board',    icon: <Kanban size={14} />,       title: 'Kanban Board Ansicht' },
-  { id: 'calendar', label: 'Kalender', icon: <CalendarDays size={14} />, title: 'Kalenderansicht' },
+  { id: 'list',     label: 'Liste',       icon: <LayoutList size={14} />,   title: 'Listenansicht' },
+  { id: 'board',    label: 'Board',       icon: <Kanban size={14} />,       title: 'Kanban Board Ansicht' },
+  { id: 'calendar', label: 'Kalender',    icon: <CalendarDays size={14} />, title: 'Kalenderansicht' },
+  { id: 'stats',    label: 'Statistiken', icon: <BarChart3 size={14} />,    title: 'Statistiken & Badges' },
 ];
 
 // ─── Option 3: Underline Minimalist Tabs ────────────────────────────────────

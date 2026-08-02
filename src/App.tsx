@@ -10,6 +10,7 @@ import { AddJobModal } from './components/AddJobModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
 import { CVEditorModal } from './components/CVEditorModal';
+import { StatsView } from './components/StatsView';
 
 import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings, StatusHistoryEntry } from './types/job';
 import { fileSystemService } from './services/storage/fileSystem';
@@ -22,9 +23,9 @@ export default function App() {
   const [currentDirName, setCurrentDirName] = useState<string | null>(null);
   const [needsPermission, setNeedsPermission] = useState<boolean>(false);
 
-  // View Mode: 'list' | 'board' | 'calendar'
-  type ViewMode = 'list' | 'board' | 'calendar';
-  const VIEW_ORDER: ViewMode[] = ['list', 'board', 'calendar'];
+  // View Mode: 'list' | 'board' | 'calendar' | 'stats'
+  type ViewMode = 'list' | 'board' | 'calendar' | 'stats';
+  const VIEW_ORDER: ViewMode[] = ['list', 'board', 'calendar', 'stats'];
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const prevViewMode = useRef<ViewMode>('list');
   const [transitionClass, setTransitionClass] = useState('');
@@ -262,7 +263,7 @@ export default function App() {
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
           />
         </div>
-      ) : (
+      ) : viewMode === 'calendar' ? (
         <div key="calendar" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <CalendarView
             jobs={jobs}
@@ -275,6 +276,10 @@ export default function App() {
               handleViewModeChange('list');
             }}
           />
+        </div>
+      ) : (
+        <div key="stats" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <StatsView jobs={jobs} />
         </div>
       )}
 
