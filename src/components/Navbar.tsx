@@ -47,9 +47,6 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
           <div>
             <h1 className="gradient-text" style={{ fontSize: '1.35rem', lineHeight: 1.1 }}>Applyo</h1>
-            <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              PWA Management & KI Assistant
-            </span>
           </div>
         </div>
 

@@ -302,7 +302,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
                           <span
-                            class="badge"
+                            className="badge"
                             style={{
                               background: statusMeta.bg,
                               color: statusMeta.color,
@@ -315,7 +315,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           </span>
                           {feedbackBadge && (
                             <span
-                              class="badge"
+                              className="badge"
                               style={{
                                 background: feedbackBadge.bg,
                                 color: feedbackBadge.color,
@@ -366,7 +366,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </h4>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    <span class="badge"
+                    <span className="badge"
                       style={{
                         background: statusMeta.bg,
                         color: statusMeta.color,
@@ -379,7 +379,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </span>
                     {feedbackBadge && (
                       <span
-                        class="badge"
+                        className="badge"
                         style={{
                           background: feedbackBadge.bg,
                           color: feedbackBadge.color,
