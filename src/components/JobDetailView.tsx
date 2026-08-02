@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Building2,
   ExternalLink,
@@ -73,6 +73,41 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   feedbackThresholdWeeks = 6,
   cardLayoutConfig,
 }) => {
+  const [notes, setNotes] = useState(job?.notes || '');
+  const [isSavedNotes, setIsSavedNotes] = useState(false);
+  const [files, setFiles] = useState<JobFile[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+
+  // Markdown Viewer / Editor Modal State
+  const [selectedMdFile, setSelectedMdFile] = useState<string | null>(null);
+  const [isMdModalOpen, setIsMdModalOpen] = useState<boolean>(false);
+
+  // Feedback tracking state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [customDateTime, setCustomDateTime] = useState('');
+
+  // Custom Tag Input state
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagText, setNewTagText] = useState('');
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadJobFiles = useCallback(async () => {
+    if (!job) return;
+    setIsLoadingFiles(true);
+    const loadedFiles = await fileSystemService.listJobFiles(job);
+    setFiles(loadedFiles.filter((f) => f.name.toLowerCase() !== 'metadata.json'));
+    setIsLoadingFiles(false);
+  }, [job]);
+
+  useEffect(() => {
+    if (!job) return;
+    setNotes(job.notes || '');
+    setIsSavedNotes(false);
+    loadJobFiles();
+  }, [job, loadJobFiles]);
+
   if (!job) {
     if (needsPermission && currentDirName) {
       return (
@@ -135,24 +170,6 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     );
   }
 
-  const [notes, setNotes] = useState(job.notes || '');
-  const [isSavedNotes, setIsSavedNotes] = useState(false);
-  const [files, setFiles] = useState<JobFile[]>([]);
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
-
-  // Markdown Viewer / Editor Modal State
-  const [selectedMdFile, setSelectedMdFile] = useState<string | null>(null);
-  const [isMdModalOpen, setIsMdModalOpen] = useState<boolean>(false);
-
-  // Feedback tracking state
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [customDateTime, setCustomDateTime] = useState('');
-
-  // Custom Tag Input state
-  const [isAddingTag, setIsAddingTag] = useState(false);
-  const [newTagText, setNewTagText] = useState('');
-
   const latestFeedback = getLatestFeedbackDate(job);
   const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
 
@@ -175,20 +192,6 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     onUpdateJob(updated);
   };
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const loadJobFiles = async () => {
-    setIsLoadingFiles(true);
-    const loadedFiles = await fileSystemService.listJobFiles(job);
-    setFiles(loadedFiles.filter((f) => f.name.toLowerCase() !== 'metadata.json'));
-    setIsLoadingFiles(false);
-  };
-
-  useEffect(() => {
-    setNotes(job.notes || '');
-    setIsSavedNotes(false);
-    loadJobFiles();
-  }, [job.id]);
 
   const handleStatusChange = (newStatus: ApplicationStatus) => {
     onUpdateJob({

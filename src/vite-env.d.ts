@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+import 'react';
 
 // ─── Window Controls Overlay API ─────────────────────────────────────────────
 // https://developer.mozilla.org/en-US/docs/Web/API/WindowControlsOverlay

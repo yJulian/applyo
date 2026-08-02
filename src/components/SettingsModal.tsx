@@ -11,10 +11,8 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSettingsSaved }) => {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState<'profile' | 'feedback' | 'layout' | 'ai'>('profile');
-  const [settings, setSettings] = useState<AISettings>(aiService.getSettings());
+  const [settings, setSettings] = useState<AISettings>(() => aiService.getSettings());
   const [profile, setProfile] = useState<UserProfile>({
     fullName: '',
     email: '',
@@ -26,12 +24,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
     async function loadProfile() {
       const loaded = await profileService.getProfile();
       setProfile(loaded);
+      setSettings(aiService.getSettings());
     }
     loadProfile();
-  }, []);
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleSave = async () => {
     aiService.saveSettings(settings);

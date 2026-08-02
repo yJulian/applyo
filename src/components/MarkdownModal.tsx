@@ -20,8 +20,6 @@ export const MarkdownModal: React.FC<MarkdownModalProps> = ({
   fileName,
   onFileSaved,
 }) => {
-  if (!isOpen || !job || !fileName) return null;
-
   const [activeTab, setActiveTab] = useState<'viewer' | 'editor'>('viewer');
   const [content, setContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -29,14 +27,19 @@ export const MarkdownModal: React.FC<MarkdownModalProps> = ({
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!isOpen || !job || !fileName) return;
+    const currentJob = job;
+    const currentFileName = fileName;
     async function loadContent() {
       setIsLoading(true);
-      const text = await fileSystemService.readTextFile(job!, fileName!);
+      const text = await fileSystemService.readTextFile(currentJob, currentFileName);
       setContent(text);
       setIsLoading(false);
     }
     loadContent();
-  }, [job, fileName]);
+  }, [isOpen, job, fileName]);
+
+  if (!isOpen || !job || !fileName) return null;
 
   const handleSave = async () => {
     if (!job || !fileName) return;
