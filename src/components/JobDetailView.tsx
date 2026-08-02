@@ -250,6 +250,15 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
 
   const handleOpenFile = async (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
+
+    // If opening Lebenslauf.json or a CV json file, open in CVEditorModal
+    if (fileName === 'Lebenslauf.json' || ext === 'json') {
+      if (onOpenCVEditor) {
+        onOpenCVEditor();
+        return;
+      }
+    }
+
     if (ext === 'md' || ext === 'txt') {
       setSelectedMdFile(fileName);
       setIsMdModalOpen(true);

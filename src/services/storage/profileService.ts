@@ -1,6 +1,6 @@
 import { openDB } from 'idb';
 import { fileSystemService } from './fileSystem';
-import { CVExperience, CVEducation, CVSkillCategory, CVProject } from '../../types/cv';
+import { CVExperience, CVEducation, CVSkillCategory, CVProject, CVStyleOptions } from '../../types/cv';
 
 const DB_NAME = 'applyo_profile_db';
 const STORE_NAME = 'profile';
@@ -17,6 +17,7 @@ export interface UserProfile {
   globalExperiences?: CVExperience[];
   globalEducation?: CVEducation[];
   globalSkillCategories?: CVSkillCategory[];
+  lastUsedCVStyle?: CVStyleOptions;
 }
 
 export const DEFAULT_PROFILE: UserProfile = {

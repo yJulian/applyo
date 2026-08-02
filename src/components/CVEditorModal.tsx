@@ -17,6 +17,7 @@ import {
   Loader2,
   Check,
   Send,
+  Upload,
 } from 'lucide-react';
 import { JobMetadata } from '../types/job';
 import { CVData, CVStyleOptions, DEFAULT_CV_STYLE, CVTemplateId, CVAccentColor } from '../types/cv';
@@ -63,12 +64,21 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
       setIsGenerating(true);
       const profile = await profileService.getProfile();
       
+      // Load last used global CV style if available
+      if (profile.lastUsedCVStyle) {
+        setStyleOptions(profile.lastUsedCVStyle);
+      }
+
       // Check if job already has a saved Lebenslauf.json or Lebenslauf.md
       if (selectedJob) {
         const savedJson = await fileSystemService.readTextFile(selectedJob, 'Lebenslauf.json');
         if (savedJson) {
           try {
-            setCvData(JSON.parse(savedJson));
+            const parsed = JSON.parse(savedJson) as CVData;
+            setCvData(parsed);
+            if (parsed.styleOptions) {
+              setStyleOptions(parsed.styleOptions);
+            }
             setIsGenerating(false);
             return;
           } catch (e) {
@@ -85,6 +95,14 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
 
     initCV();
   }, [selectedJob]);
+
+  // Update style options and persist globally
+  const handleStyleChange = (newStyle: CVStyleOptions) => {
+    setStyleOptions(newStyle);
+    profileService.getProfile().then((p) => {
+      profileService.saveProfile({ ...p, lastUsedCVStyle: newStyle });
+    });
+  };
 
   // Handle Regenerate with AI
   const handleRegenerate = async () => {
@@ -118,8 +136,15 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
     }
 
     if (targetJob) {
+      // Persist current style inside the CV Data JSON
+      const dataToSave: CVData = { ...cvData, styleOptions };
+
+      // Save style globally
+      const profile = await profileService.getProfile();
+      await profileService.saveProfile({ ...profile, lastUsedCVStyle: styleOptions });
+
       // 1. Save JSON representation
-      await fileSystemService.writeTextFile(targetJob, 'Lebenslauf.json', JSON.stringify(cvData, null, 2));
+      await fileSystemService.writeTextFile(targetJob, 'Lebenslauf.json', JSON.stringify(dataToSave, null, 2));
 
       // 2. Save Markdown representation for easy reading
       const markdownCV = `# ${cvData.header.fullName} - Lebenslauf
@@ -141,7 +166,7 @@ ${cvData.skillCategories.map(cat => `**${cat.category}:** ${cat.skills.join(', '
 ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.startDate}-${edu.endDate})`).join('\n')}
 `;
       await fileSystemService.writeTextFile(targetJob, 'Lebenslauf.md', markdownCV);
-      aiService.notifyUser(`✅ Lebenslauf.md und Lebenslauf.json erfolgreich im Ordner "${targetJob.company}" gespeichert!`);
+      aiService.notifyUser(`✅ Lebenslauf.md und Lebenslauf.json (inkl. Vorlage) erfolgreich im Ordner "${targetJob.company}" gespeichert!`);
     } else {
       aiService.notifyUser('Wähle zuerst eine Stelle aus, um den Lebenslauf auf der Festplatte zu speichern.');
     }
@@ -170,6 +195,27 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
     }
   };
 
+  // Handle JSON Import
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const parsed = JSON.parse(evt.target?.result as string) as CVData;
+        setCvData(parsed);
+        if (parsed.styleOptions) {
+          handleStyleChange(parsed.styleOptions);
+        }
+        aiService.notifyUser('✅ Lebenslauf.json (inkl. Vorlage) erfolgreich geladen!');
+      } catch (err) {
+        aiService.notifyUser('Fehler beim Einlesen der JSON-Datei.');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // Action Buttons
   const accentColors: CVAccentColor[] = ['#6366f1', '#10b981', '#06b6d4', '#8b5cf6', '#f43f5e', '#f59e0b'];
 
   return (
@@ -228,7 +274,7 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               <Layout size={14} color="var(--accent-cyan)" />
               <select
                 value={styleOptions.templateId}
-                onChange={(e) => setStyleOptions({ ...styleOptions, templateId: e.target.value as CVTemplateId })}
+                onChange={(e) => handleStyleChange({ ...styleOptions, templateId: e.target.value as CVTemplateId })}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.775rem', cursor: 'pointer', outline: 'none' }}
               >
                 <option value="modern_glass">Vorlage: Modern Glass</option>
@@ -243,7 +289,7 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               {accentColors.map((color) => (
                 <button
                   key={color}
-                  onClick={() => setStyleOptions({ ...styleOptions, accentColor: color })}
+                  onClick={() => handleStyleChange({ ...styleOptions, accentColor: color })}
                   style={{
                     width: '20px',
                     height: '20px',
@@ -270,6 +316,16 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               {isGenerating ? <Loader2 size={14} className="spin-icon" /> : <Sparkles size={14} color="var(--accent-primary)" />}
               <span>KI Neu Generieren</span>
             </button>
+
+            <label
+              className="btn btn-secondary"
+              style={{ gap: '6px', fontSize: '0.8rem', padding: '7px 12px', cursor: 'pointer' }}
+              title="Bestehende Lebenslauf.json Datei von der Festplatte öffnen"
+            >
+              <Upload size={14} color="var(--accent-cyan)" />
+              <span>JSON Laden</span>
+              <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
+            </label>
 
             <button
               onClick={handleSaveToDirectory}

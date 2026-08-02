@@ -53,6 +53,7 @@ export interface CVData {
   skillCategories: CVSkillCategory[];
   projects: CVProject[];
   languages?: string[];
+  styleOptions?: CVStyleOptions;
 }
 
 export type CVTemplateId = 'modern_glass' | 'minimal_clean' | 'tech_slate' | 'classic_executive';
