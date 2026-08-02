@@ -24,6 +24,9 @@ import {
   Calendar,
   RotateCcw,
   CalendarPlus,
+  Star,
+  Tag,
+  X,
 } from 'lucide-react';
 import {
   JobMetadata,
@@ -146,6 +149,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   // Feedback tracking state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [customDateTime, setCustomDateTime] = useState('');
+
+  // Custom Tag Input state
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagText, setNewTagText] = useState('');
 
   const latestFeedback = getLatestFeedbackDate(job);
   const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
@@ -399,6 +406,96 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                   ))}
                 </select>
 
+                {/* Personal Rating Tag (Sterne 1-5) */}
+                <span
+                  className="badge"
+                  style={{
+                    background: 'rgba(245, 158, 11, 0.12)',
+                    color: '#fbbf24',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                  }}
+                  title="Persönliche Rangliste (Sterne anklicken)"
+                >
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={13}
+                      fill={(job.personalRating || 0) >= star ? '#fbbf24' : 'transparent'}
+                      color="#fbbf24"
+                      onClick={() => {
+                        onUpdateJob({ ...job, personalRating: star });
+                      }}
+                      style={{ cursor: 'pointer', transition: 'transform 0.15s ease' }}
+                    />
+                  ))}
+                  <span style={{ fontSize: '0.7rem', marginLeft: '2px', fontWeight: 700 }}>
+                    {job.personalRating ? `${job.personalRating}/5` : 'Rang'}
+                  </span>
+                </span>
+
+                {/* Prior Knowledge Level Tag (0-9 Scale) */}
+                {(() => {
+                  const level = job.priorKnowledgeLevel;
+                  let bg = 'rgba(255, 255, 255, 0.04)';
+                  let color = 'var(--text-muted)';
+                  let border = 'var(--border-color)';
+
+                  if (level === 0) {
+                    bg = 'rgba(52, 211, 153, 0.12)';
+                    color = '#34d399';
+                    border = 'rgba(52, 211, 153, 0.3)';
+                  } else if (level !== undefined && level !== null && level >= 8) {
+                    bg = 'rgba(244, 63, 94, 0.15)';
+                    color = '#fb7185';
+                    border = 'rgba(244, 63, 94, 0.4)';
+                  } else if (level !== undefined && level !== null) {
+                    bg = 'rgba(6, 182, 212, 0.12)';
+                    color = '#38bdf8';
+                    border = 'rgba(6, 182, 212, 0.3)';
+                  }
+
+                  return (
+                    <select
+                      value={level ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val !== '') {
+                          const newLvl = parseInt(val, 10);
+                          onUpdateJob({
+                            ...job,
+                            priorKnowledgeLevel: newLvl,
+                            requiresWorkExperience: newLvl >= 8,
+                          });
+                        }
+                      }}
+                      className="badge"
+                      style={{
+                        padding: '0 24px 0 12px',
+                        background: bg,
+                        color: color,
+                        border: `1px solid ${border}`,
+                        outline: 'none',
+                        cursor: 'pointer',
+                        appearance: 'none',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 8px center',
+                      }}
+                      title="Vorwissen-Skala: 0 (Nichts), 1-7 (Skills/Vorkenntnisse), 8-9 (Zwingend Firmen-Arbeitserfahrung)"
+                    >
+                      <option value="" style={{ background: 'var(--bg-card-solid)', color: 'var(--text-muted)' }}>🧠 Vorwissen: k.A. / Einstufen...</option>
+                      <option value={0} style={{ background: 'var(--bg-card-solid)', color: '#34d399' }}>🧠 Vorwissen: 0/9 (Keine Vorkenntnisse)</option>
+                      {[1, 2, 3, 4, 5, 6, 7].map((lvl) => (
+                        <option key={lvl} value={lvl} style={{ background: 'var(--bg-card-solid)', color: '#38bdf8' }}>
+                          🧠 Vorwissen: {lvl}/9 (Skills & Vorkenntnisse)
+                        </option>
+                      ))}
+                      <option value={8} style={{ background: 'var(--bg-card-solid)', color: '#fb7185' }}>🧠 Vorwissen: 8/9 (Firmen-Erfahrung gefordert)</option>
+                      <option value={9} style={{ background: 'var(--bg-card-solid)', color: '#fb7185' }}>🧠 Vorwissen: 9/9 (Experte & Firmen-Erfahrung)</option>
+                    </select>
+                  );
+                })()}
+
                 {/* Experience Level Tag */}
                 <span
                   className="badge"
@@ -461,6 +558,90 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                     <Clock size={13} />
                     {feedbackBadge.label}
                   </span>
+                )}
+
+                {/* Custom Tags */}
+                {(job.customTags || []).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="badge"
+                    style={{
+                      background: 'rgba(139, 92, 246, 0.15)',
+                      color: '#c084fc',
+                      border: '1px solid rgba(192, 132, 252, 0.3)',
+                    }}
+                  >
+                    <Tag size={11} />
+                    <span>{tag}</span>
+                    <X
+                      size={12}
+                      style={{ cursor: 'pointer', marginLeft: '2px', opacity: 0.8 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newTags = (job.customTags || []).filter((_, i) => i !== idx);
+                        onUpdateJob({ ...job, customTags: newTags });
+                      }}
+                    />
+                  </span>
+                ))}
+
+                {/* Add Custom Tag Input / Button */}
+                {isAddingTag ? (
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Tag..."
+                    value={newTagText}
+                    onChange={(e) => setNewTagText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTagText.trim()) {
+                        onUpdateJob({
+                          ...job,
+                          customTags: [...(job.customTags || []), newTagText.trim()],
+                        });
+                        setNewTagText('');
+                        setIsAddingTag(false);
+                      } else if (e.key === 'Escape') {
+                        setIsAddingTag(false);
+                        setNewTagText('');
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newTagText.trim()) {
+                        onUpdateJob({
+                          ...job,
+                          customTags: [...(job.customTags || []), newTagText.trim()],
+                        });
+                      }
+                      setNewTagText('');
+                      setIsAddingTag(false);
+                    }}
+                    className="badge"
+                    style={{
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-main)',
+                      border: '1px solid var(--accent-primary)',
+                      outline: 'none',
+                      width: '90px',
+                      padding: '0 8px',
+                    }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingTag(true)}
+                    className="badge"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: 'var(--text-muted)',
+                      border: '1px dashed var(--border-color)',
+                      cursor: 'pointer',
+                    }}
+                    title="Eigenen Tag hinzufügen"
+                  >
+                    <Plus size={12} />
+                    <span>Tag</span>
+                  </button>
                 )}
               </div>
             </div>

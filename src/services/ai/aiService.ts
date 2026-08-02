@@ -238,10 +238,12 @@ class AIService {
       }
     });
 
+    const priorKnowledgeLevel = isExplicitSenior ? 8 : (isJunior ? 1 : 3);
+
     return {
       company,
       title,
-      summary: `Manuell erstellte Zusammenfassung aus dem Text (${input.length} Zeichen).`,
+      summary: `Automatisch generierte Übersicht für ${title} bei ${company}.`,
       tasks: tasks.length > 0 ? tasks.slice(0, 5) : ['Mitarbeit im Team', 'Umsetzung von Projekten'],
       requirements: requirements.length > 0 ? requirements.slice(0, 5) : ['Motivation und Interesse am Fachgebiet'],
       benefits: ['Flexible Arbeitszeiten', 'Weiterbildungsmöglichkeiten'],
@@ -250,6 +252,7 @@ class AIService {
       requiresWorkExperience,
       experienceLevel: expLevel,
       experienceDetails: expDetails,
+      priorKnowledgeLevel,
     };
   }
 }

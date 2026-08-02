@@ -9,6 +9,8 @@ import {
   Unlock,
   X,
   Clock,
+  Star,
+  Tag,
 } from 'lucide-react';
 import {
   JobMetadata,
@@ -531,28 +533,99 @@ export const BoardView: React.FC<BoardViewProps> = ({
                           </div>
                         )}
 
-                        {/* Feedback Badge */}
-                        {feedbackBadge && (
-                          <div style={{ display: 'flex', alignItems: 'center', marginTop: '2px' }}>
+                        {/* Tags / Badges Bar (Rating, Vorwissen 0-9, Custom Tags, Feedback) */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
+                          {job.personalRating ? (
                             <span
+                              className="badge"
                               style={{
+                                background: 'rgba(245, 158, 11, 0.12)',
+                                color: '#fbbf24',
+                                border: '1px solid rgba(251, 191, 36, 0.3)',
                                 fontSize: '0.7rem',
-                                padding: '3px 8px',
-                                borderRadius: '10px',
-                                fontWeight: 600,
+                                height: '22px',
+                                minHeight: '22px',
+                                padding: '0 8px',
+                              }}
+                            >
+                              <Star size={10} fill="#fbbf24" color="#fbbf24" />
+                              <span>{job.personalRating}/5</span>
+                            </span>
+                          ) : null}
+
+                          {(() => {
+                            if (job.priorKnowledgeLevel === undefined || job.priorKnowledgeLevel === null) return null;
+                            const level = job.priorKnowledgeLevel;
+                            let bg = 'rgba(6, 182, 212, 0.12)';
+                            let color = '#38bdf8';
+                            let border = 'rgba(6, 182, 212, 0.3)';
+
+                            if (level === 0) {
+                              bg = 'rgba(52, 211, 153, 0.12)';
+                              color = '#34d399';
+                              border = 'rgba(52, 211, 153, 0.3)';
+                            } else if (level >= 8) {
+                              bg = 'rgba(244, 63, 94, 0.15)';
+                              color = '#fb7185';
+                              border = 'rgba(244, 63, 94, 0.4)';
+                            }
+
+                            return (
+                              <span
+                                className="badge"
+                                style={{
+                                  background: bg,
+                                  color: color,
+                                  border: `1px solid ${border}`,
+                                  fontSize: '0.7rem',
+                                  height: '22px',
+                                  minHeight: '22px',
+                                  padding: '0 8px',
+                                }}
+                                title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
+                              >
+                                🧠 {level}/9
+                              </span>
+                            );
+                          })()}
+
+                          {(job.customTags || []).map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="badge"
+                              style={{
+                                background: 'rgba(139, 92, 246, 0.15)',
+                                color: '#c084fc',
+                                border: '1px solid rgba(192, 132, 252, 0.3)',
+                                fontSize: '0.7rem',
+                                height: '22px',
+                                minHeight: '22px',
+                                padding: '0 8px',
+                              }}
+                            >
+                              <Tag size={10} />
+                              <span>{tag}</span>
+                            </span>
+                          ))}
+
+                          {feedbackBadge && (
+                            <span
+                              className="badge"
+                              style={{
                                 background: feedbackBadge.bg,
                                 color: feedbackBadge.color,
                                 border: `1px solid ${feedbackBadge.border}`,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
+                                fontSize: '0.7rem',
+                                height: '22px',
+                                minHeight: '22px',
+                                padding: '0 8px',
                               }}
                             >
                               <Clock size={11} />
                               {feedbackBadge.shortLabel}
                             </span>
-                          </div>
-                        )}
+                          )}
+                        </div>
 
                         {/* Bottom Bar: Status Selector & Details button */}
                         <div

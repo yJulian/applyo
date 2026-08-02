@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock, Clock } from 'lucide-react';
+import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock, Clock, Star, Tag, ArrowUpDown } from 'lucide-react';
 import { JobMetadata, ApplicationStatus, ExperienceLevel, STATUS_LABELS, EXPERIENCE_LABELS } from '../types/job';
 import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
@@ -37,6 +37,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   feedbackThresholdWeeks = 6,
 }) => {
   const [groupByCompany, setGroupByCompany] = useState<boolean>(true);
+  const [sortBy, setSortBy] = useState<'date' | 'rating' | 'knowledge'>('date');
 
   // Drag to scroll for status filter bar
   const filterScrollRef = useRef<HTMLDivElement>(null);
@@ -71,18 +72,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
     filterScrollRef.current.scrollLeft = scrollLeftState - walk;
   };
 
-  // Apply filters
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.tasks.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase()));
+  // Apply filters & sorting
+  const filteredJobs = jobs
+    .filter((job) => {
+      const matchesSearch =
+        job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        job.tasks.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (job.customTags || []).some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
-    const matchesStatus = selectedStatusFilter === 'all' || job.status === selectedStatusFilter;
-    const matchesExp = selectedExpFilter === 'all' || job.experienceLevel === selectedExpFilter;
+      const matchesStatus = selectedStatusFilter === 'all' || job.status === selectedStatusFilter;
+      const matchesExp = selectedExpFilter === 'all' || job.experienceLevel === selectedExpFilter;
 
-    return matchesSearch && matchesStatus && matchesExp;
-  });
+      return matchesSearch && matchesStatus && matchesExp;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'rating') {
+        return (b.personalRating || 0) - (a.personalRating || 0);
+      }
+      if (sortBy === 'knowledge') {
+        const aLvl = a.priorKnowledgeLevel ?? (a.requiresWorkExperience ? 8 : 3);
+        const bLvl = b.priorKnowledgeLevel ?? (b.requiresWorkExperience ? 8 : 3);
+        return aLvl - bLvl;
+      }
+      return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime();
+    });
 
   // Group by Company if enabled
   const groupedJobs = filteredJobs.reduce<Record<string, JobMetadata[]>>((acc, job) => {
@@ -181,26 +195,48 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Additional Filters & View Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Filter size={13} color="var(--text-muted)" />
-            <select
-              value={selectedExpFilter}
-              onChange={(e) => onSelectExpFilter(e.target.value as ExperienceLevel | 'all')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-muted)',
-                fontSize: '0.75rem',
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all" style={{ background: 'var(--bg-card-solid)' }}>Filter: Alle Stellen</option>
-              <option value="junior" style={{ background: 'var(--bg-card-solid)' }}>🟢 Junior / Ohne Vorerfahrung</option>
-              <option value="required" style={{ background: 'var(--bg-card-solid)' }}>🔴 Berufserfahrung erforderlich</option>
-              <option value="desired" style={{ background: 'var(--bg-card-solid)' }}>🟡 Erfahrung gewünscht</option>
-            </select>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <Filter size={13} color="var(--text-muted)" />
+              <select
+                value={selectedExpFilter}
+                onChange={(e) => onSelectExpFilter(e.target.value as ExperienceLevel | 'all')}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.75rem',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="all" style={{ background: 'var(--bg-card-solid)' }}>Filter: Alle Stellen</option>
+                <option value="junior" style={{ background: 'var(--bg-card-solid)' }}>🟢 Junior / Ohne Vorerfahrung</option>
+                <option value="required" style={{ background: 'var(--bg-card-solid)' }}>🔴 Berufserfahrung erforderlich</option>
+                <option value="desired" style={{ background: 'var(--bg-card-solid)' }}>🟡 Erfahrung gewünscht</option>
+              </select>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ArrowUpDown size={13} color="var(--text-muted)" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-muted)',
+                  fontSize: '0.75rem',
+                  outline: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="date" style={{ background: 'var(--bg-card-solid)' }}>Sortierung: Datum</option>
+                <option value="rating" style={{ background: 'var(--bg-card-solid)' }}>Sortierung: Rangliste ⭐</option>
+                <option value="knowledge" style={{ background: 'var(--bg-card-solid)' }}>Sortierung: Vorwissen 🧠</option>
+              </select>
+            </div>
           </div>
 
           <button
@@ -313,6 +349,60 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           <span className={`badge ${expMeta.tagClass}`}>
                             {expMeta.label}
                           </span>
+                          {job.personalRating ? (
+                            <span
+                              className="badge"
+                              style={{
+                                background: 'rgba(245, 158, 11, 0.12)',
+                                color: '#fbbf24',
+                                border: '1px solid rgba(251, 191, 36, 0.3)',
+                              }}
+                            >
+                              <Star size={10} fill="#fbbf24" color="#fbbf24" />
+                              <span>{job.personalRating}/5</span>
+                            </span>
+                          ) : null}
+                          {(() => {
+                            if (job.priorKnowledgeLevel === undefined || job.priorKnowledgeLevel === null) return null;
+                            const level = job.priorKnowledgeLevel;
+                            let bg = 'rgba(6, 182, 212, 0.12)';
+                            let color = '#38bdf8';
+                            let border = 'rgba(6, 182, 212, 0.3)';
+
+                            if (level === 0) {
+                              bg = 'rgba(52, 211, 153, 0.12)';
+                              color = '#34d399';
+                              border = 'rgba(52, 211, 153, 0.3)';
+                            } else if (level >= 8) {
+                              bg = 'rgba(244, 63, 94, 0.15)';
+                              color = '#fb7185';
+                              border = 'rgba(244, 63, 94, 0.4)';
+                            }
+
+                            return (
+                              <span
+                                className="badge"
+                                style={{ background: bg, color: color, border: `1px solid ${border}` }}
+                                title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
+                              >
+                                🧠 {level}/9
+                              </span>
+                            );
+                          })()}
+                          {(job.customTags || []).map((tag, idx) => (
+                            <span
+                              key={idx}
+                              className="badge"
+                              style={{
+                                background: 'rgba(139, 92, 246, 0.15)',
+                                color: '#c084fc',
+                                border: '1px solid rgba(192, 132, 252, 0.3)',
+                              }}
+                            >
+                              <Tag size={10} />
+                              <span>{tag}</span>
+                            </span>
+                          ))}
                           {feedbackBadge && (
                             <span
                               className="badge"
@@ -377,6 +467,60 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className={`badge ${expMeta.tagClass}`}>
                       {expMeta.label}
                     </span>
+                    {job.personalRating ? (
+                      <span
+                        className="badge"
+                        style={{
+                          background: 'rgba(245, 158, 11, 0.12)',
+                          color: '#fbbf24',
+                          border: '1px solid rgba(251, 191, 36, 0.3)',
+                        }}
+                      >
+                        <Star size={10} fill="#fbbf24" color="#fbbf24" />
+                        <span>{job.personalRating}/5</span>
+                      </span>
+                    ) : null}
+                    {(() => {
+                      if (job.priorKnowledgeLevel === undefined || job.priorKnowledgeLevel === null) return null;
+                      const level = job.priorKnowledgeLevel;
+                      let bg = 'rgba(6, 182, 212, 0.12)';
+                      let color = '#38bdf8';
+                      let border = 'rgba(6, 182, 212, 0.3)';
+
+                      if (level === 0) {
+                        bg = 'rgba(52, 211, 153, 0.12)';
+                        color = '#34d399';
+                        border = 'rgba(52, 211, 153, 0.3)';
+                      } else if (level >= 8) {
+                        bg = 'rgba(244, 63, 94, 0.15)';
+                        color = '#fb7185';
+                        border = 'rgba(244, 63, 94, 0.4)';
+                      }
+
+                      return (
+                        <span
+                          className="badge"
+                          style={{ background: bg, color: color, border: `1px solid ${border}` }}
+                          title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
+                        >
+                          🧠 {level}/9
+                        </span>
+                      );
+                    })()}
+                    {(job.customTags || []).map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="badge"
+                        style={{
+                          background: 'rgba(139, 92, 246, 0.15)',
+                          color: '#c084fc',
+                          border: '1px solid rgba(192, 132, 252, 0.3)',
+                        }}
+                      >
+                        <Tag size={10} />
+                        <span>{tag}</span>
+                      </span>
+                    ))}
                     {feedbackBadge && (
                       <span
                         className="badge"
