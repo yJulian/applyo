@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { JobDetailView } from './components/JobDetailView';
 import { BoardView } from './components/BoardView';
+import { CalendarView } from './components/CalendarView';
 import { JobDetailModal } from './components/JobDetailModal';
 import { AddJobModal } from './components/AddJobModal';
 import { SettingsModal } from './components/SettingsModal';
@@ -21,8 +22,8 @@ export default function App() {
   const [currentDirName, setCurrentDirName] = useState<string | null>(null);
   const [needsPermission, setNeedsPermission] = useState<boolean>(false);
 
-  // View Mode: 'list' | 'board'
-  const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+  // View Mode: 'list' | 'board' | 'calendar'
+  const [viewMode, setViewMode] = useState<'list' | 'board' | 'calendar'>('list');
 
   // Filters
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<ApplicationStatus | 'all'>('all');
@@ -226,7 +227,7 @@ export default function App() {
             cardLayoutConfig={aiSettings.cardLayoutConfig}
           />
         </div>
-      ) : (
+      ) : viewMode === 'board' ? (
         <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <BoardView
             jobs={jobs}
@@ -247,6 +248,20 @@ export default function App() {
               setIsDetailModalOpen(true);
             }}
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
+          />
+        </div>
+      ) : (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <CalendarView
+            jobs={jobs}
+            currentDirName={currentDirName}
+            needsPermission={needsPermission}
+            onSelectDirectory={handleSelectDirectory}
+            onGrantPermission={handleGrantPermission}
+            onSelectJob={(j) => {
+              setSelectedJobId(j.id);
+              setViewMode('list');
+            }}
           />
         </div>
       )}

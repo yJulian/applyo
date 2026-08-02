@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 interface NavbarProps {
@@ -11,8 +11,8 @@ interface NavbarProps {
   onOpenSettingsModal: () => void;
   onOpenCVEditor?: () => void;
   aiSettings: AISettings;
-  viewMode: 'list' | 'board';
-  onViewModeChange: (mode: 'list' | 'board') => void;
+  viewMode: 'list' | 'board' | 'calendar';
+  onViewModeChange: (mode: 'list' | 'board' | 'calendar') => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -108,6 +108,29 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Kanban size={15} />
               <span>Board</span>
+            </button>
+
+            <button
+              onClick={() => onViewModeChange('calendar')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '16px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                border: 'none',
+                background: viewMode === 'calendar' ? 'linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%)' : 'transparent',
+                color: viewMode === 'calendar' ? '#ffffff' : 'var(--text-muted)',
+                boxShadow: viewMode === 'calendar' ? '0 2px 10px rgba(99, 102, 241, 0.4)' : 'none',
+                transition: 'all 0.2s ease',
+              }}
+              title="Kalenderansicht – Statusänderungen & Rückmeldungen"
+            >
+              <CalendarDays size={15} />
+              <span>Kalender</span>
             </button>
           </div>
         </div>
