@@ -1,5 +1,5 @@
 import React from 'react';
-import { CVData, CVStyleOptions } from '../../types/cv';
+import { CVData, CVStyleOptions, CVExperience, CVEducation, CVSkillCategory, CVProject } from '../../types/cv';
 import { Mail, Phone, MapPin, Briefcase, GraduationCap, Code2, FolderGit2 } from 'lucide-react';
 
 interface CVRendererProps {
@@ -24,6 +24,21 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
   const visibleEducation = (data.education || []).filter(e => !e.hidden);
   const visibleSkills = (data.skillCategories || []).filter(s => !s.hidden);
   const visibleProjects = (data.projects || []).filter(p => !p.hidden);
+
+  // Helper functions to resolve 2-tier text (Global vs Tailored)
+  const getExpPosition = (e: CVExperience) => e.activeVersion === 'global' ? e.position : (e.tailoredPosition || e.position);
+  const getExpSummary = (e: CVExperience) => e.activeVersion === 'global' ? e.summary : (e.tailoredSummary || e.summary);
+  const getExpHighlights = (e: CVExperience) => e.activeVersion === 'global' ? e.highlights : (e.tailoredHighlights || e.highlights);
+
+  const getEduDegree = (e: CVEducation) => e.activeVersion === 'global' ? e.degree : (e.tailoredDegree || e.degree);
+  const getEduDesc = (e: CVEducation) => e.activeVersion === 'global' ? e.description : (e.tailoredDescription || e.description);
+
+  const getSkillCat = (s: CVSkillCategory) => s.activeVersion === 'global' ? s.category : (s.tailoredCategory || s.category);
+  const getSkillList = (s: CVSkillCategory) => s.activeVersion === 'global' ? s.skills : (s.tailoredSkills || s.skills);
+
+  const getProjTitle = (p: CVProject) => p.activeVersion === 'global' ? p.title : (p.tailoredTitle || p.title);
+  const getProjDesc = (p: CVProject) => p.activeVersion === 'global' ? p.description : (p.tailoredDescription || p.description);
+  const getProjTech = (p: CVProject) => p.activeVersion === 'global' ? p.techStack : (p.tailoredTechStack || p.techStack);
 
   return (
     <div
@@ -114,7 +129,7 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
 
         {/* --- CONTENT LAYOUT --- */}
         {isMinimal ? (
-          /* MINIMAL CLEAN: SINGLE COLUMN (Header -> Summary -> Experience -> Education -> Skills -> Projects -> Languages) */
+          /* MINIMAL CLEAN: SINGLE COLUMN */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Berufserfahrung */}
             {visibleExperiences.length > 0 && (
@@ -125,16 +140,16 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                     <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                         <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
-                          {exp.position} — <span style={{ color: '#475569', fontWeight: 600 }}>{exp.company}</span>
+                          {getExpPosition(exp)} — <span style={{ color: '#475569', fontWeight: 600 }}>{exp.company}</span>
                         </span>
                         <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700 }}>
                           {exp.startDate} – {exp.isCurrent ? 'Heute' : exp.endDate}
                         </span>
                       </div>
-                      {exp.summary && <p style={{ fontSize: '0.8rem', color: '#475569', margin: '2px 0' }}>{exp.summary}</p>}
-                      {exp.highlights && exp.highlights.length > 0 && (
+                      {getExpSummary(exp) && <p style={{ fontSize: '0.8rem', color: '#475569', margin: '2px 0' }}>{getExpSummary(exp)}</p>}
+                      {getExpHighlights(exp) && getExpHighlights(exp).length > 0 && (
                         <ul style={{ paddingLeft: '16px', margin: '3px 0 0 0', fontSize: '0.775rem', color: '#475569' }}>
-                          {exp.highlights.map((h, i) => (
+                          {getExpHighlights(exp).map((h, i) => (
                             <li key={i} style={{ marginBottom: '2px' }}>{h}</li>
                           ))}
                         </ul>
@@ -153,11 +168,11 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                   {visibleEducation.map((edu) => (
                     <div key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                        <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{edu.degree}</strong>
+                        <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{getEduDegree(edu)}</strong>
                         <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700 }}>{edu.startDate} – {edu.endDate}</span>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{edu.institution}</div>
-                      {edu.description && <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{edu.description}</p>}
+                      {getEduDesc(edu) && <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
                     </div>
                   ))}
                 </div>
@@ -171,8 +186,8 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {visibleSkills.map((cat) => (
                     <div key={cat.id} style={{ fontSize: '0.825rem', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <strong style={{ color: '#0f172a', display: 'inline-block', minWidth: '150px' }}>{cat.category}: </strong>
-                      <span style={{ color: '#475569' }}>{cat.skills.join(', ')}</span>
+                      <strong style={{ color: '#0f172a', display: 'inline-block', minWidth: '150px' }}>{getSkillCat(cat)}: </strong>
+                      <span style={{ color: '#475569' }}>{getSkillList(cat).join(', ')}</span>
                     </div>
                   ))}
                 </div>
@@ -187,12 +202,12 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                   {visibleProjects.map((p) => (
                     <div key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                       <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                        {p.title}
+                        {getProjTitle(p)}
                       </h4>
-                      <p style={{ fontSize: '0.775rem', color: '#475569', margin: '2px 0' }}>{p.description}</p>
-                      {p.techStack && p.techStack.length > 0 && (
+                      <p style={{ fontSize: '0.775rem', color: '#475569', margin: '2px 0' }}>{getProjDesc(p)}</p>
+                      {getProjTech(p) && getProjTech(p).length > 0 && (
                         <div style={{ fontSize: '0.725rem', color: accentColor, fontWeight: 600 }}>
-                          Tech: {p.techStack.join(', ')}
+                          Tech: {getProjTech(p).join(', ')}
                         </div>
                       )}
                     </div>
@@ -200,31 +215,19 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                 </div>
               </div>
             )}
-
-            {/* Sprachen */}
-            {data.languages && data.languages.length > 0 && (
-              <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                <MinimalSection title="Sprachen" accentColor={accentColor} />
-                <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '0.8rem', color: '#475569' }}>
-                  {data.languages.map((lang, idx) => (
-                    <li key={idx}>{lang}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
         ) : (
-          /* MODERN GLASS / TECH SLATE: 2-COLUMN EFFICIENT LAYOUT */
+          /* MODERN GLASS / TECH SLATE: 2-COLUMN LAYOUT */
           <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: '24px' }}>
-            {/* LEFT MAIN COLUMN: Berufserfahrung & Projekte */}
+            {/* LEFT MAIN COLUMN */}
             <div>
               <SectionTitle title="Berufserfahrung" icon={<Briefcase size={16} color={accentColor} />} accentColor={accentColor} />
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-                {data.experiences.map((exp) => (
+                {visibleExperiences.map((exp) => (
                   <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                       <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                        {exp.position}
+                        {getExpPosition(exp)}
                       </h4>
                       <span style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor }}>
                         {exp.startDate} – {exp.isCurrent ? 'Heute' : exp.endDate}
@@ -233,10 +236,10 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                     <div style={{ fontSize: '0.775rem', fontWeight: 600, color: '#64748b', marginBottom: '3px' }}>
                       {exp.company} {exp.location ? `• ${exp.location}` : ''}
                     </div>
-                    {exp.summary && <p style={{ fontSize: '0.775rem', color: '#334155', marginBottom: '3px' }}>{exp.summary}</p>}
-                    {exp.highlights && exp.highlights.length > 0 && (
+                    {getExpSummary(exp) && <p style={{ fontSize: '0.775rem', color: '#334155', marginBottom: '3px' }}>{getExpSummary(exp)}</p>}
+                    {getExpHighlights(exp) && getExpHighlights(exp).length > 0 && (
                       <ul style={{ paddingLeft: '14px', margin: 0, fontSize: '0.75rem', color: '#475569' }}>
-                        {exp.highlights.map((h, i) => (
+                        {getExpHighlights(exp).map((h, i) => (
                           <li key={i} style={{ marginBottom: '2px' }}>{h}</li>
                         ))}
                       </ul>
@@ -246,19 +249,19 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
               </div>
 
               {/* Projects */}
-              {showProjects && data.projects && data.projects.length > 0 && (
+              {showProjects && visibleProjects.length > 0 && (
                 <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <SectionTitle title="Ausgewählte Projekte" icon={<FolderGit2 size={16} color={accentColor} />} accentColor={accentColor} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {data.projects.map((p) => (
+                    {visibleProjects.map((p) => (
                       <div key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                         <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                          {p.title}
+                          {getProjTitle(p)}
                         </h4>
-                        <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{p.description}</p>
-                        {p.techStack && p.techStack.length > 0 && (
+                        <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getProjDesc(p)}</p>
+                        {getProjTech(p) && getProjTech(p).length > 0 && (
                           <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '3px' }}>
-                            {p.techStack.map((t, idx) => (
+                            {getProjTech(p).map((t, idx) => (
                               <span key={idx} style={{ fontSize: '0.675rem', padding: '1px 6px', borderRadius: '4px', background: `${accentColor}15`, color: accentColor, fontWeight: 600 }}>
                                 {t}
                               </span>
@@ -272,20 +275,20 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
               )}
             </div>
 
-            {/* RIGHT SIDEBAR: Skills & Education */}
+            {/* RIGHT SIDEBAR */}
             <div>
               {/* Skills */}
-              {data.skillCategories && data.skillCategories.length > 0 && (
+              {visibleSkills.length > 0 && (
                 <div style={{ marginBottom: '20px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <SectionTitle title="Skills & Expertisen" icon={<Code2 size={16} color={accentColor} />} accentColor={accentColor} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {data.skillCategories.map((cat) => (
+                    {visibleSkills.map((cat) => (
                       <div key={cat.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                         <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                          {cat.category}
+                          {getSkillCat(cat)}
                         </h5>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {cat.skills.map((s, idx) => (
+                          {getSkillList(cat).map((s, idx) => (
                             <span
                               key={idx}
                               style={{
@@ -309,36 +312,22 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
               )}
 
               {/* Education */}
-              {data.education && data.education.length > 0 && (
+              {visibleEducation.length > 0 && (
                 <div style={{ marginBottom: '16px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <SectionTitle title="Ausbildung & Abschlüsse" icon={<GraduationCap size={16} color={accentColor} />} accentColor={accentColor} />
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {data.education.map((edu) => (
+                    {visibleEducation.map((edu) => (
                       <div key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                         <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                          {edu.degree}
+                          {getEduDegree(edu)}
                         </h4>
                         <div style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor }}>
                           {edu.institution} ({edu.startDate} – {edu.endDate})
                         </div>
-                        {edu.description && <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0' }}>{edu.description}</p>}
+                        {getEduDesc(edu) && <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Languages */}
-              {data.languages && data.languages.length > 0 && (
-                <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                    Sprachen
-                  </h5>
-                  <ul style={{ paddingLeft: '14px', margin: 0, fontSize: '0.75rem', color: '#475569' }}>
-                    {data.languages.map((lang, idx) => (
-                      <li key={idx}>{lang}</li>
-                    ))}
-                  </ul>
                 </div>
               )}
             </div>

@@ -20,6 +20,11 @@ export interface CVExperience {
   summary?: string;
   highlights: string[];
   hidden?: boolean;
+  // Two-Tier Text Override
+  tailoredPosition?: string;
+  tailoredSummary?: string;
+  tailoredHighlights?: string[];
+  activeVersion?: 'global' | 'tailored';
 }
 
 export interface CVEducation {
@@ -31,6 +36,10 @@ export interface CVEducation {
   endDate: string;
   description?: string;
   hidden?: boolean;
+  // Two-Tier Text Override
+  tailoredDegree?: string;
+  tailoredDescription?: string;
+  activeVersion?: 'global' | 'tailored';
 }
 
 export interface CVSkillCategory {
@@ -38,6 +47,10 @@ export interface CVSkillCategory {
   category: string;
   skills: string[];
   hidden?: boolean;
+  // Two-Tier Text Override
+  tailoredCategory?: string;
+  tailoredSkills?: string[];
+  activeVersion?: 'global' | 'tailored';
 }
 
 export interface CVProject {
@@ -47,6 +60,11 @@ export interface CVProject {
   techStack: string[];
   link?: string;
   hidden?: boolean;
+  // Two-Tier Text Override
+  tailoredTitle?: string;
+  tailoredDescription?: string;
+  tailoredTechStack?: string[];
+  activeVersion?: 'global' | 'tailored';
 }
 
 export interface CVData {

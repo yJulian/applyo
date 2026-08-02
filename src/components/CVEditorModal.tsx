@@ -497,72 +497,121 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
 
                 {activeTab === 'experiences' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {cvData.experiences.map((exp, idx) => (
-                      <div key={exp.id} style={{ padding: '10px', borderRadius: '8px', background: exp.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: exp.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: exp.hidden ? 0.6 : 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <button
-                              onClick={() => {
-                                const updated = [...cvData.experiences];
-                                updated[idx].hidden = !updated[idx].hidden;
-                                setCvData({ ...cvData, experiences: updated });
-                              }}
-                              className={`btn ${exp.hidden ? 'btn-secondary' : 'btn-primary'}`}
-                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                              title={exp.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
-                            >
-                              {exp.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                              <span>{exp.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const filtered = cvData.experiences.filter((_, i) => i !== idx);
-                                setCvData({ ...cvData, experiences: filtered });
-                              }}
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                              title="Löschen"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                    {cvData.experiences.map((exp, idx) => {
+                      const isGlobalMode = exp.activeVersion === 'global';
+                      const currentPosition = isGlobalMode ? exp.position : (exp.tailoredPosition || exp.position);
+                      const currentHighlights = isGlobalMode ? (exp.highlights || []) : (exp.tailoredHighlights || exp.highlights || []);
+
+                      return (
+                        <div key={exp.id} style={{ padding: '10px', borderRadius: '8px', background: exp.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: exp.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: exp.hidden ? 0.6 : 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {/* 2-Tier Version Toggle */}
+                              <div style={{ display: 'flex', gap: '2px', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '6px' }}>
+                                <button
+                                  onClick={() => {
+                                    const updated = [...cvData.experiences];
+                                    updated[idx].activeVersion = 'global';
+                                    setCvData({ ...cvData, experiences: updated });
+                                  }}
+                                  style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: isGlobalMode ? 'var(--accent-cyan)' : 'transparent', color: isGlobalMode ? '#000' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
+                                  title="Globale Vorlage bearbeiten"
+                                >
+                                  🌐 Global
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const updated = [...cvData.experiences];
+                                    updated[idx].activeVersion = 'tailored';
+                                    setCvData({ ...cvData, experiences: updated });
+                                  }}
+                                  style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: !isGlobalMode ? 'var(--accent-primary)' : 'transparent', color: !isGlobalMode ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
+                                  title="KI-angepassten Text für diese Stelle bearbeiten"
+                                >
+                                  ✨ KI-Text
+                                </button>
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  const updated = [...cvData.experiences];
+                                  updated[idx].hidden = !updated[idx].hidden;
+                                  setCvData({ ...cvData, experiences: updated });
+                                }}
+                                className={`btn ${exp.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                                style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                                title={exp.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                              >
+                                {exp.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                                <span>{exp.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const filtered = cvData.experiences.filter((_, i) => i !== idx);
+                                  setCvData({ ...cvData, experiences: filtered });
+                                }}
+                                style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                                title="Löschen"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </div>
-                        </div>
-                        <input type="text" className="input-field" style={{ marginBottom: '6px', fontSize: '0.8rem' }} placeholder="Position" value={exp.position} onChange={(e) => {
-                          const updated = [...cvData.experiences];
-                          updated[idx].position = e.target.value;
-                          setCvData({ ...cvData, experiences: updated });
-                        }} />
-                        <input type="text" className="input-field" style={{ marginBottom: '6px', fontSize: '0.8rem' }} placeholder="Unternehmen" value={exp.company} onChange={(e) => {
-                          const updated = [...cvData.experiences];
-                          updated[idx].company = e.target.value;
-                          setCvData({ ...cvData, experiences: updated });
-                        }} />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
-                          <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2021)" value={exp.startDate} onChange={(e) => {
+
+                          <input
+                            type="text"
+                            className="input-field"
+                            style={{ marginBottom: '6px', fontSize: '0.8rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
+                            placeholder={isGlobalMode ? 'Position (Global)' : 'Position (KI-angepasst für Stelle)'}
+                            value={currentPosition}
+                            onChange={(e) => {
+                              const updated = [...cvData.experiences];
+                              if (isGlobalMode) {
+                                updated[idx].position = e.target.value;
+                              } else {
+                                updated[idx].tailoredPosition = e.target.value;
+                              }
+                              setCvData({ ...cvData, experiences: updated });
+                            }}
+                          />
+                          <input type="text" className="input-field" style={{ marginBottom: '6px', fontSize: '0.8rem' }} placeholder="Unternehmen" value={exp.company} onChange={(e) => {
                             const updated = [...cvData.experiences];
-                            updated[idx].startDate = e.target.value;
+                            updated[idx].company = e.target.value;
                             setCvData({ ...cvData, experiences: updated });
                           }} />
-                          <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. Heute)" value={exp.endDate} onChange={(e) => {
-                            const updated = [...cvData.experiences];
-                            updated[idx].endDate = e.target.value;
-                            setCvData({ ...cvData, experiences: updated });
-                          }} />
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2021)" value={exp.startDate} onChange={(e) => {
+                              const updated = [...cvData.experiences];
+                              updated[idx].startDate = e.target.value;
+                              setCvData({ ...cvData, experiences: updated });
+                            }} />
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. Heute)" value={exp.endDate} onChange={(e) => {
+                              const updated = [...cvData.experiences];
+                              updated[idx].endDate = e.target.value;
+                              setCvData({ ...cvData, experiences: updated });
+                            }} />
+                          </div>
+                          <textarea
+                            rows={2}
+                            className="input-field"
+                            style={{ fontSize: '0.75rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
+                            placeholder={isGlobalMode ? 'Stichpunkte (Global)...' : 'Stichpunkte (KI-angepasst)...'}
+                            value={currentHighlights.join('\n')}
+                            onChange={(e) => {
+                              const updated = [...cvData.experiences];
+                              const list = e.target.value.split('\n').filter(Boolean);
+                              if (isGlobalMode) {
+                                updated[idx].highlights = list;
+                              } else {
+                                updated[idx].tailoredHighlights = list;
+                              }
+                              setCvData({ ...cvData, experiences: updated });
+                            }}
+                          />
                         </div>
-                        <textarea
-                          rows={2}
-                          className="input-field"
-                          style={{ fontSize: '0.75rem' }}
-                          placeholder="Stichpunkte / Highlights (ein Punkt pro Zeile)..."
-                          value={exp.highlights ? exp.highlights.join('\n') : ''}
-                          onChange={(e) => {
-                            const updated = [...cvData.experiences];
-                            updated[idx].highlights = e.target.value.split('\n').filter(Boolean);
-                            setCvData({ ...cvData, experiences: updated });
-                          }}
-                        />
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     <button
                       onClick={() => {
@@ -594,60 +643,90 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
 
                 {activeTab === 'education' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {cvData.education.map((edu, idx) => (
-                      <div key={edu.id} style={{ padding: '10px', borderRadius: '8px', background: edu.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: edu.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: edu.hidden ? 0.6 : 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <button
-                              onClick={() => {
-                                const updated = [...cvData.education];
-                                updated[idx].hidden = !updated[idx].hidden;
-                                setCvData({ ...cvData, education: updated });
-                              }}
-                              className={`btn ${edu.hidden ? 'btn-secondary' : 'btn-primary'}`}
-                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                              title={edu.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
-                            >
-                              {edu.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                              <span>{edu.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const filtered = cvData.education.filter((_, i) => i !== idx);
-                                setCvData({ ...cvData, education: filtered });
-                              }}
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                              title="Löschen"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                    {cvData.education.map((edu, idx) => {
+                      const isGlobalMode = edu.activeVersion === 'global';
+                      const currentDegree = isGlobalMode ? edu.degree : (edu.tailoredDegree || edu.degree);
+
+                      return (
+                        <div key={edu.id} style={{ padding: '10px', borderRadius: '8px', background: edu.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: edu.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: edu.hidden ? 0.6 : 1 }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ display: 'flex', gap: '2px', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '6px' }}>
+                                <button
+                                  onClick={() => {
+                                    const updated = [...cvData.education];
+                                    updated[idx].activeVersion = 'global';
+                                    setCvData({ ...cvData, education: updated });
+                                  }}
+                                  style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: isGlobalMode ? 'var(--accent-cyan)' : 'transparent', color: isGlobalMode ? '#000' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
+                                >
+                                  🌐 Global
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const updated = [...cvData.education];
+                                    updated[idx].activeVersion = 'tailored';
+                                    setCvData({ ...cvData, education: updated });
+                                  }}
+                                  style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: !isGlobalMode ? 'var(--accent-primary)' : 'transparent', color: !isGlobalMode ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
+                                >
+                                  ✨ KI-Text
+                                </button>
+                              </div>
+
+                              <button
+                                onClick={() => {
+                                  const updated = [...cvData.education];
+                                  updated[idx].hidden = !updated[idx].hidden;
+                                  setCvData({ ...cvData, education: updated });
+                                }}
+                                className={`btn ${edu.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                                style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                              >
+                                {edu.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                                <span>{edu.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const filtered = cvData.education.filter((_, i) => i !== idx);
+                                  setCvData({ ...cvData, education: filtered });
+                                }}
+                                style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                          <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }} placeholder={isGlobalMode ? 'Abschluss (Global)' : 'Abschluss (KI-angepasst)'} value={currentDegree} onChange={(e) => {
+                            const updated = [...cvData.education];
+                            if (isGlobalMode) {
+                              updated[idx].degree = e.target.value;
+                            } else {
+                              updated[idx].tailoredDegree = e.target.value;
+                            }
+                            setCvData({ ...cvData, education: updated });
+                          }} />
+                          <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem' }} placeholder="Institution / Hochschule" value={edu.institution} onChange={(e) => {
+                            const updated = [...cvData.education];
+                            updated[idx].institution = e.target.value;
+                            setCvData({ ...cvData, education: updated });
+                          }} />
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2017)" value={edu.startDate} onChange={(e) => {
+                              const updated = [...cvData.education];
+                              updated[idx].startDate = e.target.value;
+                              setCvData({ ...cvData, education: updated });
+                            }} />
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. 2021)" value={edu.endDate} onChange={(e) => {
+                              const updated = [...cvData.education];
+                              updated[idx].endDate = e.target.value;
+                              setCvData({ ...cvData, education: updated });
+                            }} />
                           </div>
                         </div>
-                        <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem' }} placeholder="Abschluss (Master, Bachelor...)" value={edu.degree} onChange={(e) => {
-                          const updated = [...cvData.education];
-                          updated[idx].degree = e.target.value;
-                          setCvData({ ...cvData, education: updated });
-                        }} />
-                        <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem' }} placeholder="Institution / Hochschule" value={edu.institution} onChange={(e) => {
-                          const updated = [...cvData.education];
-                          updated[idx].institution = e.target.value;
-                          setCvData({ ...cvData, education: updated });
-                        }} />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                          <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2017)" value={edu.startDate} onChange={(e) => {
-                            const updated = [...cvData.education];
-                            updated[idx].startDate = e.target.value;
-                            setCvData({ ...cvData, education: updated });
-                          }} />
-                          <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. 2021)" value={edu.endDate} onChange={(e) => {
-                            const updated = [...cvData.education];
-                            updated[idx].endDate = e.target.value;
-                            setCvData({ ...cvData, education: updated });
-                          }} />
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     <button
                       onClick={() => {
