@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  cors-proxy:
+    build: .
+    image: applyo-cors-proxy:latest
+    container_name: applyo-cors-proxy
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+    restart: unless-stopped

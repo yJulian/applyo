@@ -50,9 +50,9 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     return cleaned;
   }
 
-  async extractJobData(input: string, config: AIProviderConfig): Promise<ExtractedJobData> {
+  private getRequestUrlAndHeaders(config: AIProviderConfig): { fetchUrl: string; headers: Record<string, string> } {
     const baseUrl = this.cleanBaseUrl(config.baseUrl);
-    const endpoint = `${baseUrl}/chat/completions`;
+    let targetEndpoint = `${baseUrl}/chat/completions`;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -61,9 +61,22 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
       headers['Authorization'] = `Bearer ${config.apiKey.trim()}`;
     }
 
+    if (config.corsProxyUrl && config.corsProxyUrl.trim()) {
+      headers['x-target-url'] = targetEndpoint;
+      return {
+        fetchUrl: config.corsProxyUrl.trim().replace(/\/+$/, ''),
+        headers,
+      };
+    }
+
+    return { fetchUrl: targetEndpoint, headers };
+  }
+
+  async extractJobData(input: string, config: AIProviderConfig): Promise<ExtractedJobData> {
+    const { fetchUrl, headers } = this.getRequestUrlAndHeaders(config);
     const model = config.model?.trim() || 'llama3';
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(fetchUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify({
@@ -93,16 +106,7 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     config: AIProviderConfig,
     _attachmentFile?: File | null
   ): Promise<string> {
-    const baseUrl = this.cleanBaseUrl(config.baseUrl);
-    const endpoint = `${baseUrl}/chat/completions`;
-
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    if (config.apiKey && config.apiKey.trim()) {
-      headers['Authorization'] = `Bearer ${config.apiKey.trim()}`;
-    }
-
+    const { fetchUrl, headers } = this.getRequestUrlAndHeaders(config);
     const model = config.model?.trim() || 'llama3';
 
     let systemContext = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
@@ -110,7 +114,7 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
       systemContext += `\nAktueller Job im Kontext:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}\nZusammenfassung: ${contextJob.summary}`;
     }
 
-    const response = await fetch(endpoint, {
+    const response = await fetch(fetchUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify({

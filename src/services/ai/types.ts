@@ -18,6 +18,7 @@ export interface AIProviderConfig {
   apiKey: string;
   model: string;
   baseUrl?: string;
+  corsProxyUrl?: string;
 }
 
 export interface IAIProvider {

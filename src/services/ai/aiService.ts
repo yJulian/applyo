@@ -18,6 +18,7 @@ export const DEFAULT_AI_SETTINGS: AISettings = {
   customOpenaiBaseUrl: 'http://localhost:11434/v1',
   customOpenaiKey: '',
   customOpenaiModel: 'llama-3.3-70b-instruct',
+  corsProxyUrl: '',
 };
 
 class AIService {
@@ -45,18 +46,21 @@ class AIService {
   }
 
   private getConfigForProvider(providerId: AIProviderId, settings: AISettings): AIProviderConfig {
+    const corsProxyUrl = settings.corsProxyUrl;
+
     switch (providerId) {
       case 'openai':
-        return { apiKey: settings.openaiKey, model: settings.openaiModel };
+        return { apiKey: settings.openaiKey, model: settings.openaiModel, corsProxyUrl };
       case 'gemini':
-        return { apiKey: settings.geminiKey, model: settings.geminiModel };
+        return { apiKey: settings.geminiKey, model: settings.geminiModel, corsProxyUrl };
       case 'claude':
-        return { apiKey: settings.claudeKey, model: settings.claudeModel };
+        return { apiKey: settings.claudeKey, model: settings.claudeModel, corsProxyUrl };
       case 'custom_openai':
         return {
           apiKey: settings.customOpenaiKey,
           model: settings.customOpenaiModel,
           baseUrl: settings.customOpenaiBaseUrl,
+          corsProxyUrl,
         };
     }
   }

@@ -1,0 +1,10 @@
+{
+  "name": "applyo-cors-proxy",
+  "version": "1.0.0",
+  "description": "Lightweight CORS proxy for Applyo custom AI endpoints",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

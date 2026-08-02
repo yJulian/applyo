@@ -244,6 +244,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     onChange={(e) => setSettings({ ...settings, customOpenaiKey: e.target.value })}
                   />
                 </div>
+
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--accent-cyan)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                    🌐 Optionaler CORS Proxy Server URL (z.B. http://localhost:8080)
+                  </label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="z.B. http://localhost:8080 oder https://applyo-proxy.example.com"
+                    value={settings.corsProxyUrl || ''}
+                    onChange={(e) => setSettings({ ...settings, corsProxyUrl: e.target.value })}
+                  />
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                    Falls der KI-Server keine Browser-CORS-Header mitsendet, leitet dieser Proxy die Anfragen sicher weiter.
+                  </span>
+                </div>
               </div>
             </div>
 

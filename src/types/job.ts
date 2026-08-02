@@ -54,6 +54,7 @@ export interface AISettings {
   customOpenaiBaseUrl: string;
   customOpenaiKey: string;
   customOpenaiModel: string;
+  corsProxyUrl?: string;
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {
