@@ -355,3 +355,57 @@ select option {
   font-size: 0.85rem;
   color: #fbbf24;
 }
+
+/* ==========================================
+   PRINT & VECTOR PDF EXPORT STYLES
+   ========================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide app shell, backdrops and no-print badges */
+  .app-container,
+  .modal-backdrop,
+  .no-print,
+  button {
+    display: none !important;
+  }
+
+  /* Expose CV container */
+  #cv-print-container,
+  #cv-print-container * {
+    visibility: visible !important;
+  }
+
+  #cv-print-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .cv-a4-page {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 12mm 16mm !important;
+    min-height: auto !important;
+    background: #ffffff !important;
+  }
+}

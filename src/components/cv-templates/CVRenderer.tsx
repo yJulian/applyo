@@ -72,8 +72,8 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
           position: 'relative',
         }}
       >
-        {/* Page Badge */}
-        <div style={{ position: 'absolute', top: '12px', right: '16px', fontSize: '0.675rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>
+        {/* Page Badge (Nur auf dem Bildschirm sichtbar, NIEMALS in der PDF) */}
+        <div className="no-print" style={{ position: 'absolute', top: '12px', right: '16px', fontSize: '0.675rem', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>
           📄 A4 Seite 1
         </div>
 
