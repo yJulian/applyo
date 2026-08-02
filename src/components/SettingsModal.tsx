@@ -260,6 +260,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                     Falls der KI-Server keine Browser-CORS-Header mitsendet, leitet dieser Proxy die Anfragen sicher weiter.
                   </span>
                 </div>
+
+                <div>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--accent-secondary)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
+                    🔑 CORS Proxy Auth Token / Secret (Optional)
+                  </label>
+                  <input
+                    type="password"
+                    className="input-field"
+                    placeholder="Proxy Geheimcode / Token (PROXY_TOKEN Env Var)"
+                    value={settings.corsProxyToken || ''}
+                    onChange={(e) => setSettings({ ...settings, corsProxyToken: e.target.value })}
+                  />
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                    Falls auf deinem Proxy-Server per PROXY_TOKEN ein Passwort / Token hinterlegt ist.
+                  </span>
+                </div>
               </div>
             </div>
 

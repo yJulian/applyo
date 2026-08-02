@@ -1,6 +1,7 @@
 import http from 'node:http';
 
 const PORT = process.env.PORT || 8080;
+const PROXY_TOKEN = process.env.PROXY_TOKEN || process.env.PROXY_SECRET || '';
 
 const server = http.createServer(async (req, res) => {
   // Set CORS headers for all responses
@@ -16,19 +17,37 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // Health check endpoint
-  if (req.url === '/health' || req.url === '/') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', service: 'applyo-cors-proxy' }));
-    return;
+  // Token Security Check: If PROXY_TOKEN or PROXY_SECRET env var is configured, require matching token
+  if (PROXY_TOKEN) {
+    const providedToken =
+      req.headers['x-proxy-token'] ||
+      req.headers['x-proxy-secret'] ||
+      (req.headers['authorization']?.startsWith('Bearer ') ? req.headers['authorization'].substring(7) : null);
+
+    if (providedToken !== PROXY_TOKEN) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'Unauthorized: Invalid or missing x-proxy-token header' }));
+      return;
+    }
   }
 
-  // Extract target URL from header 'x-target-url' or query param '?url=...'
-  const targetUrl =
+  // Extract target URL from header 'x-target-url', query param '?url=...', or path (/https://...)
+  let targetUrl =
     req.headers['x-target-url'] ||
-    new URL(req.url, `http://${req.headers.host}`).searchParams.get('url');
+    new URL(req.url, `http://${req.headers.host || 'localhost'}`).searchParams.get('url');
 
+  if (!targetUrl && (req.url.startsWith('/http://') || req.url.startsWith('/https://'))) {
+    targetUrl = req.url.substring(1);
+  }
+
+  // If no target URL provided: handle health check or return 400
   if (!targetUrl) {
+    if (req.url === '/health' || req.url === '/') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok', service: 'applyo-cors-proxy', authenticated: Boolean(PROXY_TOKEN) }));
+      return;
+    }
+
     res.writeHead(400, { 'Content-Type': 'application/json' });
     res.end(
       JSON.stringify({
@@ -47,10 +66,10 @@ const server = http.createServer(async (req, res) => {
     }
     const body = Buffer.concat(bodyBuffers);
 
-    // Forward request headers except host & x-target-url
+    // Forward request headers except internal proxy headers
     const forwardHeaders = {};
     for (const [key, value] of Object.entries(req.headers)) {
-      if (!['host', 'x-target-url', 'connection'].includes(key.toLowerCase())) {
+      if (!['host', 'x-target-url', 'x-proxy-token', 'x-proxy-secret', 'connection'].includes(key.toLowerCase())) {
         forwardHeaders[key] = value;
       }
     }
@@ -91,5 +110,5 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`🚀 Applyo CORS Proxy running on port ${PORT}`);
+  console.log(`🚀 Applyo CORS Proxy running on port ${PORT}${PROXY_TOKEN ? ' (Authentication Enabled)' : ''}`);
 });

@@ -9,4 +9,5 @@ services:
       - "8080:8080"
     environment:
       - PORT=8080
+      - PROXY_TOKEN=mein-geheimer-proxy-token
     restart: unless-stopped

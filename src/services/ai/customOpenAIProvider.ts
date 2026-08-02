@@ -35,13 +35,17 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
 }`;
   }
 
-  private cleanBaseUrl(url?: string): string {
+  private cleanBaseUrl(url?: string, isCorsProxyActive: boolean = false): string {
     if (!url || !url.trim()) return 'http://localhost:11434/v1';
     let cleaned = url.trim().replace(/\/+$/, '');
 
-    // Bypass browser CORS policy for KIT KI-Toolbox via Vite dev server proxy
-    if (cleaned.includes('ki-toolbox.scc.kit.edu')) {
+    // Bypass browser CORS policy for KIT KI-Toolbox via Vite dev server proxy ONLY if no CORS proxy is configured
+    if (!isCorsProxyActive && cleaned.includes('ki-toolbox.scc.kit.edu')) {
       return '/kit-api/api/v1';
+    }
+
+    if (isCorsProxyActive && cleaned.startsWith('/kit-api/')) {
+      cleaned = 'https://ki-toolbox.scc.kit.edu' + cleaned.replace('/kit-api', '');
     }
 
     if (!cleaned.endsWith('/v1') && !cleaned.includes('/v1/')) {
@@ -51,7 +55,8 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
   }
 
   private getRequestUrlAndHeaders(config: AIProviderConfig): { fetchUrl: string; headers: Record<string, string> } {
-    const baseUrl = this.cleanBaseUrl(config.baseUrl);
+    const isCorsProxyActive = Boolean(config.corsProxyUrl && config.corsProxyUrl.trim());
+    const baseUrl = this.cleanBaseUrl(config.baseUrl, isCorsProxyActive);
     let targetEndpoint = `${baseUrl}/chat/completions`;
 
     const headers: Record<string, string> = {
@@ -61,10 +66,13 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
       headers['Authorization'] = `Bearer ${config.apiKey.trim()}`;
     }
 
-    if (config.corsProxyUrl && config.corsProxyUrl.trim()) {
+    if (isCorsProxyActive) {
       headers['x-target-url'] = targetEndpoint;
+      if (config.corsProxyToken && config.corsProxyToken.trim()) {
+        headers['x-proxy-token'] = config.corsProxyToken.trim();
+      }
       return {
-        fetchUrl: config.corsProxyUrl.trim().replace(/\/+$/, ''),
+        fetchUrl: config.corsProxyUrl!.trim().replace(/\/+$/, ''),
         headers,
       };
     }
