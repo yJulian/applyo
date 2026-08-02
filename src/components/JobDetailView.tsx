@@ -287,6 +287,9 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   };
 
   const getFileIcon = (fileName: string) => {
+    if (fileName === 'Lebenslauf.json') {
+      return <FileText size={18} color="#c084fc" />;
+    }
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return <FileText size={18} color="#f87171" />;
     if (ext === 'docx' || ext === 'doc') return <FileText size={18} color="#60a5fa" />;
@@ -858,53 +861,78 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {files.map((file) => (
-                          <div
-                            key={file.name}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '10px 14px',
-                              background: 'rgba(255,255,255,0.03)',
-                              borderRadius: 'var(--radius-md)',
-                              border: '1px solid var(--border-color)',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              {getFileIcon(file.name)}
-                              <div>
-                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', display: 'block' }}>
-                                  {file.name}
-                                </span>
-                                <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                                  {formatFileSize(file.size)} • Geändert: {new Date(file.lastModified).toLocaleDateString('de-DE')}
-                                </span>
+                        {[...files]
+                          .sort((a, b) => {
+                            const isA = a.name === 'Lebenslauf.json';
+                            const isB = b.name === 'Lebenslauf.json';
+                            if (isA && !isB) return -1;
+                            if (!isA && isB) return 1;
+                            return a.name.localeCompare(b.name);
+                          })
+                          .map((file) => {
+                            const isCVFile = file.name === 'Lebenslauf.json';
+
+                            return (
+                              <div
+                                key={file.name}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '10px 14px',
+                                  background: isCVFile
+                                    ? 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)'
+                                    : 'rgba(255,255,255,0.03)',
+                                  borderRadius: 'var(--radius-md)',
+                                  border: isCVFile
+                                    ? '1px solid rgba(192, 132, 252, 0.6)'
+                                    : '1px solid var(--border-color)',
+                                  boxShadow: isCVFile
+                                    ? '0 0 16px rgba(192, 132, 252, 0.35)'
+                                    : 'none',
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  {getFileIcon(file.name)}
+                                  <div>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: isCVFile ? 700 : 600, color: isCVFile ? '#c084fc' : 'var(--text-main)', display: 'block' }}>
+                                      {file.name === 'Lebenslauf.json' ? 'Lebenslauf' : file.name}
+                                    </span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                                      {formatFileSize(file.size)} • Geändert: {new Date(file.lastModified).toLocaleDateString('de-DE')}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <button
+                                    onClick={() => handleOpenFile(file.name)}
+                                    className="btn btn-secondary"
+                                    style={{
+                                      padding: '4px 10px',
+                                      fontSize: '0.75rem',
+                                      gap: '4px',
+                                      borderColor: isCVFile ? 'rgba(192, 132, 252, 0.5)' : undefined,
+                                      color: isCVFile ? '#c084fc' : undefined,
+                                    }}
+                                    title="In Applyo ansehen oder bearbeiten"
+                                  >
+                                    <Eye size={13} color={isCVFile ? '#c084fc' : undefined} />
+                                    <span>{file.name === 'Lebenslauf.json' ? 'Im Editor öffnen' : file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleDeleteFile(file.name)}
+                                    className="btn-icon"
+                                    style={{ width: '28px', height: '28px', color: '#f87171' }}
+                                    title="Löschen"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <button
-                                onClick={() => handleOpenFile(file.name)}
-                                className="btn btn-secondary"
-                                style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
-                                title="In Applyo ansehen oder bearbeiten"
-                              >
-                                <Eye size={13} />
-                                <span>{file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteFile(file.name)}
-                                className="btn-icon"
-                                style={{ width: '28px', height: '28px', color: '#f87171' }}
-                                title="Löschen"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          })}
                       </div>
                     )}
                   </div>

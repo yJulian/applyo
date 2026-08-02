@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, FileText } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 interface NavbarProps {
@@ -9,7 +9,7 @@ interface NavbarProps {
   onGrantPermission: () => void;
   onOpenAddModal: () => void;
   onOpenSettingsModal: () => void;
-  onOpenCVEditor: () => void;
+  onOpenCVEditor?: () => void;
   aiSettings: AISettings;
   viewMode: 'list' | 'board';
   onViewModeChange: (mode: 'list' | 'board') => void;
@@ -22,7 +22,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onGrantPermission,
   onOpenAddModal,
   onOpenSettingsModal,
-  onOpenCVEditor,
   aiSettings,
   viewMode,
   onViewModeChange,
@@ -239,27 +238,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </button>
 
-          {/* CV Editor Button */}
-          <button
-            onClick={onOpenCVEditor}
-            className="btn btn-secondary"
-            style={{
-              padding: '8px 14px',
-              fontSize: '0.825rem',
-              gap: '6px',
-              borderColor: 'rgba(16, 185, 129, 0.4)',
-              background: 'rgba(16, 185, 129, 0.1)',
-              color: '#34d399',
-            }}
-            title="AI Lebenslauf Editor öffnen & PDF erstellen"
-          >
-            <FileText size={16} color="#34d399" />
-            <span>Lebenslauf Editor</span>
-          </button>
-
-          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.825rem' }}>
+          {/* Create Job Button */}
+          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.825rem', gap: '6px' }}>
             <Plus size={16} />
-            <span>Stelle hinzufügen</span>
+            <span>Neue Stelle</span>
           </button>
         </div>
       </div>
