@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { JobDetailView } from './components/JobDetailView';
+import { BoardView } from './components/BoardView';
+import { JobDetailModal } from './components/JobDetailModal';
 import { AddJobModal } from './components/AddJobModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
@@ -16,6 +18,9 @@ export default function App() {
   const [currentDirName, setCurrentDirName] = useState<string | null>(null);
   const [needsPermission, setNeedsPermission] = useState<boolean>(false);
 
+  // View Mode: 'list' | 'board'
+  const [viewMode, setViewMode] = useState<'list' | 'board'>('list');
+
   // Filters
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [selectedExpFilter, setSelectedExpFilter] = useState<ExperienceLevel | 'all'>('all');
@@ -25,6 +30,7 @@ export default function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const [aiSettings, setAiSettings] = useState<AISettings>(aiService.getSettings());
 
@@ -147,37 +153,63 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         aiSettings={aiSettings}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
 
-      {/* Main Grid: Sidebar + Detail View */}
-      <div className="main-layout">
-        <Sidebar
-          jobs={jobs}
-          selectedJobId={selectedJobId}
-          onSelectJob={(j) => setSelectedJobId(j.id)}
-          selectedStatusFilter={selectedStatusFilter}
-          onSelectStatusFilter={setSelectedStatusFilter}
-          selectedExpFilter={selectedExpFilter}
-          onSelectExpFilter={setSelectedExpFilter}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          currentDirName={currentDirName}
-          needsPermission={needsPermission}
-          onSelectDirectory={handleSelectDirectory}
-          onGrantPermission={handleGrantPermission}
-        />
+      {/* Main Container: List View vs Board View */}
+      {viewMode === 'list' ? (
+        <div className="main-layout">
+          <Sidebar
+            jobs={jobs}
+            selectedJobId={selectedJobId}
+            onSelectJob={(j) => setSelectedJobId(j.id)}
+            selectedStatusFilter={selectedStatusFilter}
+            onSelectStatusFilter={setSelectedStatusFilter}
+            selectedExpFilter={selectedExpFilter}
+            onSelectExpFilter={setSelectedExpFilter}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            currentDirName={currentDirName}
+            needsPermission={needsPermission}
+            onSelectDirectory={handleSelectDirectory}
+            onGrantPermission={handleGrantPermission}
+          />
 
-        <JobDetailView
-          job={selectedJob}
-          currentDirName={currentDirName}
-          needsPermission={needsPermission}
-          onSelectDirectory={handleSelectDirectory}
-          onGrantPermission={handleGrantPermission}
-          onUpdateJob={handleUpdateJob}
-          onDeleteJob={handleDeleteJob}
-          onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
-        />
-      </div>
+          <JobDetailView
+            job={selectedJob}
+            currentDirName={currentDirName}
+            needsPermission={needsPermission}
+            onSelectDirectory={handleSelectDirectory}
+            onGrantPermission={handleGrantPermission}
+            onUpdateJob={handleUpdateJob}
+            onDeleteJob={handleDeleteJob}
+            onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
+          />
+        </div>
+      ) : (
+        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <BoardView
+            jobs={jobs}
+            selectedJobId={selectedJobId}
+            onSelectJob={(j) => setSelectedJobId(j.id)}
+            onUpdateJob={handleUpdateJob}
+            onOpenAddModal={() => setIsAddModalOpen(true)}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            selectedExpFilter={selectedExpFilter}
+            onSelectExpFilter={setSelectedExpFilter}
+            currentDirName={currentDirName}
+            needsPermission={needsPermission}
+            onSelectDirectory={handleSelectDirectory}
+            onGrantPermission={handleGrantPermission}
+            onOpenDetailModal={(j) => {
+              setSelectedJobId(j.id);
+              setIsDetailModalOpen(true);
+            }}
+          />
+        </div>
+      )}
 
       {/* Modals & Drawers */}
       <AddJobModal
@@ -192,6 +224,19 @@ export default function App() {
         onSettingsSaved={(newSettings: AISettings) => {
           setAiSettings(newSettings);
         }}
+      />
+
+      <JobDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        job={selectedJob}
+        currentDirName={currentDirName}
+        needsPermission={needsPermission}
+        onSelectDirectory={handleSelectDirectory}
+        onGrantPermission={handleGrantPermission}
+        onUpdateJob={handleUpdateJob}
+        onDeleteJob={handleDeleteJob}
+        onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
       />
 
       <AIAssistantDrawer
