@@ -97,6 +97,9 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
       createdDate: new Date().toISOString(),
       updatedDate: new Date().toISOString(),
       notes: '',
+      priorKnowledgeLevel: manualRequiresExp ? 8 : 2,
+      personalRating: 3,
+      customTags: [],
     };
 
     const res = await fileSystemService.saveJob(newJob, handle);
@@ -135,6 +138,9 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
       createdDate: new Date().toISOString(),
       updatedDate: new Date().toISOString(),
       notes: '',
+      priorKnowledgeLevel: extracted.priorKnowledgeLevel ?? (extracted.requiresWorkExperience ? 8 : 3),
+      personalRating: 3,
+      customTags: [],
     };
 
     const res = await fileSystemService.saveJob(newJob, handle);

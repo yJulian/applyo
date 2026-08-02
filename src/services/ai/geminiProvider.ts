@@ -19,6 +19,12 @@ STRIKTE REGELN FÜR ARBEITSERFAHRUNG (requiresWorkExperience & experienceLevel):
    - Setze requiresWorkExperience = false
    - Hebe in experienceDetails explizit hervor: "Junior-Stelle: Berufseinsteiger ohne bisherige Firmen-Anstellung ausdrücklich willkommen"
 
+3. SKALA FÜR BENÖTIGTES VORWISSEN (priorKnowledgeLevel: 0 bis 9):
+   Bestimme eine Ganzzahl von 0 bis 9, die beschreibt, wie viel Vorwissen/Qualifikation gefordert wird:
+   - 0: Gar nichts gefordert (keine Vorkenntnisse, Quereinstieg ohne Erfahrung/Ausbildung möglich).
+   - 1 bis 7: Abstufung an benötigtem Vorwissen/Skills (z.B. Programmiersprachen, Fachwissen, Studium, Zertifikate), ABER KEINE zwingend erforderliche reale Arbeitserfahrung an einer Firma.
+   - 8 und 9 (also genau 8 und 9): Erfordern ZWINGEND bereits vorhandene reale Arbeitserfahrung AN EINER FIRMA in einem Unternehmen/Betrieb (z.B. mehrjährige Unternehmens-Praxiserfahrung).
+
 Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit folgendem Schema:
 {
   "company": "Firmenname",
@@ -31,7 +37,8 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
   "location": "Standort oder null",
   "requiresWorkExperience": false,
   "experienceLevel": "junior" | "required" | "desired" | "none",
-  "experienceDetails": "Spezifische Angabe"
+  "experienceDetails": "Spezifische Angabe",
+  "priorKnowledgeLevel": 3
 }`;
   }
 

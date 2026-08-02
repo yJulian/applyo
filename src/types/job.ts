@@ -32,6 +32,9 @@ export interface JobMetadata {
   notes?: string;
   relativePath?: string; // e.g. "AcmeCorp/Senior Fullstack Developer"
   feedbackHistory?: string[]; // Stack of ISO timestamp strings for last received feedback
+  priorKnowledgeLevel?: number; // Skala 0-9 (0 = gar nichts gefordert, 1-7 = Skills/Vorwissen ohne Firmen-Erfahrung, 8-9 = zwingende echte Arbeitserfahrung an einer Firma)
+  personalRating?: number; // 1-5 Sterne für persönliche Rangliste
+  customTags?: string[]; // Eigene benutzerdefinierte Tags
 }
 
 export interface JobFile {

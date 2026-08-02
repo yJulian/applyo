@@ -8,6 +8,7 @@ import { JobDetailModal } from './components/JobDetailModal';
 import { AddJobModal } from './components/AddJobModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
+import { CVEditorModal } from './components/CVEditorModal';
 
 import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings } from './types/job';
 import { fileSystemService } from './services/storage/fileSystem';
@@ -33,6 +34,7 @@ export default function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isCVEditorOpen, setIsCVEditorOpen] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
 
   const [aiSettings, setAiSettings] = useState<AISettings>(aiService.getSettings());
@@ -171,6 +173,7 @@ export default function App() {
         onGrantPermission={handleGrantPermission}
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
+        onOpenCVEditor={() => setIsCVEditorOpen(true)}
         aiSettings={aiSettings}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
@@ -205,6 +208,7 @@ export default function App() {
             onUpdateJob={handleUpdateJob}
             onDeleteJob={handleDeleteJob}
             onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
+            onOpenCVEditor={() => setIsCVEditorOpen(true)}
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
             cardLayoutConfig={aiSettings.cardLayoutConfig}
           />
@@ -249,6 +253,14 @@ export default function App() {
         }}
       />
 
+      <CVEditorModal
+        isOpen={isCVEditorOpen}
+        onClose={() => setIsCVEditorOpen(false)}
+        jobs={jobs}
+        selectedJob={selectedJob}
+        onSelectJob={(j) => setSelectedJobId(j.id)}
+      />
+
       <JobDetailModal
         isOpen={isDetailModalOpen}
         onClose={() => setIsDetailModalOpen(false)}
@@ -266,61 +278,69 @@ export default function App() {
 
       <AIAssistantDrawer
         isOpen={isAIDrawerOpen}
-        onClose={() => setIsAIDrawerOpen(false)}
+        onClose={() => {
+          setIsAIDrawerOpen(false);
+          setIsFabHovered(false);
+        }}
         job={selectedJob}
       />
 
-      {/* Floating AI Assistant Action Button (Bottom-Right, Expands & Collapses on Hover) */}
-      <button
-        onClick={() => setIsAIDrawerOpen(!isAIDrawerOpen)}
-        onMouseEnter={() => setIsFabHovered(true)}
-        onMouseLeave={() => setIsFabHovered(false)}
-        style={{
-          position: 'fixed',
-          bottom: '28px',
-          right: '28px',
-          height: '52px',
-          minWidth: '52px',
-          borderRadius: '26px',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingLeft: isFabHovered ? '16px' : '15px',
-          paddingRight: isFabHovered ? '16px' : '15px',
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(16px)',
-          border: '1px solid rgba(99, 102, 241, 0.4)',
-          boxShadow: isFabHovered
-            ? '0 10px 30px rgba(99, 102, 241, 0.5), 0 0 20px rgba(99, 102, 241, 0.3)'
-            : '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.2)',
-          cursor: 'pointer',
-          opacity: isFabHovered ? 1 : 0.7,
-          transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-          zIndex: 1050,
-          overflow: 'hidden',
-          whiteSpace: 'nowrap',
-        }}
-        title={`KI-Assistent öffnen (${aiSettings.activeProvider.toUpperCase()})`}
-      >
-        <Sparkles size={22} color="#a5b4fc" style={{ flexShrink: 0 }} />
-        <span
-          style={{
-            fontSize: '0.875rem',
-            fontWeight: 600,
-            color: '#ffffff',
-            whiteSpace: 'nowrap',
-            maxWidth: isFabHovered ? '110px' : '0px',
-            opacity: isFabHovered ? 1 : 0,
-            marginLeft: isFabHovered ? '8px' : '0px',
-            overflow: 'hidden',
-            transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
-            display: 'inline-block',
-            verticalAlign: 'middle',
+      {/* Floating AI Assistant Action Button (Versteckt wenn KI-Karrierelotse offen ist) */}
+      {!isAIDrawerOpen && (
+        <button
+          onClick={() => {
+            setIsFabHovered(false);
+            setIsAIDrawerOpen(true);
           }}
+          onMouseEnter={() => setIsFabHovered(true)}
+          onMouseLeave={() => setIsFabHovered(false)}
+          style={{
+            position: 'fixed',
+            bottom: '28px',
+            right: '28px',
+            height: '52px',
+            minWidth: '52px',
+            borderRadius: '26px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingLeft: isFabHovered ? '16px' : '15px',
+            paddingRight: isFabHovered ? '16px' : '15px',
+            background: 'rgba(15, 23, 42, 0.85)',
+            backdropFilter: 'blur(16px)',
+            border: '1px solid rgba(99, 102, 241, 0.4)',
+            boxShadow: isFabHovered
+              ? '0 10px 30px rgba(99, 102, 241, 0.5), 0 0 20px rgba(99, 102, 241, 0.3)'
+              : '0 8px 24px rgba(0, 0, 0, 0.4), 0 0 15px rgba(99, 102, 241, 0.2)',
+            cursor: 'pointer',
+            opacity: isFabHovered ? 1 : 0.7,
+            transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+            zIndex: 1050,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+          }}
+          title={`KI-Karrierelotse öffnen (${aiSettings.activeProvider.toUpperCase()})`}
         >
-          KI-Assistent
-        </span>
-      </button>
+          <Sparkles size={22} color="#a5b4fc" style={{ flexShrink: 0 }} />
+          <span
+            style={{
+              fontSize: '0.875rem',
+              fontWeight: 600,
+              color: '#ffffff',
+              whiteSpace: 'nowrap',
+              maxWidth: isFabHovered ? '110px' : '0px',
+              opacity: isFabHovered ? 1 : 0,
+              marginLeft: isFabHovered ? '8px' : '0px',
+              overflow: 'hidden',
+              transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+              display: 'inline-block',
+              verticalAlign: 'middle',
+            }}
+          >
+            KI-Assistent
+          </span>
+        </button>
+      )}
     </div>
   );
 }

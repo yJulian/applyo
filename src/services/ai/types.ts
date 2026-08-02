@@ -12,6 +12,7 @@ export interface ExtractedJobData {
   experienceLevel: ExperienceLevel;
   requiresWorkExperience: boolean; // true = Berufserfahrung erforderlich, false = Junior / Einstieg ohne Erfahrung möglich
   experienceDetails?: string;     // Konkrete Jahre & Details
+  priorKnowledgeLevel?: number; // Skala 0-9 (0 = keine Vorkenntnisse, 1-7 = Skills/Vorwissen ohne Firmen-Erfahrung, 8-9 = Arbeitserfahrung an einer Firma erforderlich)
 }
 
 export interface AIProviderConfig {

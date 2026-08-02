@@ -19,11 +19,13 @@ import {
   Folder,
   Plus,
   Wand2,
-  Loader2,
   Clock,
   Calendar,
   RotateCcw,
   CalendarPlus,
+  Star,
+  Tag,
+  X,
 } from 'lucide-react';
 import {
   JobMetadata,
@@ -35,7 +37,6 @@ import {
   DEFAULT_CARD_SECTIONS,
 } from '../types/job';
 import { fileSystemService } from '../services/storage/fileSystem';
-import { profileService } from '../services/storage/profileService';
 import { aiService } from '../services/ai/aiService';
 import { MarkdownModal } from './MarkdownModal';
 import {
@@ -54,6 +55,7 @@ interface JobDetailViewProps {
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
+  onOpenCVEditor?: () => void;
   feedbackThresholdWeeks?: number;
   cardLayoutConfig?: CardSectionConfig[];
 }
@@ -67,6 +69,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   onUpdateJob,
   onDeleteJob,
   onOpenAIAssistant: _onOpenAIAssistant,
+  onOpenCVEditor,
   feedbackThresholdWeeks = 6,
   cardLayoutConfig,
 }) => {
@@ -137,7 +140,6 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   const [files, setFiles] = useState<JobFile[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [isGeneratingMarkdownCV, setIsGeneratingMarkdownCV] = useState(false);
 
   // Markdown Viewer / Editor Modal State
   const [selectedMdFile, setSelectedMdFile] = useState<string | null>(null);
@@ -146,6 +148,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   // Feedback tracking state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [customDateTime, setCustomDateTime] = useState('');
+
+  // Custom Tag Input state
+  const [isAddingTag, setIsAddingTag] = useState(false);
+  const [newTagText, setNewTagText] = useState('');
 
   const latestFeedback = getLatestFeedbackDate(job);
   const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
@@ -244,6 +250,15 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
 
   const handleOpenFile = async (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
+
+    // If opening Lebenslauf.json or a CV json file, open in CVEditorModal
+    if (fileName === 'Lebenslauf.json' || ext === 'json') {
+      if (onOpenCVEditor) {
+        onOpenCVEditor();
+        return;
+      }
+    }
+
     if (ext === 'md' || ext === 'txt') {
       setSelectedMdFile(fileName);
       setIsMdModalOpen(true);
@@ -265,57 +280,6 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     }
   };
 
-  const handleGenerateTailoredMarkdownCV = async () => {
-    setIsGeneratingMarkdownCV(true);
-    try {
-      const profile = await profileService.getProfile();
-      let cleanedMd = '';
-
-      try {
-        const prompt = `Erstelle einen auf diese Stelle maßgeschneiderten Lebenslauf im Markdown-Format (Lebenslauf.md).
-
-BEWERBER-PROFIL (Name: ${profile.fullName}, E-Mail: ${profile.email}, Telefon: ${profile.phone}, Ort: ${profile.location}):
-${profile.markdownDescription || 'Keine Angabe'}
-
-STELLE:
-Firma: ${job.company}
-Titel: ${job.title}
-Anforderungen: ${job.requirements.join(', ')}
-Aufgaben: ${job.tasks.join(', ')}
-
-ANWEISUNG:
-Passe die Schwerpunkte, Reihenfolge und Formulierung des Lebenslaufs genau auf diese Stelle (${job.title} bei ${job.company}) an.
-Achte zwingend auf korrektes UTF-8 Encoding mit sauberen Umlauten (ä, ö, ü, ß).
-Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebenslauf). Kein Erklärungstext drumherum.`;
-
-        const markdownResponse = await aiService.generateAssistantResponse(prompt, job);
-        cleanedMd = markdownResponse.replace(/```markdown/g, '').replace(/```/g, '').trim();
-      } catch (err: any) {
-        console.warn('KI-Aufruf für Lebenslauf.md fehlgeschlagen, erstelle Basis-Vorlage:', err);
-        
-        let hint = err.message || 'Verbindungsfehler';
-        if (err.message?.includes('Failed to fetch')) {
-          hint = 'Netzwerkfehler (Failed to fetch).\n• Wenn du Ollama / lokalen Server nutzt: Prüfe ob der Server läuft und CORS erlaubt (OLLAMA_ORIGINS=*).\n• Wenn du Cloud-APIs nutzt: Prüfe deine Internetverbindung & API-Keys in den Einstellungen.';
-        }
-        aiService.notifyUser(`Hinweis zur KI-Generierung:\n${hint}\n\nEs wurde dein globales Profil als Basis in Lebenslauf.md gespeichert.`);
-
-        cleanedMd = `# Lebenslauf — ${profile.fullName || 'Bewerber'}\n\n**Zielstelle:** ${job.title} bei ${job.company}\n**Kontakt:** ${profile.email || ''} | ${profile.phone || ''} | ${profile.location || ''}\n\n${profile.markdownDescription || 'Kein globales Profil hinterlegt.'}`;
-      }
-
-      // Write UTF-8 bytes to disk directly
-      const success = await fileSystemService.writeTextFile(job, 'Lebenslauf.md', cleanedMd);
-      if (success) {
-        aiService.notifyUser(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
-        loadJobFiles();
-      }
-    } catch (e: any) {
-      console.error('Fehler bei Markdown Lebenslauf-Erstellung:', e);
-      aiService.notifyUser(`Fehler beim Schreiben von Lebenslauf.md: ${e.message}`);
-    } finally {
-      setIsGeneratingMarkdownCV(false);
-    }
-  };
-
   const formatFileSize = (bytes: number): string => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -323,6 +287,9 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
   };
 
   const getFileIcon = (fileName: string) => {
+    if (fileName === 'Lebenslauf.json') {
+      return <FileText size={18} color="#c084fc" />;
+    }
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return <FileText size={18} color="#f87171" />;
     if (ext === 'docx' || ext === 'doc') return <FileText size={18} color="#60a5fa" />;
@@ -378,56 +345,122 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 <select
                   value={job.status}
                   onChange={(e) => handleStatusChange(e.target.value as ApplicationStatus)}
+                  className="badge"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    height: '28px',
-                    minHeight: '28px',
-                    maxHeight: '28px',
-                    boxSizing: 'border-box',
                     padding: '0 24px 0 12px',
-                    borderRadius: '20px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    lineHeight: '26px',
-                    background: statusMeta.bg,
+                    backgroundColor: statusMeta.bg,
                     color: statusMeta.color,
                     border: `1px solid ${statusMeta.color}`,
                     outline: 'none',
                     cursor: 'pointer',
-                    appearance: 'none',
                     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(statusMeta.color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
                     backgroundRepeat: 'no-repeat',
                     backgroundPosition: 'right 8px center',
-                    margin: 0,
                   }}
                 >
                   {Object.entries(STATUS_LABELS).map(([key, meta]) => (
-                    <option key={key} value={key} style={{ background: 'var(--bg-card-solid)', color: meta.color }}>
+                    <option key={key} value={key}>
                       Status: {meta.label}
                     </option>
                   ))}
                 </select>
 
+                {/* Personal Rating Tag (Sterne 1-5) */}
+                <span
+                  className="badge"
+                  style={{
+                    backgroundColor: 'rgba(245, 158, 11, 0.12)',
+                    color: '#fbbf24',
+                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                  }}
+                  title="Persönliche Rangliste (Sterne anklicken)"
+                >
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      size={13}
+                      fill={(job.personalRating || 0) >= star ? '#fbbf24' : 'transparent'}
+                      color="#fbbf24"
+                      onClick={() => {
+                        onUpdateJob({ ...job, personalRating: star });
+                      }}
+                      style={{ cursor: 'pointer', transition: 'transform 0.15s ease' }}
+                    />
+                  ))}
+                  <span style={{ fontSize: '0.7rem', marginLeft: '2px', fontWeight: 700 }}>
+                    {job.personalRating ? `${job.personalRating}/5` : 'Rang'}
+                  </span>
+                </span>
+
+                {/* Prior Knowledge Level Tag (0-9 Scale) */}
+                {(() => {
+                  const level = job.priorKnowledgeLevel;
+                  let bg = 'rgba(255, 255, 255, 0.04)';
+                  let color = 'var(--text-muted)';
+                  let border = 'var(--border-color)';
+
+                  if (level === 0) {
+                    bg = 'rgba(52, 211, 153, 0.12)';
+                    color = '#34d399';
+                    border = 'rgba(52, 211, 153, 0.3)';
+                  } else if (level !== undefined && level !== null && level >= 8) {
+                    bg = 'rgba(244, 63, 94, 0.15)';
+                    color = '#fb7185';
+                    border = 'rgba(244, 63, 94, 0.4)';
+                  } else if (level !== undefined && level !== null) {
+                    bg = 'rgba(6, 182, 212, 0.12)';
+                    color = '#38bdf8';
+                    border = 'rgba(6, 182, 212, 0.3)';
+                  }
+
+                  return (
+                    <select
+                      value={level ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val !== '') {
+                          const newLvl = parseInt(val, 10);
+                          onUpdateJob({
+                            ...job,
+                            priorKnowledgeLevel: newLvl,
+                            requiresWorkExperience: newLvl >= 8,
+                          });
+                        }
+                      }}
+                      className="badge"
+                      style={{
+                        padding: '0 24px 0 12px',
+                        backgroundColor: bg,
+                        color: color,
+                        border: `1px solid ${border}`,
+                        outline: 'none',
+                        cursor: 'pointer',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 8px center',
+                      }}
+                      title="Vorwissen-Skala: 0 (Nichts), 1-7 (Skills/Vorkenntnisse), 8-9 (Zwingend Firmen-Arbeitserfahrung)"
+                    >
+                      <option value="">🧠 Vorwissen: k.A. / Einstufen...</option>
+                      <option value={0}>🧠 Vorwissen: 0/9 (Keine Vorkenntnisse)</option>
+                      {[1, 2, 3, 4, 5, 6, 7].map((lvl) => (
+                        <option key={lvl} value={lvl}>
+                          🧠 Vorwissen: {lvl}/9 (Skills & Vorkenntnisse)
+                        </option>
+                      ))}
+                      <option value={8}>🧠 Vorwissen: 8/9 (Firmen-Erfahrung gefordert)</option>
+                      <option value={9}>🧠 Vorwissen: 9/9 (Experte & Firmen-Erfahrung)</option>
+                    </select>
+                  );
+                })()}
+
                 {/* Experience Level Tag */}
                 <span
+                  className="badge"
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    height: '28px',
-                    minHeight: '28px',
-                    maxHeight: '28px',
-                    boxSizing: 'border-box',
-                    padding: '0 12px',
-                    borderRadius: '20px',
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    lineHeight: '26px',
-                    gap: '6px',
                     background: expMeta.bg,
                     color: expMeta.color,
                     border: `1px solid ${expMeta.borderColor}`,
-                    margin: 0,
                   }}
                 >
                   {expMeta.entryBadge}
@@ -439,25 +472,13 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.location} ${job.company}`.trim())}`}
                     target="_blank"
                     rel="noreferrer"
+                    className="badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      height: '28px',
-                      minHeight: '28px',
-                      maxHeight: '28px',
-                      boxSizing: 'border-box',
-                      padding: '0 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      lineHeight: '26px',
-                      gap: '5px',
                       color: 'var(--accent-cyan)',
                       textDecoration: 'none',
                       background: 'rgba(6, 182, 212, 0.1)',
                       border: '1px solid rgba(6, 182, 212, 0.25)',
                       transition: 'all 0.2s ease',
-                      margin: 0,
                     }}
                     title={`In Google Maps öffnen: ${job.location} (${job.company})`}
                   >
@@ -470,23 +491,11 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 {/* Salary Tag */}
                 {job.salary && (
                   <span
+                    className="badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      height: '28px',
-                      minHeight: '28px',
-                      maxHeight: '28px',
-                      boxSizing: 'border-box',
-                      padding: '0 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      lineHeight: '26px',
-                      gap: '5px',
                       color: 'var(--accent-emerald)',
                       background: 'rgba(16, 185, 129, 0.1)',
                       border: '1px solid rgba(16, 185, 129, 0.25)',
-                      margin: 0,
                     }}
                   >
                     <CircleDollarSign size={13} />
@@ -497,28 +506,100 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                 {/* Feedback Badge Tag */}
                 {feedbackBadge && (
                   <span
+                    className="badge"
                     style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      height: '28px',
-                      minHeight: '28px',
-                      maxHeight: '28px',
-                      boxSizing: 'border-box',
-                      padding: '0 12px',
-                      borderRadius: '20px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      lineHeight: '26px',
-                      gap: '6px',
                       background: feedbackBadge.bg,
                       color: feedbackBadge.color,
                       border: `1px solid ${feedbackBadge.border}`,
-                      margin: 0,
                     }}
                   >
                     <Clock size={13} />
                     {feedbackBadge.label}
                   </span>
+                )}
+
+                {/* Custom Tags */}
+                {(job.customTags || []).map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="badge"
+                    style={{
+                      background: 'rgba(139, 92, 246, 0.15)',
+                      color: '#c084fc',
+                      border: '1px solid rgba(192, 132, 252, 0.3)',
+                    }}
+                  >
+                    <Tag size={11} />
+                    <span>{tag}</span>
+                    <X
+                      size={12}
+                      style={{ cursor: 'pointer', marginLeft: '2px', opacity: 0.8 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const newTags = (job.customTags || []).filter((_, i) => i !== idx);
+                        onUpdateJob({ ...job, customTags: newTags });
+                      }}
+                    />
+                  </span>
+                ))}
+
+                {/* Add Custom Tag Input / Button */}
+                {isAddingTag ? (
+                  <input
+                    type="text"
+                    autoFocus
+                    placeholder="Tag..."
+                    value={newTagText}
+                    onChange={(e) => setNewTagText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && newTagText.trim()) {
+                        onUpdateJob({
+                          ...job,
+                          customTags: [...(job.customTags || []), newTagText.trim()],
+                        });
+                        setNewTagText('');
+                        setIsAddingTag(false);
+                      } else if (e.key === 'Escape') {
+                        setIsAddingTag(false);
+                        setNewTagText('');
+                      }
+                    }}
+                    onBlur={() => {
+                      if (newTagText.trim()) {
+                        onUpdateJob({
+                          ...job,
+                          customTags: [...(job.customTags || []), newTagText.trim()],
+                        });
+                      }
+                      setNewTagText('');
+                      setIsAddingTag(false);
+                    }}
+                    className="badge"
+                    style={{
+                      background: 'var(--bg-input)',
+                      color: 'var(--text-main)',
+                      border: '1px solid var(--accent-primary)',
+                      outline: 'none',
+                      width: '90px',
+                      padding: '0 8px',
+                    }}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setIsAddingTag(true)}
+                    className="badge"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      color: 'var(--text-muted)',
+                      border: '1px dashed var(--border-color)',
+                      cursor: 'pointer',
+                    }}
+                    title="Eigenen Tag hinzufügen"
+                  >
+                    <Plus size={12} />
+                    <span>Tag</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -687,16 +768,15 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                       <div>
                         <h3 style={{ fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Wand2 size={18} color="#34d399" />
-                          Lebenslauf.md anpassen
+                          Lebenslauf Editor & PDF Generator
                         </h3>
                         <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '620px' }}>
-                          Passe deinen globalen Lebenslauf per KI zielgerichtet auf diese Stelle an und speichere das Ergebnis direkt als <strong>Lebenslauf.md</strong> in diesen Ordner.
+                          Erstelle und bearbeite einen maßgeschneiderten Lebenslauf für diese Stelle mit KI-Unterstützung, Live-Vorschau und PDF-Export.
                         </p>
                       </div>
 
                       <button
-                        onClick={handleGenerateTailoredMarkdownCV}
-                        disabled={isGeneratingMarkdownCV}
+                        onClick={onOpenCVEditor}
                         className="btn btn-primary"
                         style={{
                           gap: '8px',
@@ -705,17 +785,8 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                           background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                         }}
                       >
-                        {isGeneratingMarkdownCV ? (
-                          <>
-                            <Loader2 size={15} className="spin-icon" />
-                            <span>Passe Lebenslauf.md an...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={16} />
-                            <span>📄 Lebenslauf.md für diese Stelle anpassen</span>
-                          </>
-                        )}
+                        <Sparkles size={16} />
+                        <span>📄 Lebenslauf Editor öffnen & PDF erstellen</span>
                       </button>
                     </div>
                   </div>
@@ -790,53 +861,78 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {files.map((file) => (
-                          <div
-                            key={file.name}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '10px 14px',
-                              background: 'rgba(255,255,255,0.03)',
-                              borderRadius: 'var(--radius-md)',
-                              border: '1px solid var(--border-color)',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              {getFileIcon(file.name)}
-                              <div>
-                                <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', display: 'block' }}>
-                                  {file.name}
-                                </span>
-                                <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                                  {formatFileSize(file.size)} • Geändert: {new Date(file.lastModified).toLocaleDateString('de-DE')}
-                                </span>
+                        {[...files]
+                          .sort((a, b) => {
+                            const isA = a.name === 'Lebenslauf.json';
+                            const isB = b.name === 'Lebenslauf.json';
+                            if (isA && !isB) return -1;
+                            if (!isA && isB) return 1;
+                            return a.name.localeCompare(b.name);
+                          })
+                          .map((file) => {
+                            const isCVFile = file.name === 'Lebenslauf.json';
+
+                            return (
+                              <div
+                                key={file.name}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '10px 14px',
+                                  background: isCVFile
+                                    ? 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)'
+                                    : 'rgba(255,255,255,0.03)',
+                                  borderRadius: 'var(--radius-md)',
+                                  border: isCVFile
+                                    ? '1px solid rgba(192, 132, 252, 0.6)'
+                                    : '1px solid var(--border-color)',
+                                  boxShadow: isCVFile
+                                    ? '0 0 16px rgba(192, 132, 252, 0.35)'
+                                    : 'none',
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  {getFileIcon(file.name)}
+                                  <div>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: isCVFile ? 700 : 600, color: isCVFile ? '#c084fc' : 'var(--text-main)', display: 'block' }}>
+                                      {file.name === 'Lebenslauf.json' ? 'Lebenslauf' : file.name}
+                                    </span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                                      {formatFileSize(file.size)} • Geändert: {new Date(file.lastModified).toLocaleDateString('de-DE')}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <button
+                                    onClick={() => handleOpenFile(file.name)}
+                                    className="btn btn-secondary"
+                                    style={{
+                                      padding: '4px 10px',
+                                      fontSize: '0.75rem',
+                                      gap: '4px',
+                                      borderColor: isCVFile ? 'rgba(192, 132, 252, 0.5)' : undefined,
+                                      color: isCVFile ? '#c084fc' : undefined,
+                                    }}
+                                    title="In Applyo ansehen oder bearbeiten"
+                                  >
+                                    <Eye size={13} color={isCVFile ? '#c084fc' : undefined} />
+                                    <span>{file.name === 'Lebenslauf.json' ? 'Im Editor öffnen' : file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => handleDeleteFile(file.name)}
+                                    className="btn-icon"
+                                    style={{ width: '28px', height: '28px', color: '#f87171' }}
+                                    title="Löschen"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <button
-                                onClick={() => handleOpenFile(file.name)}
-                                className="btn btn-secondary"
-                                style={{ padding: '4px 10px', fontSize: '0.75rem', gap: '4px' }}
-                                title="In Applyo ansehen oder bearbeiten"
-                              >
-                                <Eye size={13} />
-                                <span>{file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteFile(file.name)}
-                                className="btn-icon"
-                                style={{ width: '28px', height: '28px', color: '#f87171' }}
-                                title="Löschen"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
+                            );
+                          })}
                       </div>
                     )}
                   </div>

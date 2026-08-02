@@ -9,6 +9,7 @@ interface NavbarProps {
   onGrantPermission: () => void;
   onOpenAddModal: () => void;
   onOpenSettingsModal: () => void;
+  onOpenCVEditor?: () => void;
   aiSettings: AISettings;
   viewMode: 'list' | 'board';
   onViewModeChange: (mode: 'list' | 'board') => void;
@@ -237,9 +238,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             </span>
           </button>
 
-          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.825rem' }}>
+          {/* Create Job Button */}
+          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.825rem', gap: '6px' }}>
             <Plus size={16} />
-            <span>Stelle hinzufügen</span>
+            <span>Neue Stelle</span>
           </button>
         </div>
       </div>
