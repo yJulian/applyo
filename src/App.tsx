@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Sparkles } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -23,7 +23,19 @@ export default function App() {
   const [needsPermission, setNeedsPermission] = useState<boolean>(false);
 
   // View Mode: 'list' | 'board' | 'calendar'
-  const [viewMode, setViewMode] = useState<'list' | 'board' | 'calendar'>('list');
+  type ViewMode = 'list' | 'board' | 'calendar';
+  const VIEW_ORDER: ViewMode[] = ['list', 'board', 'calendar'];
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const prevViewMode = useRef<ViewMode>('list');
+  const [transitionClass, setTransitionClass] = useState('');
+
+  const handleViewModeChange = useCallback((newMode: ViewMode) => {
+    const prevIdx = VIEW_ORDER.indexOf(prevViewMode.current);
+    const nextIdx = VIEW_ORDER.indexOf(newMode);
+    setTransitionClass(nextIdx > prevIdx ? 'view-enter-right' : 'view-enter-left');
+    prevViewMode.current = newMode;
+    setViewMode(newMode);
+  }, []);
 
   // Filters
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<ApplicationStatus | 'all'>('all');
@@ -190,12 +202,12 @@ export default function App() {
         onOpenCVEditor={() => setIsCVEditorOpen(true)}
         aiSettings={aiSettings}
         viewMode={viewMode}
-        onViewModeChange={setViewMode}
+        onViewModeChange={handleViewModeChange}
       />
 
-      {/* Main Container: List View vs Board View */}
+      {/* Main Container – animated on view switch */}
       {viewMode === 'list' ? (
-        <div className="main-layout">
+        <div key="list" className={`main-layout ${transitionClass}`}>
           <Sidebar
             jobs={jobs}
             selectedJobId={selectedJobId}
@@ -228,7 +240,7 @@ export default function App() {
           />
         </div>
       ) : viewMode === 'board' ? (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div key="board" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <BoardView
             jobs={jobs}
             selectedJobId={selectedJobId}
@@ -251,7 +263,7 @@ export default function App() {
           />
         </div>
       ) : (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div key="calendar" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <CalendarView
             jobs={jobs}
             currentDirName={currentDirName}
@@ -260,7 +272,7 @@ export default function App() {
             onGrantPermission={handleGrantPermission}
             onSelectJob={(j) => {
               setSelectedJobId(j.id);
-              setViewMode('list');
+              handleViewModeChange('list');
             }}
           />
         </div>
