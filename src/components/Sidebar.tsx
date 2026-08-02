@@ -302,11 +302,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
                           <span
+                            class="badge"
                             style={{
-                              fontSize: '0.7rem',
-                              padding: '2px 8px',
-                              borderRadius: '10px',
-                              fontWeight: 600,
                               background: statusMeta.bg,
                               color: statusMeta.color,
                             }}
@@ -318,17 +315,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           </span>
                           {feedbackBadge && (
                             <span
+                              class="badge"
                               style={{
-                                fontSize: '0.65rem',
-                                padding: '2px 7px',
-                                borderRadius: '10px',
-                                fontWeight: 600,
                                 background: feedbackBadge.bg,
                                 color: feedbackBadge.color,
                                 border: `1px solid ${feedbackBadge.border}`,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '4px',
                               }}
                             >
                               <Clock size={10} />
@@ -375,12 +366,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   </h4>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                    <span
+                    <span class="badge"
                       style={{
-                        fontSize: '0.7rem',
-                        padding: '2px 8px',
-                        borderRadius: '10px',
-                        fontWeight: 600,
                         background: statusMeta.bg,
                         color: statusMeta.color,
                       }}
@@ -392,17 +379,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </span>
                     {feedbackBadge && (
                       <span
+                        class="badge"
                         style={{
-                          fontSize: '0.65rem',
-                          padding: '2px 7px',
-                          borderRadius: '10px',
-                          fontWeight: 600,
                           background: feedbackBadge.bg,
                           color: feedbackBadge.color,
                           border: `1px solid ${feedbackBadge.border}`,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
                         }}
                       >
                         <Clock size={10} />

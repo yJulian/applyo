@@ -22,6 +22,7 @@ export interface GlobalAISettings {
   customOpenaiModel: string;
   corsProxyUrl?: string;
   corsProxyToken?: string;
+  showSystemAlerts?: boolean;
 }
 
 export const DEFAULT_GLOBAL_AI_SETTINGS: GlobalAISettings = {
@@ -37,12 +38,14 @@ export const DEFAULT_GLOBAL_AI_SETTINGS: GlobalAISettings = {
   customOpenaiModel: 'llama-3.3-70b-instruct',
   corsProxyUrl: '',
   corsProxyToken: '',
+  showSystemAlerts: true,
 };
 
 export const DEFAULT_AI_SETTINGS: AISettings = {
   ...DEFAULT_GLOBAL_AI_SETTINGS,
   feedbackThresholdWeeks: 6,
   cardLayoutConfig: DEFAULT_CARD_SECTIONS,
+  showSystemAlerts: true,
 };
 
 class AIService {
@@ -86,6 +89,12 @@ class AIService {
 
   setRootMeta(feedbackThresholdWeeks: number, cardLayoutConfig: CardSectionConfig[]) {
     this.rootMeta = { feedbackThresholdWeeks, cardLayoutConfig };
+  }
+
+  notifyUser(message: string): void {
+    if (this.getSettings().showSystemAlerts !== false) {
+      alert(message);
+    }
   }
 
   getSettings(): AISettings {

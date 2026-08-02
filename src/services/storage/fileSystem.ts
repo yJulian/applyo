@@ -1,6 +1,7 @@
 import { openDB } from 'idb';
 import { JobMetadata, JobFile, CardSectionConfig, DEFAULT_CARD_SECTIONS } from '../../types/job';
 import { UserProfile, DEFAULT_PROFILE } from './profileService';
+import { aiService } from '../ai/aiService';
 
 const DB_NAME = 'applyo_filesystem_db';
 const STORE_NAME = 'handles';
@@ -461,7 +462,7 @@ export class FileSystemService {
     }
 
     if (!folderHandle) {
-      alert('Bitte wähle zuerst oben in der Leiste einen Arbeitsordner auf deiner Festplatte aus.');
+      aiService.notifyUser('Bitte wähle zuerst oben in der Leiste einen Arbeitsordner auf deiner Festplatte aus.');
       return false;
     }
 
@@ -473,7 +474,7 @@ export class FileSystemService {
       return true;
     } catch (e) {
       console.error('Fehler beim Speichern der Datei im Ordner:', e);
-      alert(`Datei konnte nicht im Ordner gespeichert werden: ${(e as Error).message}`);
+      aiService.notifyUser(`Datei konnte nicht im Ordner gespeichert werden: ${(e as Error).message}`);
       return false;
     }
   }

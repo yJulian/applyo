@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Check, Cpu, User, Server, Clock, LayoutGrid, GripVertical, Eye, EyeOff, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
+import { X, Key, Check, Cpu, User, Server, Clock, LayoutGrid, GripVertical, Eye, EyeOff, RotateCcw, ArrowUp, ArrowDown, Bell } from 'lucide-react';
 import { AISettings, AIProviderId, DEFAULT_CARD_SECTIONS } from '../types/job';
 import { aiService } from '../services/ai/aiService';
 import { profileService, UserProfile } from '../services/storage/profileService';
@@ -267,6 +267,32 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '6px', display: 'block' }}>
                   Standardwert: 6 Wochen. Ist die letzte Rückmeldung älter, wird der Badge rot hervorgehoben und als "⚠️ Lange her" dargestellt.
                 </span>
+              </div>
+
+              {/* System Alert Popups Toggle */}
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 'var(--radius-md)', background: 'rgba(255, 255, 255, 0.03)', border: '1px solid var(--border-color)' }}>
+                  <div>
+                    <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <Bell size={16} color="var(--accent-cyan)" /> Pop-up Benachrichtigungen (Alerts)
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', display: 'block' }}>
+                      Bestätigungs-Popups beim Anlegen, Bearbeiten oder Löschen von Dateien und Stellen.
+                    </span>
+                  </div>
+
+                  <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={settings.showSystemAlerts !== false}
+                      onChange={(e) => setSettings({ ...settings, showSystemAlerts: e.target.checked })}
+                      style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)', cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: settings.showSystemAlerts !== false ? '#34d399' : 'var(--text-muted)' }}>
+                      {settings.showSystemAlerts !== false ? 'Aktiv' : 'Stumm'}
+                    </span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>

@@ -254,7 +254,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     if (url) {
       window.open(url, '_blank');
     } else {
-      alert('Datei konnte nicht geöffnet werden.');
+      aiService.notifyUser('Datei konnte nicht geöffnet werden.');
     }
   };
 
@@ -297,7 +297,7 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
         if (err.message?.includes('Failed to fetch')) {
           hint = 'Netzwerkfehler (Failed to fetch).\n• Wenn du Ollama / lokalen Server nutzt: Prüfe ob der Server läuft und CORS erlaubt (OLLAMA_ORIGINS=*).\n• Wenn du Cloud-APIs nutzt: Prüfe deine Internetverbindung & API-Keys in den Einstellungen.';
         }
-        alert(`Hinweis zur KI-Generierung:\n${hint}\n\nEs wurde dein globales Profil als Basis in Lebenslauf.md gespeichert.`);
+        aiService.notifyUser(`Hinweis zur KI-Generierung:\n${hint}\n\nEs wurde dein globales Profil als Basis in Lebenslauf.md gespeichert.`);
 
         cleanedMd = `# Lebenslauf — ${profile.fullName || 'Bewerber'}\n\n**Zielstelle:** ${job.title} bei ${job.company}\n**Kontakt:** ${profile.email || ''} | ${profile.phone || ''} | ${profile.location || ''}\n\n${profile.markdownDescription || 'Kein globales Profil hinterlegt.'}`;
       }
@@ -305,12 +305,12 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
       // Write UTF-8 bytes to disk directly
       const success = await fileSystemService.writeTextFile(job, 'Lebenslauf.md', cleanedMd);
       if (success) {
-        alert(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
+        aiService.notifyUser(`✅ "Lebenslauf.md" wurde erfolgreich im Ordner "${job.company}/${job.title}" auf deiner Festplatte gespeichert!`);
         loadJobFiles();
       }
     } catch (e: any) {
       console.error('Fehler bei Markdown Lebenslauf-Erstellung:', e);
-      alert(`Fehler beim Schreiben von Lebenslauf.md: ${e.message}`);
+      aiService.notifyUser(`Fehler beim Schreiben von Lebenslauf.md: ${e.message}`);
     } finally {
       setIsGeneratingMarkdownCV(false);
     }
@@ -372,22 +372,34 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
 
               <h1 style={{ fontSize: '1.8rem', lineHeight: 1.2, marginBottom: '14px' }}>{job.title}</h1>
 
-              {/* Row 3: Status & Location & Salary */}
-              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
-                {/* Status Selector */}
+              {/* Unified Header Tags Bar (All tags share exact uniform 28px height, 1px border, 0 12px padding) */}
+              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+                {/* Status Selector Tag */}
                 <select
                   value={job.status}
                   onChange={(e) => handleStatusChange(e.target.value as ApplicationStatus)}
                   style={{
-                    padding: '6px 14px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    height: '28px',
+                    minHeight: '28px',
+                    maxHeight: '28px',
+                    boxSizing: 'border-box',
+                    padding: '0 24px 0 12px',
                     borderRadius: '20px',
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
                     fontWeight: 700,
+                    lineHeight: '26px',
                     background: statusMeta.bg,
                     color: statusMeta.color,
                     border: `1px solid ${statusMeta.color}`,
                     outline: 'none',
                     cursor: 'pointer',
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='none' stroke='${encodeURIComponent(statusMeta.color)}' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 8px center',
+                    margin: 0,
                   }}
                 >
                   {Object.entries(STATUS_LABELS).map(([key, meta]) => (
@@ -397,7 +409,31 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                   ))}
                 </select>
 
-                {/* Location */}
+                {/* Experience Level Tag */}
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    height: '28px',
+                    minHeight: '28px',
+                    maxHeight: '28px',
+                    boxSizing: 'border-box',
+                    padding: '0 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    lineHeight: '26px',
+                    gap: '6px',
+                    background: expMeta.bg,
+                    color: expMeta.color,
+                    border: `1px solid ${expMeta.borderColor}`,
+                    margin: 0,
+                  }}
+                >
+                  {expMeta.entryBadge}
+                </span>
+
+                {/* Location Tag */}
                 {job.location && (
                   <a
                     href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${job.location} ${job.company}`.trim())}`}
@@ -406,64 +442,78 @@ Antworte AUSSCHLIESSLICH mit dem sauberen Markdown-Text (beginnend mit # Lebensl
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
+                      height: '28px',
+                      minHeight: '28px',
+                      maxHeight: '28px',
+                      boxSizing: 'border-box',
+                      padding: '0 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      lineHeight: '26px',
                       gap: '5px',
-                      fontSize: '0.8rem',
                       color: 'var(--accent-cyan)',
                       textDecoration: 'none',
-                      padding: '4px 10px',
-                      borderRadius: '12px',
                       background: 'rgba(6, 182, 212, 0.1)',
                       border: '1px solid rgba(6, 182, 212, 0.25)',
-                      cursor: 'pointer',
                       transition: 'all 0.2s ease',
+                      margin: 0,
                     }}
                     title={`In Google Maps öffnen: ${job.location} (${job.company})`}
                   >
-                    <MapPin size={14} color="var(--accent-cyan)" />
-                    <span style={{ fontWeight: 600 }}>{job.location}</span>
-                    <ExternalLink size={12} style={{ opacity: 0.7, marginLeft: '2px' }} />
+                    <MapPin size={13} color="var(--accent-cyan)" />
+                    <span>{job.location}</span>
+                    <ExternalLink size={11} style={{ opacity: 0.7 }} />
                   </a>
                 )}
 
+                {/* Salary Tag */}
                 {job.salary && (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--accent-emerald)' }}>
-                    <CircleDollarSign size={14} /> {job.salary}
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      height: '28px',
+                      minHeight: '28px',
+                      maxHeight: '28px',
+                      boxSizing: 'border-box',
+                      padding: '0 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      lineHeight: '26px',
+                      gap: '5px',
+                      color: 'var(--accent-emerald)',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                      margin: 0,
+                    }}
+                  >
+                    <CircleDollarSign size={13} />
+                    <span>{job.salary}</span>
                   </span>
                 )}
-              </div>
 
-              {/* Row 4: All Tags (Experience Level, Feedback Badge, etc.) */}
-              <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                {/* Experience Tag Card */}
-                <span
-                  className={`badge ${expMeta.tagClass}`}
-                  style={{
-                    fontSize: '0.75rem',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    fontWeight: 700,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                  }}
-                >
-                  {expMeta.entryBadge}
-                </span>
-
-                {/* Feedback Badge if available */}
+                {/* Feedback Badge Tag */}
                 {feedbackBadge && (
                   <span
                     style={{
-                      fontSize: '0.75rem',
-                      padding: '6px 12px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      height: '28px',
+                      minHeight: '28px',
+                      maxHeight: '28px',
+                      boxSizing: 'border-box',
+                      padding: '0 12px',
                       borderRadius: '20px',
+                      fontSize: '0.75rem',
                       fontWeight: 700,
+                      lineHeight: '26px',
+                      gap: '6px',
                       background: feedbackBadge.bg,
                       color: feedbackBadge.color,
                       border: `1px solid ${feedbackBadge.border}`,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px',
+                      margin: 0,
                     }}
                   >
                     <Clock size={13} />
