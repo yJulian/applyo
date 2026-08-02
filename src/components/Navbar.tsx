@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays } from 'lucide-react';
 import { AISettings } from '../types/job';
 
@@ -19,35 +19,50 @@ interface NavbarProps {
 
 const TABS: { id: ViewMode; label: string; icon: React.ReactNode; title: string }[] = [
   { id: 'list',     label: 'Liste',    icon: <LayoutList size={15} />,   title: 'Listenansicht' },
-  { id: 'board',    label: 'Board',    icon: <Kanban size={15} />,        title: 'Kanban Board Ansicht' },
-  { id: 'calendar', label: 'Kalender', icon: <CalendarDays size={15} />, title: 'Kalenderansicht – Statusaenderungen & Rueckmeldungen' },
+  { id: 'board',    label: 'Board',    icon: <Kanban size={15} />,       title: 'Kanban Board Ansicht' },
+  { id: 'calendar', label: 'Kalender', icon: <CalendarDays size={15} />, title: 'Kalenderansicht' },
 ];
 
-interface RippleItem { id: number; x: number; y: number; }
-
+// ─── Sliding Pill Tab Switcher ────────────────────────────────────────────────
 const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMode) => void }> = ({
   viewMode,
   onViewModeChange,
 }) => {
-  const [ripples, setRipples] = useState<RippleItem[]>([]);
-  const [lastActivated, setLastActivated] = useState<ViewMode>(viewMode);
-  const rippleCounter = useRef(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
 
-  const handleClick = useCallback((mode: ViewMode, e: React.MouseEvent<HTMLButtonElement>) => {
-    if (mode === viewMode) return;
-    setLastActivated(mode);
-    onViewModeChange(mode);
+  // Measure the active button and update the pill position/size
+  const updatePill = useCallback(() => {
+    const activeIdx = TABS.findIndex(t => t.id === viewMode);
+    const btn = btnRefs.current[activeIdx];
+    const container = containerRef.current;
+    if (!btn || !container) return;
+    const btnRect = btn.getBoundingClientRect();
+    const conRect = container.getBoundingClientRect();
+    setPill({
+      left: btnRect.left - conRect.left,
+      width: btnRect.width,
+    });
+  }, [viewMode]);
 
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = ++rippleCounter.current;
-    setRipples(r => [...r, { id, x, y }]);
-    setTimeout(() => setRipples(r => r.filter(rp => rp.id !== id)), 650);
-  }, [viewMode, onViewModeChange]);
+  // On first render: set without transition, then enable
+  useEffect(() => {
+    updatePill();
+    // tiny delay so the initial position is set before we enable CSS transition
+    const t = setTimeout(() => setMounted(true), 30);
+    return () => clearTimeout(t);
+  }, []);
+
+  // On view change: slide
+  useEffect(() => {
+    if (mounted) updatePill();
+  }, [viewMode, mounted, updatePill]);
 
   return (
     <div
+      ref={containerRef}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -56,83 +71,65 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
         background: 'rgba(9, 13, 22, 0.9)',
         border: '1px solid rgba(255,255,255,0.09)',
         boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
-        gap: '2px',
+        position: 'relative',
+        gap: '0px',
       }}
     >
-      {TABS.map(tab => {
-        const isActive = viewMode === tab.id;
-        const justActivated = isActive && lastActivated === tab.id;
+      {/* The sliding pill indicator */}
+      {pill && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '3px',
+            left: pill.left,
+            width: pill.width,
+            height: 'calc(100% - 6px)',
+            borderRadius: '18px',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%)',
+            boxShadow: '0 2px 12px rgba(99,102,241,0.45), 0 1px 3px rgba(0,0,0,0.3)',
+            // Spring-elastic transition – overshoots slightly then settles
+            transition: mounted
+              ? 'left 0.42s cubic-bezier(0.34, 1.4, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.3, 0.64, 1)'
+              : 'none',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      )}
 
+      {/* Tab buttons – sit on top of the pill */}
+      {TABS.map((tab, idx) => {
+        const isActive = viewMode === tab.id;
         return (
           <button
             key={tab.id}
-            onClick={e => handleClick(tab.id, e)}
+            ref={el => { btnRefs.current[idx] = el; }}
+            onClick={() => { if (!isActive) onViewModeChange(tab.id); }}
             title={tab.title}
-            className={isActive ? 'tab-btn-active' : ''}
             style={{
               position: 'relative',
+              zIndex: 1,
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               padding: '7px 16px',
               borderRadius: '18px',
               fontSize: '0.8rem',
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: isActive ? 'default' : 'pointer',
               border: 'none',
               outline: 'none',
-              overflow: 'hidden',
-              letterSpacing: '0.01em',
-              background: isActive
-                ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)'
-                : 'transparent',
-              color: isActive ? '#ffffff' : 'rgba(148,163,184,0.85)',
-              boxShadow: isActive
-                ? '0 2px 14px rgba(99,102,241,0.55), 0 0 0 1px rgba(99,102,241,0.3)'
-                : 'none',
-              transition: [
-                'background 0.35s cubic-bezier(0.22,1,0.36,1)',
-                'color 0.25s ease',
-                'box-shadow 0.35s ease',
-                'transform 0.22s cubic-bezier(0.34,1.56,0.64,1)',
-              ].join(', '),
-              transform: isActive ? 'scale(1.05)' : 'scale(1)',
+              background: 'transparent',
+              color: isActive ? '#ffffff' : 'rgba(148,163,184,0.75)',
+              transition: 'color 0.25s ease',
+              userSelect: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
-            {/* Shimmer sweep on active */}
-            {isActive && (
-              <span style={{
-                position: 'absolute', inset: 0, borderRadius: '18px',
-                background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.22) 50%, transparent 65%)',
-                backgroundSize: '200% 100%',
-                animation: 'tabShimmer 2.4s ease-in-out infinite',
-                pointerEvents: 'none',
-              }} />
-            )}
-
-            {/* Icon – bounces when this tab becomes active */}
-            <span
-              key={justActivated ? `${tab.id}-bounce` : tab.id}
-              className="tab-icon"
-              style={{
-                display: 'flex',
-                flexShrink: 0,
-                animation: justActivated ? 'tabIconBounce 0.45s cubic-bezier(0.22,1,0.36,1) both' : 'none',
-              }}
-            >
+            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               {tab.icon}
             </span>
-
-            <span style={{ position: 'relative', zIndex: 1 }}>{tab.label}</span>
-
-            {/* Ripple effects */}
-            {ripples.map(rp => (
-              <span
-                key={rp.id}
-                className="tab-ripple"
-                style={{ left: rp.x - 16, top: rp.y - 16 }}
-              />
-            ))}
+            <span>{tab.label}</span>
           </button>
         );
       })}
@@ -140,6 +137,7 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
   );
 };
 
+// ─── Main Navbar ──────────────────────────────────────────────────────────────
 export const Navbar: React.FC<NavbarProps> = ({
   currentDirName,
   needsPermission,
@@ -157,6 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <header className="glass-panel" style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none', padding: '12px 24px', zIndex: 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', position: 'relative' }}>
+
         {/* Left: Brand */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
@@ -167,18 +166,17 @@ export const Navbar: React.FC<NavbarProps> = ({
           }}>
             <Briefcase size={20} color="#ffffff" />
           </div>
-          <div>
-            <h1 className="gradient-text" style={{ fontSize: '1.35rem', lineHeight: 1.1 }}>Applyo</h1>
-          </div>
+          <h1 className="gradient-text" style={{ fontSize: '1.35rem', lineHeight: 1.1 }}>Applyo</h1>
         </div>
 
-        {/* Center: Animated View Switcher */}
+        {/* Center: Sliding Pill Switcher */}
         <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}>
           <ViewSwitcher viewMode={viewMode} onViewModeChange={onViewModeChange} />
         </div>
 
         {/* Right: Controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+
           {/* Directory Button */}
           <button
             onClick={needsPermission && currentDirName ? onGrantPermission : onSelectDirectory}
@@ -204,7 +202,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             title={
               needsPermission && currentDirName
                 ? `Zugriff auf '${currentDirName}' freigeben`
-                : currentDirName ? `Ordner: ${currentDirName}` : 'Lokalen Arbeitsordner waehlen'
+                : currentDirName ? `Ordner: ${currentDirName}` : 'Lokalen Arbeitsordner wählen'
             }
           >
             {needsPermission && currentDirName ? (
@@ -224,7 +222,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}>
               {needsPermission && currentDirName
                 ? `Zugriff auf '${currentDirName}' freigeben`
-                : currentDirName ? `Ordner: ${currentDirName}` : 'Ordner waehlen'}
+                : currentDirName ? `Ordner: ${currentDirName}` : 'Ordner wählen'}
             </span>
           </button>
 

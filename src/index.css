@@ -340,52 +340,8 @@ select option {
   animation: viewEnterFromLeft 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Tab Switcher Animations */
-@keyframes tabIndicatorSlide {
-  from { opacity: 0.6; transform: scaleX(0.85); }
-  to   { opacity: 1;   transform: scaleX(1); }
-}
-
-@keyframes tabGlowPulse {
-  0%   { box-shadow: 0 2px 10px rgba(99,102,241,0.4); }
-  50%  { box-shadow: 0 2px 20px rgba(99,102,241,0.7), 0 0 30px rgba(139,92,246,0.3); }
-  100% { box-shadow: 0 2px 10px rgba(99,102,241,0.4); }
-}
-
-@keyframes tabShimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-@keyframes tabIconBounce {
-  0%   { transform: scale(1) rotate(0deg); }
-  30%  { transform: scale(1.3) rotate(-8deg); }
-  60%  { transform: scale(0.9) rotate(4deg); }
-  100% { transform: scale(1) rotate(0deg); }
-}
-
-.tab-btn-active {
-  animation: tabGlowPulse 2s ease-in-out infinite;
-}
-
-.tab-btn-active .tab-icon {
-  animation: tabIconBounce 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-@keyframes rippleOut {
-  from { transform: scale(0); opacity: 0.5; }
-  to   { transform: scale(3); opacity: 0; }
-}
-
-.tab-ripple {
-  position: absolute;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  background: rgba(165, 180, 252, 0.35);
-  pointer-events: none;
-  animation: rippleOut 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
+/* Tab Switcher – handled via inline JS transitions (sliding pill) */
+/* No idle animations – clean & calm */
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
