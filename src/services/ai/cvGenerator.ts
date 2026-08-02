@@ -35,8 +35,16 @@ export function buildFallbackCV(profile: UserProfile, job: JobMetadata | null): 
       email: profile.email || 'kontakt@beispiel.de',
       phone: profile.phone || '+49 170 1234567',
       location: profile.location || 'Deutschland',
-      linkedin: 'linkedin.com/in/profil',
-      github: 'github.com/profil',
+      citizenship: profile.citizenship || '',
+      showCitizenship: Boolean(profile.citizenship),
+      linkedin: profile.linkedin || '',
+      showLinkedin: Boolean(profile.linkedin),
+      github: profile.github || '',
+      showGithub: Boolean(profile.github),
+      xing: profile.xing || '',
+      showXing: Boolean(profile.xing),
+      website: profile.website || '',
+      showWebsite: Boolean(profile.website),
     },
     summary: job
       ? `Zielgerichteter und engagierter Fachspezifiker mit Schwerpunkt auf ${job.title}. Fundierte Kenntnisse in der Umsetzung moderner Projekte mit Fokus auf Qualität und Effizienz bei ${company}.`

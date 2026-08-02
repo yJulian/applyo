@@ -11,6 +11,12 @@ export interface UserProfile {
   email: string;
   phone: string;
   location: string;
+  citizenship?: string;
+  website?: string;
+  github?: string;
+  linkedin?: string;
+  xing?: string;
+  portfolio?: string;
   markdownDescription: string; // Personal description & background (.md)
   resumeFileName?: string;
   globalProjects?: CVProject[];
@@ -25,6 +31,12 @@ export const DEFAULT_PROFILE: UserProfile = {
   email: 'julian@example.com',
   phone: '+49 170 1234567',
   location: 'Deutschland',
+  citizenship: 'Deutsch',
+  website: '',
+  github: 'github.com/mustermann',
+  linkedin: 'linkedin.com/in/mustermann',
+  xing: '',
+  portfolio: '',
   markdownDescription: `# Mein Profil & Werdegang
 
 ## Über mich

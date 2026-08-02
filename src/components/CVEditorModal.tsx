@@ -62,11 +62,25 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   const mergeWithGlobalProfile = (cv: CVData, profile: any): CVData => {
     const merged = { ...cv };
 
-    // Sync contact header
+    // Sync contact header & global profile links/details
     merged.header.fullName = profile.fullName || merged.header.fullName;
     merged.header.email = profile.email || merged.header.email;
     merged.header.phone = profile.phone || merged.header.phone;
     merged.header.location = profile.location || merged.header.location;
+    merged.header.citizenship = profile.citizenship ?? merged.header.citizenship;
+    merged.header.website = profile.website ?? merged.header.website;
+    merged.header.github = profile.github ?? merged.header.github;
+    merged.header.linkedin = profile.linkedin ?? merged.header.linkedin;
+    merged.header.xing = profile.xing ?? merged.header.xing;
+    merged.header.portfolio = profile.portfolio ?? merged.header.portfolio;
+
+    // Ensure show flags default to true if link/field exists and flag is undefined
+    if (merged.header.showCitizenship === undefined && merged.header.citizenship) merged.header.showCitizenship = true;
+    if (merged.header.showLinkedin === undefined && merged.header.linkedin) merged.header.showLinkedin = true;
+    if (merged.header.showGithub === undefined && merged.header.github) merged.header.showGithub = true;
+    if (merged.header.showXing === undefined && merged.header.xing) merged.header.showXing = true;
+    if (merged.header.showWebsite === undefined && merged.header.website) merged.header.showWebsite = true;
+    if (merged.header.showPortfolio === undefined && merged.header.portfolio) merged.header.showPortfolio = true;
 
     // Merge Experiences
     const currentExpKeys = new Set((merged.experiences || []).map((e) => `${e.company}-${e.position}`.toLowerCase()));
@@ -483,6 +497,123 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                         value={cvData.summary}
                         onChange={(e) => setCvData({ ...cvData, summary: e.target.value })}
                       />
+                    </div>
+
+                    {/* Links & Zusätzliche Kopfdaten-Toggles */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                      <span style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
+                        Kopfdaten & Online-Profile im Lebenslauf
+                      </span>
+
+                      {/* Staatsbürgerschaft */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>Staatsbürgerschaft</label>
+                          <button
+                            type="button"
+                            onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showCitizenship: !(cvData.header.showCitizenship ?? Boolean(cvData.header.citizenship)) } })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showCitizenship ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+                          >
+                            {cvData.header.showCitizenship ? <Eye size={13} /> : <EyeOff size={13} />}
+                            {cvData.header.showCitizenship ? 'Sichtbar' : 'Ausgeblendet'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="z.B. Deutsch"
+                          value={cvData.header.citizenship || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, citizenship: e.target.value } })}
+                        />
+                      </div>
+
+                      {/* LinkedIn */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>LinkedIn</label>
+                          <button
+                            type="button"
+                            onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showLinkedin: !(cvData.header.showLinkedin ?? Boolean(cvData.header.linkedin)) } })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showLinkedin ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+                          >
+                            {cvData.header.showLinkedin ? <Eye size={13} /> : <EyeOff size={13} />}
+                            {cvData.header.showLinkedin ? 'Sichtbar' : 'Ausgeblendet'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="linkedin.com/in/profil"
+                          value={cvData.header.linkedin || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, linkedin: e.target.value } })}
+                        />
+                      </div>
+
+                      {/* GitHub */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>GitHub</label>
+                          <button
+                            type="button"
+                            onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showGithub: !(cvData.header.showGithub ?? Boolean(cvData.header.github)) } })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showGithub ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+                          >
+                            {cvData.header.showGithub ? <Eye size={13} /> : <EyeOff size={13} />}
+                            {cvData.header.showGithub ? 'Sichtbar' : 'Ausgeblendet'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="github.com/profil"
+                          value={cvData.header.github || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, github: e.target.value } })}
+                        />
+                      </div>
+
+                      {/* XING */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>XING</label>
+                          <button
+                            type="button"
+                            onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showXing: !(cvData.header.showXing ?? Boolean(cvData.header.xing)) } })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showXing ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+                          >
+                            {cvData.header.showXing ? <Eye size={13} /> : <EyeOff size={13} />}
+                            {cvData.header.showXing ? 'Sichtbar' : 'Ausgeblendet'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="xing.com/profile/name"
+                          value={cvData.header.xing || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, xing: e.target.value } })}
+                        />
+                      </div>
+
+                      {/* Website */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>Website / Portfolio</label>
+                          <button
+                            type="button"
+                            onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showWebsite: !(cvData.header.showWebsite ?? Boolean(cvData.header.website)) } })}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showWebsite ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
+                          >
+                            {cvData.header.showWebsite ? <Eye size={13} /> : <EyeOff size={13} />}
+                            {cvData.header.showWebsite ? 'Sichtbar' : 'Ausgeblendet'}
+                          </button>
+                        </div>
+                        <input
+                          type="text"
+                          className="input-field"
+                          placeholder="https://deine-website.de"
+                          value={cvData.header.website || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, website: e.target.value } })}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}

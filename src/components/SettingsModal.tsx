@@ -220,6 +220,66 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   onChange={(e) => setProfile({ ...profile, location: e.target.value })}
                 />
               </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  Staatsbürgerschaft
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="z.B. Deutsch, Österreichisch"
+                  value={profile.citizenship || ''}
+                  onChange={(e) => setProfile({ ...profile, citizenship: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  LinkedIn Profile URL
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="linkedin.com/in/profil"
+                  value={profile.linkedin || ''}
+                  onChange={(e) => setProfile({ ...profile, linkedin: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  GitHub Profile URL
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="github.com/profil"
+                  value={profile.github || ''}
+                  onChange={(e) => setProfile({ ...profile, github: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  XING Profile URL
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="xing.com/profile/name"
+                  value={profile.xing || ''}
+                  onChange={(e) => setProfile({ ...profile, xing: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  Website / Portfolio / Blog
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="https://deine-website.de"
+                  value={profile.website || ''}
+                  onChange={(e) => setProfile({ ...profile, website: e.target.value })}
+                />
+              </div>
             </div>
 
             {/* Global Personal Description & Resume (.md) */}

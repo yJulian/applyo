@@ -4,9 +4,18 @@ export interface CVHeader {
   email: string;
   phone: string;
   location: string;
+  citizenship?: string;
+  showCitizenship?: boolean;
   website?: string;
+  showWebsite?: boolean;
   github?: string;
+  showGithub?: boolean;
   linkedin?: string;
+  showLinkedin?: boolean;
+  xing?: string;
+  showXing?: boolean;
+  portfolio?: string;
+  showPortfolio?: boolean;
 }
 
 export interface CVExperience {

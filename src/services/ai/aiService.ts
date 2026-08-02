@@ -207,9 +207,18 @@ Antworte AUSSCHLIESSLICH als beliebiges valides JSON ohne Markdown-Codeblöcke m
     "email": "E-Mail",
     "phone": "Telefon",
     "location": "Ort",
+    "citizenship": "Staatsbürgerschaft (falls angegeben)",
+    "showCitizenship": true,
     "website": null,
+    "showWebsite": false,
     "github": null,
-    "linkedin": null
+    "showGithub": false,
+    "linkedin": null,
+    "showLinkedin": false,
+    "xing": null,
+    "showXing": false,
+    "portfolio": null,
+    "showPortfolio": false
   },
   "summary": "Zusammenfassung (2-3 Sätze)",
   "experiences": [
