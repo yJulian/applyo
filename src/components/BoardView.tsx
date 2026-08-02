@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import {
   Search,
-  Filter,
-  Plus,
   MapPin,
   CircleDollarSign,
   GripVertical,
   ChevronRight,
   Folder,
   Unlock,
-  Layers,
   X,
 } from 'lucide-react';
 import {
@@ -50,11 +47,11 @@ export const BoardView: React.FC<BoardViewProps> = ({
   selectedJobId: _selectedJobId,
   onSelectJob,
   onUpdateJob,
-  onOpenAddModal,
+  onOpenAddModal: _onOpenAddModal,
   searchQuery,
-  onSearchChange,
+  onSearchChange: _onSearchChange,
   selectedExpFilter,
-  onSelectExpFilter,
+  onSelectExpFilter: _onSelectExpFilter,
   currentDirName,
   needsPermission,
   onSelectDirectory,
@@ -257,76 +254,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', width: '100%' }}>
-      {/* Board Header Toolbar */}
-      <div
-        className="glass-panel"
-        style={{
-          borderRadius: 0,
-          borderTop: 'none',
-          borderLeft: 'none',
-          borderRight: 'none',
-          padding: '14px 24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: '16px',
-          zIndex: 5,
-        }}
-      >
-        {/* Left: Global Search & Filter */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', flex: 1, maxWidth: '600px' }}>
-          <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
-            <Search
-              size={16}
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }}
-            />
-            <input
-              type="text"
-              className="input-field"
-              style={{ paddingLeft: '36px', height: '38px', fontSize: '0.85rem' }}
-              placeholder="Board durchsuchen (Firma, Titel, Skill)..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.04)', padding: '4px 12px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-            <Filter size={14} color="var(--text-muted)" />
-            <select
-              value={selectedExpFilter}
-              onChange={(e) => onSelectExpFilter(e.target.value as ExperienceLevel | 'all')}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--text-main)',
-                fontSize: '0.8rem',
-                fontWeight: 500,
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="all" style={{ background: 'var(--bg-card-solid)' }}>Filter: Alle Erfahrungsstufen</option>
-              <option value="junior" style={{ background: 'var(--bg-card-solid)' }}>🟢 Junior / Ohne Vorerfahrung</option>
-              <option value="required" style={{ background: 'var(--bg-card-solid)' }}>🔴 Berufserfahrung erforderlich</option>
-              <option value="desired" style={{ background: 'var(--bg-card-solid)' }}>🟡 Erfahrung gewünscht</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Right: Board Stats & Add Action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Layers size={15} color="var(--accent-primary)" />
-            <strong>{filteredJobs.length}</strong> Bewerbungen im Board
-          </span>
-
-          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-            <Plus size={16} />
-            <span>Stelle hinzufügen</span>
-          </button>
-        </div>
-      </div>
 
       {/* Kanban Board Columns Container */}
       <div
