@@ -423,6 +423,186 @@ select option {
 }
 
 /* ==========================================
+   WINDOW CONTROLS OVERLAY (PWA Titlebar)
+   ========================================== */
+
+/*
+  When installed as a PWA with display_override: ["window-controls-overlay"],
+  the browser exposes env(titlebar-area-*) variables so we can fill that space.
+  On non-WCO contexts this block has no effect (the variables are undefined).
+*/
+
+.wco-titlebar {
+  /* Precisely fill the OS titlebar area */
+  position: fixed;
+  top: env(titlebar-area-y, 0);
+  left: env(titlebar-area-x, 0);
+  width: env(titlebar-area-width, 100%);
+  height: env(titlebar-area-height, 40px);
+
+  display: flex;
+  align-items: center;
+  gap: 0;
+
+  background: rgba(9, 13, 22, 0.96);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 1px 0 rgba(99, 102, 241, 0.18), 0 4px 20px rgba(0, 0, 0, 0.5);
+
+  z-index: 9999;
+  overflow: hidden;
+  padding: 0;
+
+  /* Make the whole bar draggable by default */
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+
+.wco-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 14px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  /* inherits drag from .wco-titlebar */
+}
+
+.wco-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  /* inherits drag from .wco-titlebar – only the pill itself is no-drag */
+}
+
+.wco-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  margin-left: auto;
+  /* inherits drag from .wco-titlebar */
+}
+
+/* Borderless icon buttons (folder, settings) in WCO bar */
+.wco-bare-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  height: 28px;
+  padding: 0 6px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: background 0.18s ease, opacity 0.18s ease;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.wco-bare-btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+.wco-bare-btn:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ViewSwitcher pill – must be no-drag so clicks register */
+.view-switcher-container {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* Minimal tab row inside WCO bar – no container background, same pill as ViewSwitcher */
+.wco-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 3px;
+  position: relative;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+.wco-tab-btn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 18px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.75);
+  transition: color 0.25s ease;
+  user-select: none;
+  white-space: nowrap;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.wco-tab-btn--active {
+  color: #ffffff;
+  cursor: default;
+}
+
+/* Primary add-job button in WCO bar */
+.wco-add-btn {
+  height: 28px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+.wco-add-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.55);
+}
+.wco-add-btn:active {
+  transform: translateY(0);
+}
+
+/*
+  Spacer that pushes the app content below the WCO titlebar.
+  Height matches env(titlebar-area-height). When WCO is not active
+  the spacer has zero height.
+*/
+.wco-spacer {
+  height: env(titlebar-area-height, 0px);
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* ==========================================
    PRINT & VECTOR PDF EXPORT STYLES
    ========================================== */
 @media print {

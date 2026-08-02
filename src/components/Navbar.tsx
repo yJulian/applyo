@@ -18,22 +18,22 @@ interface NavbarProps {
 }
 
 const TABS: { id: ViewMode; label: string; icon: React.ReactNode; title: string }[] = [
-  { id: 'list',     label: 'Liste',    icon: <LayoutList size={15} />,   title: 'Listenansicht' },
-  { id: 'board',    label: 'Board',    icon: <Kanban size={15} />,       title: 'Kanban Board Ansicht' },
-  { id: 'calendar', label: 'Kalender', icon: <CalendarDays size={15} />, title: 'Kalenderansicht' },
+  { id: 'list',     label: 'Liste',    icon: <LayoutList size={14} />,   title: 'Listenansicht' },
+  { id: 'board',    label: 'Board',    icon: <Kanban size={14} />,       title: 'Kanban Board Ansicht' },
+  { id: 'calendar', label: 'Kalender', icon: <CalendarDays size={14} />, title: 'Kalenderansicht' },
 ];
 
 // ─── Sliding Pill Tab Switcher ────────────────────────────────────────────────
-const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMode) => void }> = ({
-  viewMode,
-  onViewModeChange,
-}) => {
+const ViewSwitcher: React.FC<{
+  viewMode: ViewMode;
+  onViewModeChange: (m: ViewMode) => void;
+  compact?: boolean;
+}> = ({ viewMode, onViewModeChange, compact = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  // Measure the active button and update the pill position/size
   const updatePill = useCallback(() => {
     const activeIdx = TABS.findIndex(t => t.id === viewMode);
     const btn = btnRefs.current[activeIdx];
@@ -41,28 +41,26 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
     if (!btn || !container) return;
     const btnRect = btn.getBoundingClientRect();
     const conRect = container.getBoundingClientRect();
-    setPill({
-      left: btnRect.left - conRect.left,
-      width: btnRect.width,
-    });
+    setPill({ left: btnRect.left - conRect.left, width: btnRect.width });
   }, [viewMode]);
 
-  // On first render: set without transition, then enable
   useEffect(() => {
     updatePill();
-    // tiny delay so the initial position is set before we enable CSS transition
     const t = setTimeout(() => setMounted(true), 30);
     return () => clearTimeout(t);
   }, []);
 
-  // On view change: slide
   useEffect(() => {
     if (mounted) updatePill();
   }, [viewMode, mounted, updatePill]);
 
+  const pillPad = compact ? '5px 12px' : '7px 16px';
+  const fontSize = compact ? '0.75rem' : '0.8rem';
+
   return (
     <div
       ref={containerRef}
+      className="view-switcher-container"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -75,7 +73,6 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
         gap: '0px',
       }}
     >
-      {/* The sliding pill indicator */}
       {pill && (
         <div
           style={{
@@ -87,7 +84,6 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
             borderRadius: '18px',
             background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%)',
             boxShadow: '0 2px 12px rgba(99,102,241,0.45), 0 1px 3px rgba(0,0,0,0.3)',
-            // Spring-elastic transition – overshoots slightly then settles
             transition: mounted
               ? 'left 0.42s cubic-bezier(0.34, 1.4, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.3, 0.64, 1)'
               : 'none',
@@ -96,8 +92,6 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
           }}
         />
       )}
-
-      {/* Tab buttons – sit on top of the pill */}
       {TABS.map((tab, idx) => {
         const isActive = viewMode === tab.id;
         return (
@@ -111,10 +105,10 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
               zIndex: 1,
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '7px 16px',
+              gap: '5px',
+              padding: pillPad,
               borderRadius: '18px',
-              fontSize: '0.8rem',
+              fontSize,
               fontWeight: 600,
               cursor: isActive ? 'default' : 'pointer',
               border: 'none',
@@ -124,6 +118,7 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
               transition: 'color 0.25s ease',
               userSelect: 'none',
               whiteSpace: 'nowrap',
+              WebkitAppRegion: 'no-drag',
             }}
           >
             <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
@@ -137,8 +132,217 @@ const ViewSwitcher: React.FC<{ viewMode: ViewMode; onViewModeChange: (m: ViewMod
   );
 };
 
-// ─── Main Navbar ──────────────────────────────────────────────────────────────
-export const Navbar: React.FC<NavbarProps> = ({
+// ─── Hook: Window Controls Overlay state ─────────────────────────────────────
+function useWindowControlsOverlay() {
+  const [isWCO, setIsWCO] = useState(false);
+  const [titlebarArea, setTitlebarArea] = useState({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 40,
+  });
+
+  useEffect(() => {
+    const wco = (navigator as Navigator & { windowControlsOverlay?: {
+      visible: boolean;
+      getTitlebarAreaRect(): DOMRect;
+      addEventListener(type: string, cb: () => void): void;
+      removeEventListener(type: string, cb: () => void): void;
+    }}).windowControlsOverlay;
+
+    if (!wco) return;
+
+    const update = () => {
+      const visible = wco.visible;
+      setIsWCO(visible);
+      if (visible) {
+        const rect = wco.getTitlebarAreaRect();
+        setTitlebarArea({ x: rect.x, y: rect.y, width: rect.width, height: rect.height });
+      }
+    };
+
+    update();
+    wco.addEventListener('geometrychange', update);
+    return () => wco.removeEventListener('geometrychange', update);
+  }, []);
+
+  return { isWCO, titlebarArea };
+}
+
+// ─── WCO: Tab-Switcher mit gleitendem Outline-Pill ──────────────────────────
+const WCOTabSwitcher: React.FC<{
+  viewMode: ViewMode;
+  onViewModeChange: (m: ViewMode) => void;
+}> = ({ viewMode, onViewModeChange }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  const updatePill = useCallback(() => {
+    const activeIdx = TABS.findIndex(t => t.id === viewMode);
+    const btn = btnRefs.current[activeIdx];
+    const container = containerRef.current;
+    if (!btn || !container) return;
+    const btnRect = btn.getBoundingClientRect();
+    const conRect = container.getBoundingClientRect();
+    setPill({ left: btnRect.left - conRect.left, width: btnRect.width });
+  }, [viewMode]);
+
+  useEffect(() => {
+    updatePill();
+    const t = setTimeout(() => setMounted(true), 30);
+    return () => clearTimeout(t);
+  }, []);
+
+  useEffect(() => { if (mounted) updatePill(); }, [viewMode, mounted, updatePill]);
+
+  return (
+    <div ref={containerRef} className="wco-tabs view-switcher-container">
+      {/* Sliding gradient pill – same look as ViewSwitcher, no container background */}
+      {pill && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '3px',
+            left: pill.left,
+            width: pill.width,
+            height: 'calc(100% - 6px)',
+            borderRadius: '18px',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%)',
+            boxShadow: '0 2px 12px rgba(99,102,241,0.45), 0 1px 3px rgba(0,0,0,0.3)',
+            transition: mounted
+              ? 'left 0.42s cubic-bezier(0.34, 1.4, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.3, 0.64, 1)'
+              : 'none',
+            pointerEvents: 'none',
+            zIndex: 0,
+          }}
+        />
+      )}
+      {TABS.map((tab, idx) => {
+        const isActive = viewMode === tab.id;
+        return (
+          <button
+            key={tab.id}
+            ref={el => { btnRefs.current[idx] = el; }}
+            onClick={() => { if (!isActive) onViewModeChange(tab.id); }}
+            title={tab.title}
+            className={`wco-tab-btn${isActive ? ' wco-tab-btn--active' : ''}`}
+            style={{ position: 'relative', zIndex: 1 }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+};
+
+// ─── WCO Titlebar (nur wenn als PWA mit WCO installiert) ─────────────────────
+const WCOTitlebar: React.FC<NavbarProps> = ({
+  currentDirName,
+  needsPermission,
+  onSelectDirectory,
+  onGrantPermission,
+  onOpenAddModal,
+  onOpenSettingsModal,
+  aiSettings,
+  viewMode,
+  onViewModeChange,
+}) => {
+  const [isFolderHovered, setIsFolderHovered] = useState(false);
+  const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+
+  return (
+    <>
+      <div className="wco-titlebar">
+
+        {/* Left: Folder + Settings (borderless icon buttons) */}
+        <div className="wco-left">
+          <button
+            onClick={needsPermission && currentDirName ? onGrantPermission : onSelectDirectory}
+            onMouseEnter={() => setIsFolderHovered(true)}
+            onMouseLeave={() => setIsFolderHovered(false)}
+            className="wco-bare-btn"
+            title={
+              needsPermission && currentDirName
+                ? `Zugriff auf '${currentDirName}' freigeben`
+                : currentDirName ? `Ordner: ${currentDirName}` : 'Lokalen Arbeitsordner wählen'
+            }
+          >
+            {needsPermission && currentDirName ? (
+              <Unlock size={15} color="#f59e0b" />
+            ) : currentDirName ? (
+              <FolderCheck size={15} color="#10b981" />
+            ) : (
+              <Folder size={15} color="#6366f1" />
+            )}
+            <span style={{
+              fontSize: '0.72rem', fontWeight: 600,
+              color: needsPermission && currentDirName ? '#f59e0b' : currentDirName ? '#34d399' : '#a5b4fc',
+              whiteSpace: 'nowrap',
+              maxWidth: isFolderHovered ? '180px' : '0px',
+              opacity: isFolderHovered ? 1 : 0,
+              marginLeft: isFolderHovered ? '5px' : '0px',
+              overflow: 'hidden',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}>
+              {needsPermission && currentDirName
+                ? `'${currentDirName}' freigeben`
+                : currentDirName ?? 'Ordner wählen'}
+            </span>
+          </button>
+
+          <button
+            onClick={onOpenSettingsModal}
+            onMouseEnter={() => setIsSettingsHovered(true)}
+            onMouseLeave={() => setIsSettingsHovered(false)}
+            className="wco-bare-btn"
+            title={`Einstellungen (KI: ${aiSettings.activeProvider.toUpperCase()})`}
+          >
+            <Settings size={15} color="#c084fc" style={{ flexShrink: 0 }} />
+            <span style={{
+              fontSize: '0.72rem', fontWeight: 600,
+              color: '#c084fc',
+              whiteSpace: 'nowrap',
+              maxWidth: isSettingsHovered ? '110px' : '0px',
+              opacity: isSettingsHovered ? 1 : 0,
+              marginLeft: isSettingsHovered ? '5px' : '0px',
+              overflow: 'hidden',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}>
+              Einstellungen
+            </span>
+          </button>
+        </div>
+
+        {/* Center: Minimal Tab Switcher */}
+        <div className="wco-center">
+          <WCOTabSwitcher viewMode={viewMode} onViewModeChange={onViewModeChange} />
+        </div>
+
+        {/* Right: Neue Stelle */}
+        <div className="wco-right">
+          <button
+            onClick={onOpenAddModal}
+            className="wco-add-btn"
+            title="Neue Bewerbung hinzufügen"
+          >
+            <Plus size={14} />
+            <span>Neue Stelle</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Spacer below WCO bar */}
+      <div className="wco-spacer" />
+    </>
+  );
+};
+
+// ─── Standard Navbar (Browser / non-WCO PWA) ─────────────────────────────────
+const StandardNavbar: React.FC<NavbarProps> = ({
   currentDirName,
   needsPermission,
   onSelectDirectory,
@@ -264,4 +468,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       </div>
     </header>
   );
+};
+
+// ─── Main Navbar export ───────────────────────────────────────────────────────
+export const Navbar: React.FC<NavbarProps> = (props) => {
+  const { isWCO } = useWindowControlsOverlay();
+  return isWCO ? <WCOTitlebar {...props} /> : <StandardNavbar {...props} />;
 };
