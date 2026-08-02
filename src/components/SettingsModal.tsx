@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { X, Key, Check, Cpu, User, Server, Clock } from 'lucide-react';
-import { AISettings, AIProviderId } from '../types/job';
+import { X, Key, Check, Cpu, User, Server, Clock, LayoutGrid, GripVertical, Eye, EyeOff, RotateCcw, ArrowUp, ArrowDown } from 'lucide-react';
+import { AISettings, AIProviderId, DEFAULT_CARD_SECTIONS } from '../types/job';
 import { aiService } from '../services/ai/aiService';
 import { profileService, UserProfile } from '../services/storage/profileService';
 
@@ -13,7 +13,7 @@ interface SettingsModalProps {
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSettingsSaved }) => {
   if (!isOpen) return null;
 
-  const [activeTab, setActiveTab] = useState<'profile' | 'feedback' | 'ai'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'feedback' | 'layout' | 'ai'>('profile');
   const [settings, setSettings] = useState<AISettings>(aiService.getSettings());
   const [profile, setProfile] = useState<UserProfile>({
     fullName: '',
@@ -23,6 +23,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     markdownDescription: '',
   });
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [draggedCardIndex, setDraggedCardIndex] = useState<number | null>(null);
 
   useEffect(() => {
     async function loadProfile() {
@@ -45,6 +46,53 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
     }, 1000);
   };
 
+  const cardLayout = settings.cardLayoutConfig || DEFAULT_CARD_SECTIONS;
+
+  const handleCardDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedCardIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleCardDragOver = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    if (draggedCardIndex !== null && draggedCardIndex !== targetIndex) {
+      const updated = [...cardLayout];
+      const [draggedItem] = updated.splice(draggedCardIndex, 1);
+      updated.splice(targetIndex, 0, draggedItem);
+
+      setSettings({ ...settings, cardLayoutConfig: updated });
+      setDraggedCardIndex(targetIndex);
+    }
+  };
+
+  const handleCardDragEnd = () => {
+    setDraggedCardIndex(null);
+  };
+
+  const moveCard = (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= cardLayout.length) return;
+
+    const updated = [...cardLayout];
+    const [movedItem] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, movedItem);
+
+    setSettings({ ...settings, cardLayoutConfig: updated });
+  };
+
+  const toggleCardVisibility = (id: string) => {
+    const updated = cardLayout.map((c) =>
+      c.id === id ? { ...c, visible: !c.visible } : c
+    );
+    setSettings({ ...settings, cardLayoutConfig: updated });
+  };
+
+  const resetCardLayout = () => {
+    setSettings({ ...settings, cardLayoutConfig: DEFAULT_CARD_SECTIONS });
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-card glass-panel" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '640px' }}>
@@ -52,12 +100,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div style={{ padding: '8px', borderRadius: '10px', background: 'rgba(99,102,241,0.15)', color: 'var(--accent-primary)' }}>
-              {activeTab === 'profile' ? <User size={20} /> : activeTab === 'feedback' ? <Clock size={20} /> : <Cpu size={20} />}
+              {activeTab === 'profile' ? <User size={20} /> : activeTab === 'feedback' ? <Clock size={20} /> : activeTab === 'layout' ? <LayoutGrid size={20} /> : <Cpu size={20} />}
             </div>
             <div>
               <h2 style={{ fontSize: '1.2rem' }}>Einstellungen & Profil</h2>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Globaler Lebenslauf, Rückmeldungs-Fristen & KI-Anbieter konfigurieren
+                Globaler Lebenslauf, Rückmeldungen, Karten-Layout & KI-Anbieter
               </span>
             </div>
           </div>
@@ -67,29 +115,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
         </div>
 
         {/* Navigation Tabs */}
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px' }}>
+        <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', flexWrap: 'wrap' }}>
           <button
             onClick={() => setActiveTab('profile')}
             className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
+            style={{ flex: 1, minWidth: '120px', gap: '6px', fontSize: '0.8rem' }}
           >
-            <User size={16} />
+            <User size={15} />
             <span>Lebenslauf</span>
           </button>
           <button
             onClick={() => setActiveTab('feedback')}
             className={`btn ${activeTab === 'feedback' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
+            style={{ flex: 1, minWidth: '120px', gap: '6px', fontSize: '0.8rem' }}
           >
-            <Clock size={16} />
-            <span>Rückmeldung & Fristen</span>
+            <Clock size={15} />
+            <span>Rückmeldung</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('layout')}
+            className={`btn ${activeTab === 'layout' ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ flex: 1, minWidth: '100px', gap: '6px', fontSize: '0.8rem' }}
+          >
+            <LayoutGrid size={15} />
+            <span>Layout</span>
           </button>
           <button
             onClick={() => setActiveTab('ai')}
             className={`btn ${activeTab === 'ai' ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
+            style={{ flex: 1, minWidth: '120px', gap: '6px', fontSize: '0.8rem' }}
           >
-            <Cpu size={16} />
+            <Cpu size={15} />
             <span>KI Provider</span>
           </button>
         </div>
@@ -216,7 +272,141 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
           </div>
         )}
 
-        {/* Tab 3: AI Settings */}
+        {/* Tab 3: Card Layout Customization */}
+        {activeTab === 'layout' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h4 style={{ fontSize: '0.95rem', color: 'var(--accent-cyan)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <LayoutGrid size={16} /> Anordnung der Detail-Karten
+                </h4>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Ziehe eine Karte per Drag & Drop hoch/runter (reagiert sofort) oder nutze die Pfeile ⬆️ ⬇️.
+                </span>
+              </div>
+
+              <button
+                onClick={resetCardLayout}
+                className="btn btn-secondary"
+                style={{ fontSize: '0.75rem', gap: '4px', padding: '5px 10px' }}
+                title="Kartenanordnung auf Standard zurücksetzen"
+              >
+                <RotateCcw size={13} />
+                <span>Zurücksetzen</span>
+              </button>
+            </div>
+
+            {/* Drag and drop card list */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {cardLayout.map((card, idx) => {
+                const isDraggingThis = draggedCardIndex === idx;
+                return (
+                  <div
+                    key={card.id}
+                    draggable
+                    onDragStart={(e) => handleCardDragStart(e, idx)}
+                    onDragOver={(e) => handleCardDragOver(e, idx)}
+                    onDragEnd={handleCardDragEnd}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      borderRadius: 'var(--radius-md)',
+                      background: isDraggingThis
+                        ? 'rgba(99, 102, 241, 0.25)'
+                        : card.visible
+                        ? 'rgba(255, 255, 255, 0.04)'
+                        : 'rgba(255, 255, 255, 0.01)',
+                      border: isDraggingThis
+                        ? '2px solid var(--accent-primary)'
+                        : card.visible
+                        ? '1px solid var(--border-color)'
+                        : '1px dashed rgba(248, 113, 113, 0.3)',
+                      boxShadow: isDraggingThis ? '0 10px 30px rgba(99, 102, 241, 0.4)' : 'none',
+                      opacity: card.visible ? 1 : 0.5,
+                      transform: isDraggingThis ? 'scale(1.02)' : 'scale(1)',
+                      cursor: 'grab',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <GripVertical size={20} color={isDraggingThis ? 'var(--accent-cyan)' : 'var(--accent-primary)'} style={{ cursor: 'grab' }} />
+                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-cyan)', width: '22px' }}>
+                          #{idx + 1}
+                        </span>
+                      </div>
+
+                      <div>
+                        <span style={{ fontSize: '0.875rem', fontWeight: 600, color: card.visible ? 'var(--text-main)' : 'var(--text-muted)', display: 'block' }}>
+                          {card.title}
+                        </span>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                          ID: {card.id}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {/* Move Up / Down Buttons */}
+                      <button
+                        onClick={() => moveCard(idx, 'up')}
+                        disabled={idx === 0}
+                        className="btn-icon"
+                        style={{ width: '28px', height: '28px', opacity: idx === 0 ? 0.3 : 1 }}
+                        title="Nach oben verschieben"
+                      >
+                        <ArrowUp size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => moveCard(idx, 'down')}
+                        disabled={idx === cardLayout.length - 1}
+                        className="btn-icon"
+                        style={{ width: '28px', height: '28px', opacity: idx === cardLayout.length - 1 ? 0.3 : 1 }}
+                        title="Nach unten verschieben"
+                      >
+                        <ArrowDown size={14} />
+                      </button>
+
+                      <span
+                        style={{
+                          fontSize: '0.7rem',
+                          padding: '3px 8px',
+                          borderRadius: '10px',
+                          fontWeight: 700,
+                          background: card.visible ? 'rgba(52, 211, 153, 0.12)' : 'rgba(248, 113, 113, 0.12)',
+                          color: card.visible ? '#34d399' : '#f87171',
+                          border: card.visible ? '1px solid rgba(52, 211, 153, 0.3)' : '1px solid rgba(248, 113, 113, 0.3)',
+                          margin: '0 4px',
+                        }}
+                      >
+                        {card.visible ? 'Aktiv' : 'Aus'}
+                      </span>
+
+                      <button
+                        onClick={() => toggleCardVisibility(card.id)}
+                        className="btn-icon"
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          color: card.visible ? '#f87171' : '#34d399',
+                          borderColor: card.visible ? 'rgba(248, 113, 113, 0.3)' : 'rgba(52, 211, 153, 0.3)',
+                        }}
+                        title={card.visible ? 'Karte entfernen / ausblenden' : 'Karte wieder einblenden'}
+                      >
+                        {card.visible ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: AI Settings */}
         {activeTab === 'ai' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '60vh', overflowY: 'auto', paddingRight: '4px' }}>
             {/* Active Provider Selector */}

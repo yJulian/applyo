@@ -44,6 +44,33 @@ export interface JobFile {
 
 export type AIProviderId = 'openai' | 'gemini' | 'claude' | 'custom_openai';
 
+export type CardSectionId =
+  | 'feedback'
+  | 'tailored_cv'
+  | 'documents'
+  | 'summary'
+  | 'experience_check'
+  | 'tasks_requirements'
+  | 'benefits'
+  | 'notes';
+
+export interface CardSectionConfig {
+  id: CardSectionId;
+  title: string;
+  visible: boolean;
+}
+
+export const DEFAULT_CARD_SECTIONS: CardSectionConfig[] = [
+  { id: 'feedback', title: 'Letzte Rückmeldung verwalten', visible: true },
+  { id: 'tailored_cv', title: 'Lebenslauf.md anpassen', visible: true },
+  { id: 'documents', title: 'Dokumente & Ordner', visible: true },
+  { id: 'summary', title: 'Zusammenfassung', visible: true },
+  { id: 'experience_check', title: 'Berufserfahrung & Einstieg Check', visible: true },
+  { id: 'tasks_requirements', title: 'Aufgaben & Anforderungen', visible: true },
+  { id: 'benefits', title: 'Benefits & Vorteile', visible: true },
+  { id: 'notes', title: 'Notizen & Notizen zum Gespräch', visible: true },
+];
+
 export interface AISettings {
   activeProvider: AIProviderId;
   openaiKey: string;
@@ -58,6 +85,7 @@ export interface AISettings {
   corsProxyUrl?: string;
   corsProxyToken?: string;
   feedbackThresholdWeeks?: number; // Frist in Wochen für den Status "Lange her" (Standard: 6)
+  cardLayoutConfig?: CardSectionConfig[]; // Anpassbare Kartenanordnung im Job-Detail
 }
 
 export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: string; bg: string }> = {

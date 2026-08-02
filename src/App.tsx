@@ -12,6 +12,7 @@ import { AIAssistantDrawer } from './components/AIAssistantDrawer';
 import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings } from './types/job';
 import { fileSystemService } from './services/storage/fileSystem';
 import { aiService } from './services/ai/aiService';
+import { profileService } from './services/storage/profileService';
 
 export default function App() {
   const [jobs, setJobs] = useState<JobMetadata[]>([]);
@@ -45,6 +46,11 @@ export default function App() {
         const permState = await fileSystemService.checkPermissionState(handle);
         if (permState === 'granted') {
           setNeedsPermission(false);
+          const rootMeta = await fileSystemService.loadRootMetadata(handle);
+          aiService.setRootMeta(rootMeta.feedbackThresholdWeeks, rootMeta.cardLayoutConfig);
+          profileService.setCachedProfile(rootMeta.profile);
+          setAiSettings(aiService.getSettings());
+
           const scannedJobs = await fileSystemService.scanDirectory(handle);
           setJobs(scannedJobs);
           if (scannedJobs.length > 0) {
@@ -69,6 +75,11 @@ export default function App() {
     const granted = await fileSystemService.requestRootPermission(handle);
     if (granted) {
       setNeedsPermission(false);
+      const rootMeta = await fileSystemService.loadRootMetadata(handle);
+      aiService.setRootMeta(rootMeta.feedbackThresholdWeeks, rootMeta.cardLayoutConfig);
+      profileService.setCachedProfile(rootMeta.profile);
+      setAiSettings(aiService.getSettings());
+
       const scannedJobs = await fileSystemService.scanDirectory(handle);
       setJobs(scannedJobs);
       if (scannedJobs.length > 0) {
@@ -85,6 +96,12 @@ export default function App() {
     if (handle) {
       setCurrentDirName(handle.name);
       setNeedsPermission(false);
+      
+      const rootMeta = await fileSystemService.loadRootMetadata(handle);
+      aiService.setRootMeta(rootMeta.feedbackThresholdWeeks, rootMeta.cardLayoutConfig);
+      profileService.setCachedProfile(rootMeta.profile);
+      setAiSettings(aiService.getSettings());
+
       const scannedJobs = await fileSystemService.scanDirectory(handle);
       if (scannedJobs.length > 0) {
         setJobs(scannedJobs);
@@ -189,6 +206,7 @@ export default function App() {
             onDeleteJob={handleDeleteJob}
             onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
+            cardLayoutConfig={aiSettings.cardLayoutConfig}
           />
         </div>
       ) : (
@@ -243,6 +261,7 @@ export default function App() {
         onDeleteJob={handleDeleteJob}
         onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
         feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
+        cardLayoutConfig={aiSettings.cardLayoutConfig}
       />
 
       <AIAssistantDrawer

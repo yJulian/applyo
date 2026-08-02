@@ -1,8 +1,8 @@
 import { openDB } from 'idb';
+import { fileSystemService } from './fileSystem';
 
 const DB_NAME = 'applyo_profile_db';
 const STORE_NAME = 'profile';
-const PROFILE_KEY = 'user_profile_data';
 const CV_FILE_KEY = 'user_global_cv_file';
 
 export interface UserProfile {
@@ -37,6 +37,12 @@ Erfahrener Softwareentwickler mit Leidenschaft für moderne Webanwendungen (Reac
 };
 
 class ProfileService {
+  private cachedProfile: UserProfile | null = null;
+
+  setCachedProfile(profile: UserProfile) {
+    this.cachedProfile = profile;
+  }
+
   async initDB() {
     return openDB(DB_NAME, 1, {
       upgrade(db) {
@@ -48,24 +54,30 @@ class ProfileService {
   }
 
   async getProfile(): Promise<UserProfile> {
-    try {
-      const db = await this.initDB();
-      const saved = await db.get(STORE_NAME, PROFILE_KEY);
-      if (saved) {
-        return { ...DEFAULT_PROFILE, ...saved };
-      }
-    } catch (e) {
-      console.warn('Fehler beim Laden des Benutzerprofils:', e);
+    if (this.cachedProfile) {
+      return this.cachedProfile;
     }
-    return DEFAULT_PROFILE;
+    try {
+      const { profile } = await fileSystemService.loadRootMetadata();
+      this.cachedProfile = profile;
+      return profile;
+    } catch (e) {
+      console.warn('Fehler beim Laden des Benutzerprofils aus metadata.json:', e);
+      return DEFAULT_PROFILE;
+    }
   }
 
   async saveProfile(profile: UserProfile): Promise<void> {
+    this.cachedProfile = profile;
     try {
-      const db = await this.initDB();
-      await db.put(STORE_NAME, profile, PROFILE_KEY);
+      const loaded = await fileSystemService.loadRootMetadata();
+      await fileSystemService.saveRootMetadata({
+        profile,
+        feedbackThresholdWeeks: loaded.feedbackThresholdWeeks,
+        cardLayoutConfig: loaded.cardLayoutConfig,
+      });
     } catch (e) {
-      console.error('Fehler beim Speichern des Benutzerprofils:', e);
+      console.error('Fehler beim Speichern des Benutzerprofils in root metadata.json:', e);
     }
   }
 
