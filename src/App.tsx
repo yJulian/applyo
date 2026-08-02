@@ -10,7 +10,7 @@ import { SettingsModal } from './components/SettingsModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
 import { CVEditorModal } from './components/CVEditorModal';
 
-import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings } from './types/job';
+import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings, StatusHistoryEntry } from './types/job';
 import { fileSystemService } from './services/storage/fileSystem';
 import { aiService } from './services/ai/aiService';
 import { profileService } from './services/storage/profileService';
@@ -132,8 +132,21 @@ export default function App() {
   };
 
   const handleUpdateJob = async (updatedJob: JobMetadata) => {
-    setJobs((prev) => prev.map((j) => (j.id === updatedJob.id ? updatedJob : j)));
-    await fileSystemService.saveJob(updatedJob);
+    const previousJob = jobs.find((j) => j.id === updatedJob.id);
+    let jobToSave = { ...updatedJob };
+
+    if (previousJob && previousJob.status !== updatedJob.status) {
+      const historyEntry: StatusHistoryEntry = {
+        fromStatus: previousJob.status,
+        toStatus: updatedJob.status,
+        timestamp: new Date().toISOString(),
+      };
+      const existingHistory = previousJob.statusHistory || [];
+      jobToSave.statusHistory = [...existingHistory, historyEntry];
+    }
+
+    setJobs((prev) => prev.map((j) => (j.id === jobToSave.id ? jobToSave : j)));
+    await fileSystemService.saveJob(jobToSave);
   };
 
   const handleDeleteJob = async (jobToDelete: JobMetadata) => {

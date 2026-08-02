@@ -12,6 +12,12 @@ export type ExperienceLevel =
   | 'desired'   // Berufserfahrung gewünscht / vom Vorteil
   | 'none';     // Keine Angabe / Unklar
 
+export interface StatusHistoryEntry {
+  fromStatus?: ApplicationStatus;
+  toStatus: ApplicationStatus;
+  timestamp: string;
+}
+
 export interface JobMetadata {
   id: string;
   company: string;
@@ -35,6 +41,7 @@ export interface JobMetadata {
   priorKnowledgeLevel?: number; // Skala 0-9 (0 = gar nichts gefordert, 1-7 = Skills/Vorwissen ohne Firmen-Erfahrung, 8-9 = zwingende echte Arbeitserfahrung an einer Firma)
   personalRating?: number; // 1-5 Sterne für persönliche Rangliste
   customTags?: string[]; // Eigene benutzerdefinierte Tags
+  statusHistory?: StatusHistoryEntry[]; // Automatische Protokollierung von Statusänderungen
 }
 
 export interface JobFile {
