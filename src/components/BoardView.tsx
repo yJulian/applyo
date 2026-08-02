@@ -10,13 +10,13 @@ import {
   Folder,
   Unlock,
   Layers,
+  X,
 } from 'lucide-react';
 import {
   JobMetadata,
   ApplicationStatus,
   ExperienceLevel,
   STATUS_LABELS,
-  EXPERIENCE_LABELS
 } from '../types/job';
 
 interface BoardViewProps {
@@ -65,6 +65,70 @@ export const BoardView: React.FC<BoardViewProps> = ({
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<ApplicationStatus | null>(null);
 
+  // Per-column search query & expand states
+  const [columnSearches, setColumnSearches] = useState<Record<ApplicationStatus, string>>({
+    interested: '',
+    applied: '',
+    response_received: '',
+    interviewing: '',
+    offer: '',
+    rejected: '',
+  });
+
+  const [expandedColumnSearches, setExpandedColumnSearches] = useState<Record<ApplicationStatus, boolean>>({
+    interested: false,
+    applied: false,
+    response_received: false,
+    interviewing: false,
+    offer: false,
+    rejected: false,
+  });
+
+  const toggleColumnSearch = (status: ApplicationStatus, open: boolean) => {
+    setExpandedColumnSearches((prev) => ({ ...prev, [status]: open }));
+  };
+
+  const updateColumnSearch = (status: ApplicationStatus, query: string) => {
+    setColumnSearches((prev) => ({ ...prev, [status]: query }));
+  };
+
+  // Helper to render experience level as a colored dot with tooltip
+  const renderExperienceDot = (expLevel: ExperienceLevel) => {
+    let color = '#64748b';
+    let shadow = 'none';
+    let tooltip = 'Keine Angabe zur Erfahrung';
+
+    if (expLevel === 'required') {
+      color = '#f43f5e';
+      shadow = '0 0 8px rgba(244, 63, 94, 0.8)';
+      tooltip = '🔴 Berufserfahrung erforderlich';
+    } else if (expLevel === 'junior') {
+      color = '#10b981';
+      shadow = '0 0 8px rgba(16, 185, 129, 0.8)';
+      tooltip = '🟢 Junior / Ohne Vorerfahrung möglich';
+    } else if (expLevel === 'desired') {
+      color = '#f59e0b';
+      shadow = '0 0 8px rgba(245, 158, 11, 0.8)';
+      tooltip = '🟡 Berufserfahrung gewünscht';
+    }
+
+    return (
+      <div
+        title={tooltip}
+        style={{
+          width: '10px',
+          height: '10px',
+          borderRadius: '50%',
+          backgroundColor: color,
+          boxShadow: shadow,
+          cursor: 'help',
+          flexShrink: 0,
+          transition: 'transform 0.15s ease',
+        }}
+      />
+    );
+  };
+
   // Apply search & exp filter across jobs
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -77,10 +141,19 @@ export const BoardView: React.FC<BoardViewProps> = ({
     return matchesSearch && matchesExp;
   });
 
-  // Group filtered jobs by status
+  // Group filtered jobs by status and apply column-specific search filtering
   const jobsByStatus = BOARD_COLUMNS.reduce<Record<ApplicationStatus, JobMetadata[]>>(
     (acc, status) => {
-      acc[status] = filteredJobs.filter((j) => j.status === status);
+      const colQuery = columnSearches[status].toLowerCase().trim();
+      acc[status] = filteredJobs.filter((j) => {
+        if (j.status !== status) return false;
+        if (!colQuery) return true;
+        return (
+          j.company.toLowerCase().includes(colQuery) ||
+          j.title.toLowerCase().includes(colQuery) ||
+          j.tasks.some((t) => t.toLowerCase().includes(colQuery))
+        );
+      });
       return acc;
     },
     {
@@ -201,7 +274,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
           zIndex: 5,
         }}
       >
-        {/* Left: Search & Filter */}
+        {/* Left: Global Search & Filter */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap', flex: 1, maxWidth: '600px' }}>
           <div style={{ position: 'relative', flex: 1, minWidth: '220px' }}>
             <Search
@@ -272,6 +345,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
           const statusMeta = STATUS_LABELS[statusKey];
           const columnJobs = jobsByStatus[statusKey] || [];
           const isDropTarget = dragOverStatus === statusKey;
+          const isSearchExpanded = expandedColumnSearches[statusKey];
+          const colSearchText = columnSearches[statusKey];
 
           return (
             <div
@@ -296,15 +371,16 @@ export const BoardView: React.FC<BoardViewProps> = ({
               {/* Column Header */}
               <div
                 style={{
-                  padding: '14px 16px',
+                  padding: '12px 14px',
                   borderBottom: '1px solid var(--border-color)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   background: 'rgba(255, 255, 255, 0.02)',
+                  gap: '8px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                   <div
                     style={{
                       width: '10px',
@@ -312,26 +388,104 @@ export const BoardView: React.FC<BoardViewProps> = ({
                       borderRadius: '50%',
                       backgroundColor: statusMeta.color,
                       boxShadow: `0 0 8px ${statusMeta.color}`,
+                      flexShrink: 0,
                     }}
                   />
-                  <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>
+                  <h3
+                    style={{
+                      fontSize: '0.875rem',
+                      fontWeight: 700,
+                      color: 'var(--text-main)',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
                     {statusMeta.label}
                   </h3>
                 </div>
 
-                <span
-                  style={{
-                    fontSize: '0.75rem',
-                    fontWeight: 700,
-                    padding: '2px 8px',
-                    borderRadius: '12px',
-                    background: statusMeta.bg,
-                    color: statusMeta.color,
-                    border: `1px solid ${statusMeta.color}40`,
-                  }}
-                >
-                  {columnJobs.length}
-                </span>
+                {/* Expanding Search Icon & Count Badge */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {isSearchExpanded ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        background: 'var(--bg-input)',
+                        border: '1px solid var(--accent-primary)',
+                        borderRadius: '14px',
+                        padding: '2px 8px',
+                        boxShadow: '0 0 10px rgba(99, 102, 241, 0.2)',
+                      }}
+                    >
+                      <Search size={12} color="var(--accent-primary)" style={{ marginRight: '4px', flexShrink: 0 }} />
+                      <input
+                        type="text"
+                        autoFocus
+                        placeholder="In Phase..."
+                        value={colSearchText}
+                        onChange={(e) => updateColumnSearch(statusKey, e.target.value)}
+                        style={{
+                          width: '85px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--text-main)',
+                          fontSize: '0.75rem',
+                          outline: 'none',
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          updateColumnSearch(statusKey, '');
+                          toggleColumnSearch(statusKey, false);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: '2px',
+                        }}
+                        title="Schließen"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => toggleColumnSearch(statusKey, true)}
+                      className="btn-icon"
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        background: colSearchText ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
+                        border: colSearchText ? '1px solid var(--accent-primary)' : '1px solid transparent',
+                      }}
+                      title="Diese Phase filtern"
+                    >
+                      <Search size={13} color={colSearchText ? 'var(--accent-primary)' : 'var(--text-muted)'} />
+                    </button>
+                  )}
+
+                  <span
+                    style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '12px',
+                      background: statusMeta.bg,
+                      color: statusMeta.color,
+                      border: `1px solid ${statusMeta.color}40`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {columnJobs.length}
+                  </span>
+                </div>
               </div>
 
               {/* Column Cards Scroll Area */}
@@ -360,11 +514,10 @@ export const BoardView: React.FC<BoardViewProps> = ({
                       gap: '8px',
                     }}
                   >
-                    <span>Hierher ziehen (Drag & Drop)</span>
+                    <span>{colSearchText ? 'Keine Treffer' : 'Hierher ziehen (Drag & Drop)'}</span>
                   </div>
                 ) : (
                   columnJobs.map((job) => {
-                    const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
                     const isDraggingThis = draggedJobId === job.id;
 
                     return (
@@ -390,7 +543,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                           position: 'relative',
                         }}
                       >
-                        {/* Top: Drag handle & Company */}
+                        {/* Top: Drag handle & Company + Red/Green/Yellow Dot Indicator */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
                             <GripVertical size={14} color="var(--text-dim)" style={{ flexShrink: 0, cursor: 'grab' }} />
@@ -410,9 +563,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
                             </span>
                           </div>
 
-                          <span className={`badge ${expMeta.tagClass}`} style={{ fontSize: '0.65rem', padding: '2px 6px' }}>
-                            {expMeta.label}
-                          </span>
+                          {/* Minimal Experience Level Dot with hover tooltip */}
+                          {renderExperienceDot(job.experienceLevel)}
                         </div>
 
                         {/* Title */}
