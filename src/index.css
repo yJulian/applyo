@@ -46,7 +46,8 @@ body {
   color: var(--text-main);
   font-family: var(--font-family);
   min-height: 100vh;
-  overflow-x: hidden;
+  min-width: 650px;
+  overflow-x: auto;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -75,6 +76,7 @@ body {
   flex-direction: column;
   height: 100vh;
   width: 100vw;
+  min-width: 650px;
   overflow: hidden;
 }
 
@@ -433,12 +435,12 @@ select option {
 */
 
 .wco-titlebar {
-  /* Precisely fill the OS titlebar area */
+  /* Span 100vw across full window with +1px extra height */
   position: fixed;
   top: env(titlebar-area-y, 0);
-  left: env(titlebar-area-x, 0);
-  width: env(titlebar-area-width, 100%);
-  height: env(titlebar-area-height, 40px);
+  left: 0;
+  width: 100vw;
+  height: calc(env(titlebar-area-height, 40px) + 1px);
 
   display: flex;
   align-items: center;
@@ -447,12 +449,12 @@ select option {
   background: rgba(9, 13, 22, 0.96);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 1px 0 rgba(99, 102, 241, 0.18), 0 4px 20px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 1px 0 rgba(99, 102, 241, 0.25), 0 4px 20px rgba(0, 0, 0, 0.5);
 
   z-index: 9999;
-  overflow: hidden;
-  padding: 0;
+  padding-left: env(titlebar-area-x, 0);
+  padding-right: calc(100vw - env(titlebar-area-x, 0) - env(titlebar-area-width, 100vw));
 
   /* Make the whole bar draggable by default */
   -webkit-app-region: drag;
@@ -561,31 +563,32 @@ select option {
   cursor: default;
 }
 
-/* Primary add-job button in WCO bar */
+/* Primary add-job button in WCO bar (Segmented Option 1 style) */
 .wco-add-btn {
   height: 28px;
-  border-radius: 14px;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   padding: 0 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: rgba(99, 102, 241, 0.2);
   color: #ffffff;
   font-family: inherit;
   font-size: 0.75rem;
   font-weight: 600;
-  border: none;
+  border: 1px solid rgba(99, 102, 241, 0.4);
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   white-space: nowrap;
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
 .wco-add-btn:hover {
-  opacity: 0.92;
+  background: rgba(99, 102, 241, 0.35);
+  border-color: rgba(165, 180, 252, 0.6);
   transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.55);
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
 }
 .wco-add-btn:active {
   transform: translateY(0);
@@ -597,7 +600,7 @@ select option {
   the spacer has zero height.
 */
 .wco-spacer {
-  height: env(titlebar-area-height, 0px);
+  height: calc(env(titlebar-area-height, 0px) + 1px);
   width: 100%;
   flex-shrink: 0;
 }

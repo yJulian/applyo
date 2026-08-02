@@ -23,7 +23,7 @@ const TABS: { id: ViewMode; label: string; icon: React.ReactNode; title: string 
   { id: 'calendar', label: 'Kalender', icon: <CalendarDays size={14} />, title: 'Kalenderansicht' },
 ];
 
-// ─── Sliding Pill Tab Switcher ────────────────────────────────────────────────
+// ─── Option 3: Underline Minimalist Tabs ────────────────────────────────────
 const ViewSwitcher: React.FC<{
   viewMode: ViewMode;
   onViewModeChange: (m: ViewMode) => void;
@@ -31,31 +31,31 @@ const ViewSwitcher: React.FC<{
 }> = ({ viewMode, onViewModeChange, compact = false }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
+  const [underline, setUnderline] = useState<{ left: number; width: number } | null>(null);
   const [mounted, setMounted] = useState(false);
 
-  const updatePill = useCallback(() => {
+  const updateUnderline = useCallback(() => {
     const activeIdx = TABS.findIndex(t => t.id === viewMode);
     const btn = btnRefs.current[activeIdx];
     const container = containerRef.current;
     if (!btn || !container) return;
     const btnRect = btn.getBoundingClientRect();
     const conRect = container.getBoundingClientRect();
-    setPill({ left: btnRect.left - conRect.left, width: btnRect.width });
+    setUnderline({ left: btnRect.left - conRect.left, width: btnRect.width });
   }, [viewMode]);
 
   useEffect(() => {
-    updatePill();
+    updateUnderline();
     const t = setTimeout(() => setMounted(true), 30);
     return () => clearTimeout(t);
   }, []);
 
   useEffect(() => {
-    if (mounted) updatePill();
-  }, [viewMode, mounted, updatePill]);
+    if (mounted) updateUnderline();
+  }, [viewMode, mounted, updateUnderline]);
 
-  const pillPad = compact ? '5px 12px' : '7px 16px';
-  const fontSize = compact ? '0.75rem' : '0.8rem';
+  const pillPad = compact ? '6px 12px' : '8px 18px';
+  const fontSize = compact ? '0.78rem' : '0.825rem';
 
   return (
     <div
@@ -64,34 +64,11 @@ const ViewSwitcher: React.FC<{
       style={{
         display: 'inline-flex',
         alignItems: 'center',
-        padding: '3px',
-        borderRadius: '22px',
-        background: 'rgba(9, 13, 22, 0.9)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        boxShadow: '0 4px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
         position: 'relative',
-        gap: '0px',
+        gap: compact ? '4px' : '8px',
+        paddingBottom: '2px',
       }}
     >
-      {pill && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '3px',
-            left: pill.left,
-            width: pill.width,
-            height: 'calc(100% - 6px)',
-            borderRadius: '18px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%)',
-            boxShadow: '0 2px 12px rgba(99,102,241,0.45), 0 1px 3px rgba(0,0,0,0.3)',
-            transition: mounted
-              ? 'left 0.42s cubic-bezier(0.34, 1.4, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.3, 0.64, 1)'
-              : 'none',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        />
-      )}
       {TABS.map((tab, idx) => {
         const isActive = viewMode === tab.id;
         return (
@@ -105,29 +82,49 @@ const ViewSwitcher: React.FC<{
               zIndex: 1,
               display: 'flex',
               alignItems: 'center',
-              gap: '5px',
+              gap: '6px',
               padding: pillPad,
-              borderRadius: '18px',
+              borderRadius: '6px',
               fontSize,
-              fontWeight: 600,
+              fontWeight: isActive ? 600 : 500,
               cursor: isActive ? 'default' : 'pointer',
               border: 'none',
               outline: 'none',
               background: 'transparent',
-              color: isActive ? '#ffffff' : 'rgba(148,163,184,0.75)',
-              transition: 'color 0.25s ease',
+              color: isActive ? '#ffffff' : 'rgba(148, 163, 184, 0.65)',
+              transition: 'color 0.2s ease',
               userSelect: 'none',
               whiteSpace: 'nowrap',
               WebkitAppRegion: 'no-drag',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0, color: isActive ? '#6366f1' : 'inherit' }}>
               {tab.icon}
             </span>
             <span>{tab.label}</span>
           </button>
         );
       })}
+      {/* Dynamic sliding gradient underline */}
+      {underline && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: underline.left + 8,
+            width: underline.width - 16,
+            height: '2px',
+            borderRadius: '2px',
+            background: 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%)',
+            boxShadow: '0 0 10px rgba(99, 102, 241, 0.6)',
+            transition: mounted
+              ? 'left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+              : 'none',
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -169,74 +166,12 @@ function useWindowControlsOverlay() {
   return { isWCO, titlebarArea };
 }
 
-// ─── WCO: Tab-Switcher mit gleitendem Outline-Pill ──────────────────────────
+// ─── WCO: Underline Minimalist Tab Switcher ─────────────────────────────────
 const WCOTabSwitcher: React.FC<{
   viewMode: ViewMode;
   onViewModeChange: (m: ViewMode) => void;
 }> = ({ viewMode, onViewModeChange }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  const updatePill = useCallback(() => {
-    const activeIdx = TABS.findIndex(t => t.id === viewMode);
-    const btn = btnRefs.current[activeIdx];
-    const container = containerRef.current;
-    if (!btn || !container) return;
-    const btnRect = btn.getBoundingClientRect();
-    const conRect = container.getBoundingClientRect();
-    setPill({ left: btnRect.left - conRect.left, width: btnRect.width });
-  }, [viewMode]);
-
-  useEffect(() => {
-    updatePill();
-    const t = setTimeout(() => setMounted(true), 30);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => { if (mounted) updatePill(); }, [viewMode, mounted, updatePill]);
-
-  return (
-    <div ref={containerRef} className="wco-tabs view-switcher-container">
-      {/* Sliding gradient pill – same look as ViewSwitcher, no container background */}
-      {pill && (
-        <div
-          style={{
-            position: 'absolute',
-            top: '3px',
-            left: pill.left,
-            width: pill.width,
-            height: 'calc(100% - 6px)',
-            borderRadius: '18px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 55%, #06b6d4 100%)',
-            boxShadow: '0 2px 12px rgba(99,102,241,0.45), 0 1px 3px rgba(0,0,0,0.3)',
-            transition: mounted
-              ? 'left 0.42s cubic-bezier(0.34, 1.4, 0.64, 1), width 0.38s cubic-bezier(0.34, 1.3, 0.64, 1)'
-              : 'none',
-            pointerEvents: 'none',
-            zIndex: 0,
-          }}
-        />
-      )}
-      {TABS.map((tab, idx) => {
-        const isActive = viewMode === tab.id;
-        return (
-          <button
-            key={tab.id}
-            ref={el => { btnRefs.current[idx] = el; }}
-            onClick={() => { if (!isActive) onViewModeChange(tab.id); }}
-            title={tab.title}
-            className={`wco-tab-btn${isActive ? ' wco-tab-btn--active' : ''}`}
-            style={{ position: 'relative', zIndex: 1 }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
+  return <ViewSwitcher viewMode={viewMode} onViewModeChange={onViewModeChange} compact />;
 };
 
 // ─── WCO Titlebar (nur wenn als PWA mit WCO installiert) ─────────────────────
@@ -253,12 +188,13 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
 }) => {
   const [isFolderHovered, setIsFolderHovered] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+  const [isAddHovered, setIsAddHovered] = useState(false);
 
   return (
     <>
       <div className="wco-titlebar">
 
-        {/* Left: Folder + Settings (borderless icon buttons) */}
+        {/* Left: Folder only */}
         <div className="wco-left">
           <button
             onClick={needsPermission && currentDirName ? onGrantPermission : onSelectDirectory}
@@ -293,6 +229,36 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
                 : currentDirName ?? 'Ordner wählen'}
             </span>
           </button>
+        </div>
+
+        {/* Center: Minimal Tab Switcher */}
+        <div className="wco-center">
+          <WCOTabSwitcher viewMode={viewMode} onViewModeChange={onViewModeChange} />
+        </div>
+
+        {/* Right: Neue Stelle + Einstellungen */}
+        <div className="wco-right">
+          <button
+            onClick={onOpenAddModal}
+            onMouseEnter={() => setIsAddHovered(true)}
+            onMouseLeave={() => setIsAddHovered(false)}
+            className="wco-bare-btn"
+            title="Neue Bewerbung hinzufügen"
+          >
+            <Plus size={15} color="#38bdf8" style={{ flexShrink: 0 }} />
+            <span style={{
+              fontSize: '0.72rem', fontWeight: 600,
+              color: '#38bdf8',
+              whiteSpace: 'nowrap',
+              maxWidth: isAddHovered ? '110px' : '0px',
+              opacity: isAddHovered ? 1 : 0,
+              marginLeft: isAddHovered ? '5px' : '0px',
+              overflow: 'hidden',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}>
+              Neue Stelle
+            </span>
+          </button>
 
           <button
             onClick={onOpenSettingsModal}
@@ -314,23 +280,6 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
             }}>
               Einstellungen
             </span>
-          </button>
-        </div>
-
-        {/* Center: Minimal Tab Switcher */}
-        <div className="wco-center">
-          <WCOTabSwitcher viewMode={viewMode} onViewModeChange={onViewModeChange} />
-        </div>
-
-        {/* Right: Neue Stelle */}
-        <div className="wco-right">
-          <button
-            onClick={onOpenAddModal}
-            className="wco-add-btn"
-            title="Neue Bewerbung hinzufügen"
-          >
-            <Plus size={14} />
-            <span>Neue Stelle</span>
           </button>
         </div>
       </div>
