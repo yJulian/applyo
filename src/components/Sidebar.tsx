@@ -194,11 +194,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           })}
         </div>
 
-        {/* Additional Filters & View Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px', gap: '8px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Filter size={13} color="var(--text-muted)" />
+        {/* Additional Filters & View Toggle - Nebeneinander auf einer Zeile */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '8px', gap: '6px', flexWrap: 'nowrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 1, minWidth: 0 }}>
+              <Filter size={13} color="var(--text-muted)" style={{ flexShrink: 0 }} />
               <select
                 value={selectedExpFilter}
                 onChange={(e) => onSelectExpFilter(e.target.value as ExperienceLevel | 'all')}
@@ -206,20 +206,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   backgroundColor: 'transparent',
                   border: 'none',
                   color: 'var(--text-muted)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.725rem',
                   outline: 'none',
                   cursor: 'pointer',
+                  padding: '2px 0',
+                  backgroundImage: 'none',
                 }}
               >
-                <option value="all">Filter: Alle Stellen</option>
-                <option value="junior">🟢 Junior / Ohne Vorerfahrung</option>
-                <option value="required">🔴 Berufserfahrung erforderlich</option>
-                <option value="desired">🟡 Erfahrung gewünscht</option>
+                <option value="all" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Filter: Alle Stellen</option>
+                <option value="junior" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>🟢 Junior / Ohne Vorerfahrung</option>
+                <option value="required" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>🔴 Erfahrung erforderlich</option>
+                <option value="desired" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>🟡 Erfahrung gewünscht</option>
               </select>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <ArrowUpDown size={13} color="var(--text-muted)" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '3px', flexShrink: 1, minWidth: 0 }}>
+              <ArrowUpDown size={13} color="var(--text-muted)" style={{ flexShrink: 0 }} />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
@@ -227,14 +229,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   backgroundColor: 'transparent',
                   border: 'none',
                   color: 'var(--text-muted)',
-                  fontSize: '0.75rem',
+                  fontSize: '0.725rem',
                   outline: 'none',
                   cursor: 'pointer',
+                  padding: '2px 0',
+                  backgroundImage: 'none',
                 }}
               >
-                <option value="date">Sortierung: Datum</option>
-                <option value="rating">Sortierung: Rangliste ⭐</option>
-                <option value="knowledge">Sortierung: Vorwissen 🧠</option>
+                <option value="date" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Sortierung: Datum</option>
+                <option value="rating" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Sortierung: Rangliste ⭐</option>
+                <option value="knowledge" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Sortierung: Vorwissen 🧠</option>
               </select>
             </div>
           </div>
@@ -242,10 +246,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             onClick={() => setGroupByCompany(!groupByCompany)}
             className="btn-icon"
-            style={{ width: '28px', height: '28px' }}
+            style={{ width: '26px', height: '26px', flexShrink: 0, padding: 0 }}
             title={groupByCompany ? 'Graphen/Listen-Ansicht umschalten' : 'Nach Firma gruppieren'}
           >
-            <Layers size={14} color={groupByCompany ? 'var(--accent-primary)' : 'var(--text-muted)'} />
+            <Layers size={13} color={groupByCompany ? 'var(--accent-primary)' : 'var(--text-muted)'} />
           </button>
         </div>
       </div>
