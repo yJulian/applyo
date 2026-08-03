@@ -704,14 +704,21 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                             setCvData({ ...cvData, experiences: updated });
                           }} />
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
-                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2021)" value={exp.startDate} onChange={(e) => {
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2021)" value={exp.startDate || ''} onChange={(e) => {
                               const updated = [...cvData.experiences];
                               updated[idx].startDate = e.target.value;
                               setCvData({ ...cvData, experiences: updated });
                             }} />
-                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. Heute)" value={exp.endDate} onChange={(e) => {
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. Heute)" value={exp.endDate || ''} onChange={(e) => {
                               const updated = [...cvData.experiences];
-                              updated[idx].endDate = e.target.value;
+                              const val = e.target.value;
+                              updated[idx].endDate = val;
+                              const lowerVal = val.trim().toLowerCase();
+                              if (lowerVal === 'heute' || lowerVal === 'present' || lowerVal === 'aktuell') {
+                                updated[idx].isCurrent = true;
+                              } else if (val.trim().length > 0) {
+                                updated[idx].isCurrent = false;
+                              }
                               setCvData({ ...cvData, experiences: updated });
                             }} />
                           </div>

@@ -38,6 +38,21 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
   const getProjDesc = (p: CVProject) => p.activeVersion === 'global' ? p.description : (p.tailoredDescription || p.description);
   const getProjTech = (p: CVProject) => p.activeVersion === 'global' ? p.techStack : (p.tailoredTechStack || p.techStack);
 
+  const getExpDuration = (e: CVExperience) => {
+    const end = e.endDate ? e.endDate : (e.isCurrent ? 'Heute' : '');
+    if (e.startDate && end) {
+      return `${e.startDate} – ${end}`;
+    }
+    return e.startDate || end;
+  };
+
+  const getEduDuration = (e: CVEducation) => {
+    if (e.startDate && e.endDate) {
+      return `${e.startDate} – ${e.endDate}`;
+    }
+    return e.startDate || e.endDate || '';
+  };
+
   return (
     <div
       id={targetId}
@@ -178,12 +193,12 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   {visibleExperiences.map((exp) => (
                     <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
                         <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
                           {getExpPosition(exp)} — <span style={{ color: '#475569', fontWeight: 600 }}>{exp.company}</span>
                         </span>
-                        <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700 }}>
-                          {exp.startDate} – {exp.isCurrent ? 'Heute' : exp.endDate}
+                        <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
+                          {getExpDuration(exp)}
                         </span>
                       </div>
                       {getExpSummary(exp) && <p style={{ fontSize: '0.8rem', color: '#475569', margin: '2px 0' }}>{getExpSummary(exp)}</p>}
@@ -207,9 +222,11 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {visibleEducation.map((edu) => (
                     <div key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
                         <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{getEduDegree(edu)}</strong>
-                        <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700 }}>{edu.startDate} – {edu.endDate}</span>
+                        <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
+                          {getEduDuration(edu)}
+                        </span>
                       </div>
                       <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{edu.institution}</div>
                       {getEduDesc(edu) && <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
@@ -271,12 +288,12 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
                 {visibleExperiences.map((exp) => (
                   <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
                       <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
                         {getExpPosition(exp)}
                       </h4>
-                      <span style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor }}>
-                        {exp.startDate} – {exp.isCurrent ? 'Heute' : exp.endDate}
+                      <span style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
+                        {getExpDuration(exp)}
                       </span>
                     </div>
                     <div style={{ fontSize: '0.775rem', fontWeight: 600, color: '#64748b', marginBottom: '3px' }}>
@@ -368,7 +385,7 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
                           {getEduDegree(edu)}
                         </h4>
                         <div style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor }}>
-                          {edu.institution} ({edu.startDate} – {edu.endDate})
+                          {edu.institution} {getEduDuration(edu) && <span style={{ whiteSpace: 'nowrap' }}>({getEduDuration(edu)})</span>}
                         </div>
                         {getEduDesc(edu) && <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
                       </div>
