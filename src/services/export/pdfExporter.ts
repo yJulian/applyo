@@ -88,6 +88,21 @@ class PDFExporter {
                 box-shadow: none !important;
                 border: none !important;
               }
+              h1, h2, h3, h4, h5, h6 {
+                break-after: avoid !important;
+                page-break-after: avoid !important;
+              }
+              thead {
+                display: table-header-group !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+                break-after: avoid !important;
+                page-break-after: avoid !important;
+              }
+              tr {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+              }
             </style>
           </head>
           <body>

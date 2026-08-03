@@ -188,95 +188,123 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Berufserfahrung */}
             {visibleExperiences.length > 0 && (
-              <div>
-                <MinimalSection title="Berufserfahrung" accentColor={accentColor} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0 }}>
+                <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                  <tr>
+                    <td style={{ padding: 0, paddingBottom: '4px' }}>
+                      <MinimalSection title="Berufserfahrung" accentColor={accentColor} />
+                    </td>
+                  </tr>
+                </thead>
+                <tbody>
                   {visibleExperiences.map((exp) => (
-                    <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
-                        <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
-                          {getExpPosition(exp)} — <span style={{ color: '#475569', fontWeight: 600 }}>{exp.company}</span>
-                        </span>
-                        <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
-                          {getExpDuration(exp)}
-                        </span>
-                      </div>
-                      {getExpSummary(exp) && <p style={{ fontSize: '0.8rem', color: '#475569', margin: '2px 0' }}>{getExpSummary(exp)}</p>}
-                      {getExpHighlights(exp) && getExpHighlights(exp).length > 0 && (
-                        <ul style={{ paddingLeft: '16px', margin: '3px 0 0 0', fontSize: '0.775rem', color: '#475569' }}>
-                          {getExpHighlights(exp).map((h, i) => (
-                            <li key={i} style={{ marginBottom: '2px' }}>{h}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                    <tr key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                      <td style={{ padding: 0, paddingBottom: '14px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a' }}>
+                            {getExpPosition(exp)} — <span style={{ color: '#475569', fontWeight: 600 }}>{exp.company}</span>
+                          </span>
+                          <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
+                            {getExpDuration(exp)}
+                          </span>
+                        </div>
+                        {getExpSummary(exp) && <p style={{ fontSize: '0.8rem', color: '#475569', margin: '2px 0' }}>{getExpSummary(exp)}</p>}
+                        {getExpHighlights(exp) && getExpHighlights(exp).length > 0 && (
+                          <ul style={{ paddingLeft: '16px', margin: '3px 0 0 0', fontSize: '0.775rem', color: '#475569' }}>
+                            {getExpHighlights(exp).map((h, i) => (
+                              <li key={i} style={{ marginBottom: '2px' }}>{h}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </div>
+                </tbody>
+              </table>
             )}
 
             {/* Ausbildung & Abschlüsse */}
             {visibleEducation.length > 0 && (
-              <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                <MinimalSection title="Ausbildung & Abschlüsse" accentColor={accentColor} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0 }}>
+                <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                  <tr>
+                    <td style={{ padding: 0, paddingBottom: '4px' }}>
+                      <MinimalSection title="Ausbildung & Abschlüsse" accentColor={accentColor} />
+                    </td>
+                  </tr>
+                </thead>
+                <tbody>
                   {visibleEducation.map((edu) => (
-                    <div key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
-                        <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{getEduDegree(edu)}</strong>
-                        <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
-                          {getEduDuration(edu)}
-                        </span>
-                      </div>
-                      <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{edu.institution}</div>
-                      {getEduDesc(edu) && <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
-                    </div>
+                    <tr key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                      <td style={{ padding: 0, paddingBottom: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                          <strong style={{ fontSize: '0.875rem', color: '#0f172a' }}>{getEduDegree(edu)}</strong>
+                          <span style={{ fontSize: '0.75rem', color: accentColor, fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
+                            {getEduDuration(edu)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 600 }}>{edu.institution}</div>
+                        {getEduDesc(edu) && <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </div>
+                </tbody>
+              </table>
             )}
 
             {/* Kenntnisse & Fähigkeiten */}
             {visibleSkills.length > 0 && (
-              <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                <MinimalSection title="Kenntnisse & Fähigkeiten" accentColor={accentColor} />
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
-                  <tbody>
-                    {visibleSkills.map((cat) => (
-                      <tr key={cat.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                        <td style={{ width: '1%', whiteSpace: 'nowrap', fontWeight: 700, color: '#0f172a', paddingRight: '16px', paddingBottom: '6px', verticalAlign: 'top' }}>
-                          {getSkillCat(cat)}:
-                        </td>
-                        <td style={{ color: '#475569', paddingBottom: '6px', verticalAlign: 'top' }}>
-                          {getSkillList(cat).join(', ')}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, fontSize: '0.825rem' }}>
+                <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                  <tr>
+                    <td colSpan={2} style={{ padding: 0, paddingBottom: '4px' }}>
+                      <MinimalSection title="Kenntnisse & Fähigkeiten" accentColor={accentColor} />
+                    </td>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleSkills.map((cat) => (
+                    <tr key={cat.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                      <td style={{ width: '1%', whiteSpace: 'nowrap', fontWeight: 700, color: '#0f172a', paddingRight: '16px', paddingBottom: '6px', verticalAlign: 'top' }}>
+                        {getSkillCat(cat)}:
+                      </td>
+                      <td style={{ color: '#475569', paddingBottom: '6px', verticalAlign: 'top' }}>
+                        {getSkillList(cat).join(', ')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             )}
 
             {/* Ausgewählte Projekte */}
             {showProjects && visibleProjects.length > 0 && (
-              <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                <MinimalSection title="Ausgewählte Projekte" accentColor={accentColor} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0 }}>
+                <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                  <tr>
+                    <td style={{ padding: 0, paddingBottom: '4px' }}>
+                      <MinimalSection title="Ausgewählte Projekte" accentColor={accentColor} />
+                    </td>
+                  </tr>
+                </thead>
+                <tbody>
                   {visibleProjects.map((p) => (
-                    <div key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                      <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                        {getProjTitle(p)}
-                      </h4>
-                      <p style={{ fontSize: '0.775rem', color: '#475569', margin: '2px 0' }}>{getProjDesc(p)}</p>
-                      {getProjTech(p) && getProjTech(p).length > 0 && (
-                        <div style={{ fontSize: '0.725rem', color: accentColor, fontWeight: 600 }}>
-                          Tech: {getProjTech(p).join(', ')}
-                        </div>
-                      )}
-                    </div>
+                    <tr key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                      <td style={{ padding: 0, paddingBottom: '12px' }}>
+                        <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                          {getProjTitle(p)}
+                        </h4>
+                        <p style={{ fontSize: '0.775rem', color: '#475569', margin: '2px 0' }}>{getProjDesc(p)}</p>
+                        {getProjTech(p) && getProjTech(p).length > 0 && (
+                          <div style={{ fontSize: '0.725rem', color: accentColor, fontWeight: 600 }}>
+                            Tech: {getProjTech(p).join(', ')}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
                   ))}
-                </div>
-              </div>
+                </tbody>
+              </table>
             )}
           </div>
         ) : (
@@ -284,57 +312,78 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
           <div style={{ display: 'grid', gridTemplateColumns: '1.7fr 1fr', gap: '24px' }}>
             {/* LEFT MAIN COLUMN */}
             <div>
-              <SectionTitle title="Berufserfahrung" icon={<Briefcase size={16} color={accentColor} />} accentColor={accentColor} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
-                {visibleExperiences.map((exp) => (
-                  <div key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
-                      <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                        {getExpPosition(exp)}
-                      </h4>
-                      <span style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
-                        {getExpDuration(exp)}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '0.775rem', fontWeight: 600, color: '#64748b', marginBottom: '3px' }}>
-                      {exp.company} {exp.location ? `• ${exp.location}` : ''}
-                    </div>
-                    {getExpSummary(exp) && <p style={{ fontSize: '0.775rem', color: '#334155', marginBottom: '3px' }}>{getExpSummary(exp)}</p>}
-                    {getExpHighlights(exp) && getExpHighlights(exp).length > 0 && (
-                      <ul style={{ paddingLeft: '14px', margin: 0, fontSize: '0.75rem', color: '#475569' }}>
-                        {getExpHighlights(exp).map((h, i) => (
-                          <li key={i} style={{ marginBottom: '2px' }}>{h}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                ))}
-              </div>
+              {/* Berufserfahrung */}
+              {visibleExperiences.length > 0 && (
+                <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, marginBottom: '20px' }}>
+                  <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                    <tr>
+                      <td style={{ padding: 0, paddingBottom: '4px' }}>
+                        <SectionTitle title="Berufserfahrung" icon={<Briefcase size={16} color={accentColor} />} accentColor={accentColor} />
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleExperiences.map((exp) => (
+                      <tr key={exp.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                        <td style={{ padding: 0, paddingBottom: '14px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '8px' }}>
+                            <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                              {getExpPosition(exp)}
+                            </h4>
+                            <span style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: '12px' }}>
+                              {getExpDuration(exp)}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.775rem', fontWeight: 600, color: '#64748b', marginBottom: '3px' }}>
+                            {exp.company} {exp.location ? `• ${exp.location}` : ''}
+                          </div>
+                          {getExpSummary(exp) && <p style={{ fontSize: '0.775rem', color: '#334155', marginBottom: '3px' }}>{getExpSummary(exp)}</p>}
+                          {getExpHighlights(exp) && getExpHighlights(exp).length > 0 && (
+                            <ul style={{ paddingLeft: '14px', margin: 0, fontSize: '0.75rem', color: '#475569' }}>
+                              {getExpHighlights(exp).map((h, i) => (
+                                <li key={i} style={{ marginBottom: '2px' }}>{h}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
 
               {/* Projects */}
               {showProjects && visibleProjects.length > 0 && (
-                <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <SectionTitle title="Ausgewählte Projekte" icon={<FolderGit2 size={16} color={accentColor} />} accentColor={accentColor} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0 }}>
+                  <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                    <tr>
+                      <td style={{ padding: 0, paddingBottom: '4px' }}>
+                        <SectionTitle title="Ausgewählte Projekte" icon={<FolderGit2 size={16} color={accentColor} />} accentColor={accentColor} />
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {visibleProjects.map((p) => (
-                      <div key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                        <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                          {getProjTitle(p)}
-                        </h4>
-                        <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getProjDesc(p)}</p>
-                        {getProjTech(p) && getProjTech(p).length > 0 && (
-                          <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '3px' }}>
-                            {getProjTech(p).map((t, idx) => (
-                              <span key={idx} style={{ fontSize: '0.675rem', padding: '1px 6px', borderRadius: '4px', background: `${accentColor}15`, color: accentColor, fontWeight: 600 }}>
-                                {t}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
+                      <tr key={p.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                        <td style={{ padding: 0, paddingBottom: '12px' }}>
+                          <h4 style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                            {getProjTitle(p)}
+                          </h4>
+                          <p style={{ fontSize: '0.75rem', color: '#475569', margin: '2px 0' }}>{getProjDesc(p)}</p>
+                          {getProjTech(p) && getProjTech(p).length > 0 && (
+                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '3px' }}>
+                              {getProjTech(p).map((t, idx) => (
+                                <span key={idx} style={{ fontSize: '0.675rem', padding: '1px 6px', borderRadius: '4px', background: `${accentColor}15`, color: accentColor, fontWeight: 600 }}>
+                                  {t}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                </div>
+                  </tbody>
+                </table>
               )}
             </div>
 
@@ -342,56 +391,72 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
             <div>
               {/* Skills */}
               {visibleSkills.length > 0 && (
-                <div style={{ marginBottom: '20px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <SectionTitle title="Skills & Expertisen" icon={<Code2 size={16} color={accentColor} />} accentColor={accentColor} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, marginBottom: '20px' }}>
+                  <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                    <tr>
+                      <td style={{ padding: 0, paddingBottom: '4px' }}>
+                        <SectionTitle title="Skills & Expertisen" icon={<Code2 size={16} color={accentColor} />} accentColor={accentColor} />
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {visibleSkills.map((cat) => (
-                      <div key={cat.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                        <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
-                          {getSkillCat(cat)}
-                        </h5>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                          {getSkillList(cat).map((s, idx) => (
-                            <span
-                              key={idx}
-                              style={{
-                                fontSize: '0.7rem',
-                                padding: '2px 6px',
-                                borderRadius: '8px',
-                                background: `${accentColor}12`,
-                                color: accentColor,
-                                border: `1px solid ${accentColor}30`,
-                                fontWeight: 600,
-                              }}
-                            >
-                              {s}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
+                      <tr key={cat.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                        <td style={{ padding: 0, paddingBottom: '10px' }}>
+                          <h5 style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                            {getSkillCat(cat)}
+                          </h5>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                            {getSkillList(cat).map((s, idx) => (
+                              <span
+                                key={idx}
+                                style={{
+                                  fontSize: '0.7rem',
+                                  padding: '2px 6px',
+                                  borderRadius: '8px',
+                                  background: `${accentColor}12`,
+                                  color: accentColor,
+                                  border: `1px solid ${accentColor}30`,
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                </div>
+                  </tbody>
+                </table>
               )}
 
               {/* Education */}
               {visibleEducation.length > 0 && (
-                <div style={{ marginBottom: '16px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <SectionTitle title="Ausbildung & Abschlüsse" icon={<GraduationCap size={16} color={accentColor} />} accentColor={accentColor} />
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', margin: 0, padding: 0, marginBottom: '16px' }}>
+                  <thead style={{ display: 'table-header-group', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakAfter: 'avoid', breakAfter: 'avoid' }}>
+                    <tr>
+                      <td style={{ padding: 0, paddingBottom: '4px' }}>
+                        <SectionTitle title="Ausbildung & Abschlüsse" icon={<GraduationCap size={16} color={accentColor} />} accentColor={accentColor} />
+                      </td>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {visibleEducation.map((edu) => (
-                      <div key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                        <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
-                          {getEduDegree(edu)}
-                        </h4>
-                        <div style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor }}>
-                          {edu.institution} {getEduDuration(edu) && <span style={{ whiteSpace: 'nowrap' }}>({getEduDuration(edu)})</span>}
-                        </div>
-                        {getEduDesc(edu) && <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
-                      </div>
+                      <tr key={edu.id} style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                        <td style={{ padding: 0, paddingBottom: '10px' }}>
+                          <h4 style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a', margin: 0 }}>
+                            {getEduDegree(edu)}
+                          </h4>
+                          <div style={{ fontSize: '0.725rem', fontWeight: 600, color: accentColor }}>
+                            {edu.institution} {getEduDuration(edu) && <span style={{ whiteSpace: 'nowrap' }}>({getEduDuration(edu)})</span>}
+                          </div>
+                          {getEduDesc(edu) && <p style={{ fontSize: '0.7rem', color: '#64748b', margin: '2px 0' }}>{getEduDesc(edu)}</p>}
+                        </td>
+                      </tr>
                     ))}
-                  </div>
-                </div>
+                  </tbody>
+                </table>
               )}
             </div>
           </div>
