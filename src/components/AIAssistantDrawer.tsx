@@ -39,6 +39,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
   const [inputText, setInputText] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [modelMode, setModelMode] = useState<'fast' | 'generation'>('generation');
 
   if (!isOpen) return null;
 
@@ -56,7 +57,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
     setIsGenerating(true);
 
     try {
-      const response = await aiService.generateAssistantResponse(promptText, job);
+      const response = await aiService.generateAssistantResponse(promptText, job, null, modelMode);
       const assistantMsg: ChatMessage = {
         id: crypto.randomUUID(),
         sender: 'assistant',
@@ -80,6 +81,10 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  const currentSettings = aiService.getSettings();
+  const activeConfig = aiService.getConfigForProvider(currentSettings.activeProvider, currentSettings, modelMode);
+  const activeModelName = activeConfig.model;
 
   return (
     <div
@@ -121,19 +126,44 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.02)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center' }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255, 255, 255, 0.02)', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', overflow: 'hidden' }}>
+            <div style={{ padding: '6px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
               <Sparkles size={18} color="#a5b4fc" />
             </div>
-            <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)' }}>KI Karrierelotse</h3>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Assistent mit vollem Bewerber- & Stellenkontext</span>
+            <div style={{ overflow: 'hidden' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>KI Karrierelotse</h3>
+              <span style={{ fontSize: '0.7rem', color: '#a5b4fc', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>
+                Modell: <strong>{activeModelName}</strong>
+              </span>
             </div>
           </div>
-          <button onClick={onClose} className="btn-icon" style={{ width: '32px', height: '32px' }} title="Schließen">
-            <X size={16} />
-          </button>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {/* Model Mode Segment Toggle */}
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '8px', gap: '2px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <button
+                onClick={() => setModelMode('fast')}
+                className={`btn ${modelMode === 'fast' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 8px', fontSize: '0.72rem', border: 'none', borderRadius: '6px' }}
+                title="Schnelles Extraktionsmodell"
+              >
+                ⚡ Schnell
+              </button>
+              <button
+                onClick={() => setModelMode('generation')}
+                className={`btn ${modelMode === 'generation' ? 'btn-primary' : 'btn-secondary'}`}
+                style={{ padding: '4px 8px', fontSize: '0.72rem', border: 'none', borderRadius: '6px' }}
+                title="Starkes Generierungsmodell"
+              >
+                🧠 Stark
+              </button>
+            </div>
+
+            <button onClick={onClose} className="btn-icon" style={{ width: '32px', height: '32px' }} title="Schließen">
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
         {/* Active Context Banner */}

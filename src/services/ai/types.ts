@@ -18,6 +18,8 @@ export interface ExtractedJobData {
 export interface AIProviderConfig {
   apiKey: string;
   model: string;
+  fastModel?: string;
+  genModel?: string;
   baseUrl?: string;
   corsProxyUrl?: string;
   corsProxyToken?: string;

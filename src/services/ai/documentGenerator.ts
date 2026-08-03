@@ -34,7 +34,7 @@ Gib AUSSCHLIESSLICH den HTML-Inhalt zurück (verwende <h2>, <p>, <ul>, <li>).`;
 
     let cleanedHtml = '';
     try {
-      const htmlResponse = await aiService.generateAssistantResponse(prompt, job, globalCvFile);
+      const htmlResponse = await aiService.generateAssistantResponse(prompt, job, globalCvFile, 'generation');
       cleanedHtml = htmlResponse.replace(/```html/g, '').replace(/```/g, '').trim();
     } catch (e: any) {
       console.warn('KI Aufruf für Anschreiben fehlgeschlagen, erstelle Standard-Vorlage:', e);
@@ -95,7 +95,7 @@ Gib AUSSCHLIESSLICH den HTML-Inhalt zurück (mit <h2>, <h3>, <p>, <ul>, <li>).`;
 
     let cleanedHtml = '';
     try {
-      const htmlResponse = await aiService.generateAssistantResponse(prompt, job, globalCvFile);
+      const htmlResponse = await aiService.generateAssistantResponse(prompt, job, globalCvFile, 'generation');
       cleanedHtml = htmlResponse.replace(/```html/g, '').replace(/```/g, '').trim();
     } catch (e: any) {
       console.warn('KI Aufruf für Lebenslauf fehlgeschlagen, erstelle Standard-Vorlage:', e);

@@ -17,13 +17,25 @@ export interface GlobalAISettings {
   activeProvider: AIProviderId;
   openaiKey: string;
   openaiModel: string;
+  openaiModelFast?: string;
+  openaiModelGen?: string;
+
   geminiKey: string;
   geminiModel: string;
+  geminiModelFast?: string;
+  geminiModelGen?: string;
+
   claudeKey: string;
   claudeModel: string;
+  claudeModelFast?: string;
+  claudeModelGen?: string;
+
   customOpenaiBaseUrl: string;
   customOpenaiKey: string;
   customOpenaiModel: string;
+  customOpenaiModelFast?: string;
+  customOpenaiModelGen?: string;
+
   corsProxyUrl?: string;
   corsProxyToken?: string;
   showSystemAlerts?: boolean;
@@ -33,13 +45,25 @@ export const DEFAULT_GLOBAL_AI_SETTINGS: GlobalAISettings = {
   activeProvider: 'gemini',
   openaiKey: '',
   openaiModel: 'gpt-4o-mini',
+  openaiModelFast: 'gpt-4o-mini',
+  openaiModelGen: 'gpt-4o',
+
   geminiKey: '',
   geminiModel: 'gemini-2.0-flash',
+  geminiModelFast: 'gemini-2.0-flash',
+  geminiModelGen: 'gemini-2.0-flash',
+
   claudeKey: '',
   claudeModel: 'claude-haiku-4-5-20251001',
+  claudeModelFast: 'claude-haiku-4-5-20251001',
+  claudeModelGen: 'claude-sonnet-4-5-20251001',
+
   customOpenaiBaseUrl: 'http://localhost:11434/v1',
   customOpenaiKey: '',
   customOpenaiModel: 'llama-3.3-70b-instruct',
+  customOpenaiModelFast: 'llama-3.3-70b-instruct',
+  customOpenaiModelGen: 'llama-3.3-70b-instruct',
+
   corsProxyUrl: '',
   corsProxyToken: '',
   showSystemAlerts: true,
@@ -226,32 +250,71 @@ class AIService {
     }
   }
 
-  private getConfigForProvider(providerId: AIProviderId, settings: AISettings): AIProviderConfig {
+  getConfigForProvider(
+    providerId: AIProviderId,
+    settings: AISettings,
+    taskType: 'fast' | 'generation' = 'fast'
+  ): AIProviderConfig {
     const corsProxyUrl = settings.corsProxyUrl;
     const corsProxyToken = settings.corsProxyToken;
 
     switch (providerId) {
-      case 'openai':
-        return { apiKey: settings.openaiKey, model: settings.openaiModel, corsProxyUrl, corsProxyToken };
-      case 'gemini':
-        return { apiKey: settings.geminiKey, model: settings.geminiModel, corsProxyUrl, corsProxyToken };
-      case 'claude':
-        return { apiKey: settings.claudeKey, model: settings.claudeModel, corsProxyUrl, corsProxyToken };
-      case 'custom_openai':
+      case 'openai': {
+        const fast = settings.openaiModelFast || settings.openaiModel || 'gpt-4o-mini';
+        const gen = settings.openaiModelGen || settings.openaiModel || 'gpt-4o';
+        return {
+          apiKey: settings.openaiKey,
+          model: taskType === 'fast' ? fast : gen,
+          fastModel: fast,
+          genModel: gen,
+          corsProxyUrl,
+          corsProxyToken,
+        };
+      }
+      case 'gemini': {
+        const fast = settings.geminiModelFast || settings.geminiModel || 'gemini-2.0-flash';
+        const gen = settings.geminiModelGen || settings.geminiModel || 'gemini-2.0-flash';
+        return {
+          apiKey: settings.geminiKey,
+          model: taskType === 'fast' ? fast : gen,
+          fastModel: fast,
+          genModel: gen,
+          corsProxyUrl,
+          corsProxyToken,
+        };
+      }
+      case 'claude': {
+        const fast = settings.claudeModelFast || settings.claudeModel || 'claude-haiku-4-5-20251001';
+        const gen = settings.claudeModelGen || settings.claudeModel || 'claude-sonnet-4-5-20251001';
+        return {
+          apiKey: settings.claudeKey,
+          model: taskType === 'fast' ? fast : gen,
+          fastModel: fast,
+          genModel: gen,
+          corsProxyUrl,
+          corsProxyToken,
+        };
+      }
+      case 'custom_openai': {
+        const fast = settings.customOpenaiModelFast || settings.customOpenaiModel || 'llama-3.3-70b-instruct';
+        const gen = settings.customOpenaiModelGen || settings.customOpenaiModel || 'llama-3.3-70b-instruct';
         return {
           apiKey: settings.customOpenaiKey,
-          model: settings.customOpenaiModel,
+          model: taskType === 'fast' ? fast : gen,
+          fastModel: fast,
+          genModel: gen,
           baseUrl: settings.customOpenaiBaseUrl,
           corsProxyUrl,
           corsProxyToken,
         };
+      }
     }
   }
 
   async extractJobData(input: string): Promise<ExtractedJobData> {
     const settings = this.getSettings();
     const activeProvider = this.providers[settings.activeProvider];
-    const config = this.getConfigForProvider(settings.activeProvider, settings);
+    const config = this.getConfigForProvider(settings.activeProvider, settings, 'fast');
 
     if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
       return this.heuristicFallbackExtract(input);
@@ -273,11 +336,12 @@ class AIService {
   async generateAssistantResponse(
     prompt: string,
     contextJob: JobMetadata | null,
-    attachmentFile?: File | null
+    attachmentFile?: File | null,
+    modelMode: 'fast' | 'generation' = 'generation'
   ): Promise<string> {
     const settings = this.getSettings();
     const activeProvider = this.providers[settings.activeProvider];
-    const config = this.getConfigForProvider(settings.activeProvider, settings);
+    const config = this.getConfigForProvider(settings.activeProvider, settings, modelMode);
 
     if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
       throw new Error(`API Key für ${activeProvider.name} fehlt. Bitte in den Einstellungen eintragen.`);
@@ -292,7 +356,7 @@ class AIService {
   async generateTailoredCV(userProfile: UserProfile, job: JobMetadata | null): Promise<CVData> {
     const fallback = buildFallbackCV(userProfile, job);
     const settings = this.getSettings();
-    const config = this.getConfigForProvider(settings.activeProvider, settings);
+    const config = this.getConfigForProvider(settings.activeProvider, settings, 'generation');
 
     if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
       return fallback;

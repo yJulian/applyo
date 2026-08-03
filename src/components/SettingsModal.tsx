@@ -567,17 +567,31 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   />
                 </div>
 
-                <div>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Modell Name (Freitext-Eingabe)
-                  </label>
-                  <input
-                    type="text"
-                    className="input-field"
-                    placeholder="z.B. azure.gpt-4.1-mini, gpt-oss:120b, llama-3.3-70b-instruct"
-                    value={settings.customOpenaiModel}
-                    onChange={(e) => setSettings({ ...settings, customOpenaiModel: e.target.value })}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#a5b4fc', display: 'block', marginBottom: '3px' }}>
+                      ⚡ Extraktion & Zusammenfassung
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="z.B. llama-3.3-70b-instruct"
+                      value={settings.customOpenaiModelFast || settings.customOpenaiModel || ''}
+                      onChange={(e) => setSettings({ ...settings, customOpenaiModelFast: e.target.value, customOpenaiModel: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#38bdf8', display: 'block', marginBottom: '3px' }}>
+                      🧠 Generierung & Schreibmodell
+                    </label>
+                    <input
+                      type="text"
+                      className="input-field"
+                      placeholder="z.B. qwen2.5-coder-32b-instruct"
+                      value={settings.customOpenaiModelGen || settings.customOpenaiModel || ''}
+                      onChange={(e) => setSettings({ ...settings, customOpenaiModelGen: e.target.value })}
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -640,14 +654,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   value={settings.geminiKey}
                   onChange={(e) => setSettings({ ...settings, geminiKey: e.target.value })}
                 />
-                <select
-                  className="input-field"
-                  value={settings.geminiModel}
-                  onChange={(e) => setSettings({ ...settings, geminiModel: e.target.value })}
-                >
-                  <option value="gemini-2.0-flash">Modell: gemini-2.0-flash (Sehr schnell & präzise)</option>
-                  <option value="gemini-1.5-pro">Modell: gemini-1.5-pro (Maximale Intelligenz)</option>
-                </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#a5b4fc', display: 'block', marginBottom: '3px' }}>
+                      ⚡ Extraktion & Zusammenfassung
+                    </label>
+                    <select
+                      className="input-field"
+                      value={settings.geminiModelFast || settings.geminiModel || 'gemini-2.0-flash'}
+                      onChange={(e) => setSettings({ ...settings, geminiModelFast: e.target.value, geminiModel: e.target.value })}
+                    >
+                      <option value="gemini-2.0-flash">gemini-2.0-flash (Schnell & Präzise)</option>
+                      <option value="gemini-1.5-pro">gemini-1.5-pro (Maximale Intelligenz)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#38bdf8', display: 'block', marginBottom: '3px' }}>
+                      🧠 Generierung & Schreibmodell
+                    </label>
+                    <select
+                      className="input-field"
+                      value={settings.geminiModelGen || settings.geminiModel || 'gemini-2.0-flash'}
+                      onChange={(e) => setSettings({ ...settings, geminiModelGen: e.target.value })}
+                    >
+                      <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+                      <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -664,14 +698,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   value={settings.openaiKey}
                   onChange={(e) => setSettings({ ...settings, openaiKey: e.target.value })}
                 />
-                <select
-                  className="input-field"
-                  value={settings.openaiModel}
-                  onChange={(e) => setSettings({ ...settings, openaiModel: e.target.value })}
-                >
-                  <option value="gpt-4o-mini">Modell: gpt-4o-mini (Kostengünstig & schnell)</option>
-                  <option value="gpt-4o">Modell: gpt-4o (Leistungsstark)</option>
-                </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#a5b4fc', display: 'block', marginBottom: '3px' }}>
+                      ⚡ Extraktion & Zusammenfassung
+                    </label>
+                    <select
+                      className="input-field"
+                      value={settings.openaiModelFast || settings.openaiModel || 'gpt-4o-mini'}
+                      onChange={(e) => setSettings({ ...settings, openaiModelFast: e.target.value, openaiModel: e.target.value })}
+                    >
+                      <option value="gpt-4o-mini">gpt-4o-mini (Schnell & günstig)</option>
+                      <option value="gpt-4o">gpt-4o (Leistungsstark)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#38bdf8', display: 'block', marginBottom: '3px' }}>
+                      🧠 Generierung & Schreibmodell
+                    </label>
+                    <select
+                      className="input-field"
+                      value={settings.openaiModelGen || settings.openaiModel || 'gpt-4o'}
+                      onChange={(e) => setSettings({ ...settings, openaiModelGen: e.target.value })}
+                    >
+                      <option value="gpt-4o">gpt-4o (Höchste Textqualität)</option>
+                      <option value="gpt-4o-mini">gpt-4o-mini</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -688,15 +742,36 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                   value={settings.claudeKey}
                   onChange={(e) => setSettings({ ...settings, claudeKey: e.target.value })}
                 />
-                <select
-                  className="input-field"
-                  value={settings.claudeModel}
-                  onChange={(e) => setSettings({ ...settings, claudeModel: e.target.value })}
-                >
-                  <option value="claude-haiku-4-5-20251001">Modell: Claude Haiku 4.5 (Empfohlen)</option>
-                  <option value="claude-3-5-sonnet-20241022">Modell: Claude 3.5 Sonnet</option>
-                  <option value="claude-3-5-haiku-20241022">Modell: Claude 3.5 Haiku</option>
-                </select>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#a5b4fc', display: 'block', marginBottom: '3px' }}>
+                      ⚡ Extraktion & Zusammenfassung
+                    </label>
+                    <select
+                      className="input-field"
+                      value={settings.claudeModelFast || settings.claudeModel || 'claude-haiku-4-5-20251001'}
+                      onChange={(e) => setSettings({ ...settings, claudeModelFast: e.target.value, claudeModel: e.target.value })}
+                    >
+                      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+                      <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+                      <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.72rem', color: '#38bdf8', display: 'block', marginBottom: '3px' }}>
+                      🧠 Generierung & Schreibmodell
+                    </label>
+                    <select
+                      className="input-field"
+                      value={settings.claudeModelGen || settings.claudeModel || 'claude-sonnet-4-5-20251001'}
+                      onChange={(e) => setSettings({ ...settings, claudeModelGen: e.target.value })}
+                    >
+                      <option value="claude-sonnet-4-5-20251001">Claude Sonnet 4.5</option>
+                      <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
+                      <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

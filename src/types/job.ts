@@ -85,13 +85,21 @@ export interface AISettings {
   activeProvider: AIProviderId;
   openaiKey: string;
   openaiModel: string;
+  openaiModelFast?: string;
+  openaiModelGen?: string;
   geminiKey: string;
   geminiModel: string;
+  geminiModelFast?: string;
+  geminiModelGen?: string;
   claudeKey: string;
   claudeModel: string;
+  claudeModelFast?: string;
+  claudeModelGen?: string;
   customOpenaiBaseUrl: string;
   customOpenaiKey: string;
   customOpenaiModel: string;
+  customOpenaiModelFast?: string;
+  customOpenaiModelGen?: string;
   corsProxyUrl?: string;
   corsProxyToken?: string;
   feedbackThresholdWeeks?: number; // Frist in Wochen für den Status "Lange her" (Standard: 6)
