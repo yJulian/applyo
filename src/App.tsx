@@ -10,6 +10,7 @@ import { AddJobModal } from './components/AddJobModal';
 import { SettingsModal } from './components/SettingsModal';
 import { AIAssistantDrawer } from './components/AIAssistantDrawer';
 import { CVEditorModal } from './components/CVEditorModal';
+import { CoverLetterEditorModal } from './components/CoverLetterEditorModal';
 import { StatsView } from './components/StatsView';
 
 import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings, StatusHistoryEntry } from './types/job';
@@ -49,6 +50,7 @@ export default function App() {
   const [isAIDrawerOpen, setIsAIDrawerOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCVEditorOpen, setIsCVEditorOpen] = useState(false);
+  const [isCoverLetterEditorOpen, setIsCoverLetterEditorOpen] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
 
   const [aiSettings, setAiSettings] = useState<AISettings>(aiService.getSettings());
@@ -201,6 +203,7 @@ export default function App() {
         onOpenAddModal={() => setIsAddModalOpen(true)}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         onOpenCVEditor={() => setIsCVEditorOpen(true)}
+        onOpenCoverLetterEditor={() => setIsCoverLetterEditorOpen(true)}
         aiSettings={aiSettings}
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -236,6 +239,7 @@ export default function App() {
             onDeleteJob={handleDeleteJob}
             onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
             onOpenCVEditor={() => setIsCVEditorOpen(true)}
+            onOpenCoverLetterEditor={() => setIsCoverLetterEditorOpen(true)}
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
             cardLayoutConfig={aiSettings.cardLayoutConfig}
           />
@@ -301,6 +305,14 @@ export default function App() {
       <CVEditorModal
         isOpen={isCVEditorOpen}
         onClose={() => setIsCVEditorOpen(false)}
+        jobs={jobs}
+        selectedJob={selectedJob}
+        onSelectJob={(j) => setSelectedJobId(j.id)}
+      />
+
+      <CoverLetterEditorModal
+        isOpen={isCoverLetterEditorOpen}
+        onClose={() => setIsCoverLetterEditorOpen(false)}
         jobs={jobs}
         selectedJob={selectedJob}
         onSelectJob={(j) => setSelectedJobId(j.id)}

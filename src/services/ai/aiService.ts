@@ -7,7 +7,9 @@ import { CustomOpenAIProvider } from './customOpenAIProvider';
 import { fileSystemService } from '../storage/fileSystem';
 import { profileService, UserProfile } from '../storage/profileService';
 import { CVData } from '../../types/cv';
+import { CoverLetterData } from '../../types/coverLetter';
 import { buildFallbackCV } from './cvGenerator';
+import { buildFallbackCoverLetter } from './coverLetterGenerator';
 
 const AI_GLOBAL_STORAGE_KEY = 'applyo_global_ai_settings';
 
@@ -339,6 +341,137 @@ Erstelle das aktualisierte Lebenslauf-JSON:`;
     } catch (e) {
       console.warn('Fehler bei KI-Lebenslauf-Verfeinerung:', e);
       return currentCV;
+    }
+  }
+
+  async generateTailoredCoverLetter(userProfile: UserProfile, job: JobMetadata | null): Promise<CoverLetterData> {
+    const fallback = buildFallbackCoverLetter(userProfile, job);
+    const settings = this.getSettings();
+    const config = this.getConfigForProvider(settings.activeProvider, settings);
+
+    if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
+      return fallback;
+    }
+
+    const systemPrompt = `Du bist ein professioneller Bewerbungscoach und HR-Texter. Erstelle aus dem Bewerberprofil und der Ziel-Stellenanzeige ein hochprofessionelles, maßgeschneidertes Anschreiben (Bewerbungsschreiben) im exakten JSON-Format.
+Antworte AUSSCHLIESSLICH als beliebiges valides JSON ohne Markdown-Codeblöcke mit folgendem Schema:
+{
+  "sender": {
+    "fullName": "Name des Bewerbers",
+    "title": "Aktueller oder angestrebter Titel",
+    "email": "E-Mail",
+    "phone": "Telefonnummer",
+    "location": "Wohnort"
+  },
+  "recipient": {
+    "company": "Firmenname",
+    "department": "Abteilung / Recruiting",
+    "contactPerson": "Ansprechpartner (falls bekannt, sonst 'Personalabteilung')",
+    "address": "Straße / Hausnummer (falls bekannt)",
+    "zipCity": "PLZ Ort (falls bekannt)"
+  },
+  "meta": {
+    "placeAndDate": "Ort, Datum (z.B. Berlin, den 3. August 2026)",
+    "subject": "Bewerbung als [Stellentitel]"
+  },
+  "content": {
+    "salutation": "Anrede (z.B. 'Sehr geehrte Damen und Herren,' oder 'Sehr geehrte Frau [Name],')",
+    "intro": "Starker erster Absatz (2-3 Sätze): Warum bewerbe ich mich und was begeistert mich an der Stelle/Firma.",
+    "bodyParagraphs": [
+      "Hauptabsatz 1: Relevanteste bisherige Erfolge, Fachkenntnisse und Erfahrungen verknüpft mit den Anforderungen der Stelle.",
+      "Hauptabsatz 2: Arbeitsweise, Teamfähigkeit, Motivation und konkreter Mehrwert für das Unternehmen."
+    ],
+    "callToAction": "Schlussabsatz mit Ausdruck der Freude auf ein persönliches Gespräch sowie evtl. Gehaltsvorstellung/Eintrittsdatum falls relevant.",
+    "closing": "Mit freundlichen Grüßen,",
+    "signatureName": "Vollständiger Name des Bewerbers"
+  }
+}`;
+
+    const promptText = `PROFIL DES BEWERBERS:
+Name: ${userProfile.fullName}
+E-Mail: ${userProfile.email}
+Telefon: ${userProfile.phone}
+Wohnort: ${userProfile.location}
+Werdegang & Hintergrund:
+${userProfile.markdownDescription}
+
+ZIEL-STELLENAUSSCHREIBUNG:
+Firma: ${job ? job.company : 'Unbekannt'}
+Titel: ${job ? job.title : 'Unbekannt'}
+Standort: ${job ? (job.location || '') : ''}
+Zusammenfassung: ${job ? job.summary : ''}
+Aufgaben: ${job ? job.tasks.join(', ') : ''}
+Anforderungen: ${job ? job.requirements.join(', ') : ''}
+Benefits: ${job ? (job.benefits || []).join(', ') : ''}
+
+Erstelle nun das überzeugende, maßgeschneiderte Anschreiben-JSON:`;
+
+    try {
+      const responseText = await this.generateAssistantResponse(
+        `${systemPrompt}\n\n${promptText}`,
+        job
+      );
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as CoverLetterData;
+        return {
+          ...fallback,
+          ...parsed,
+          sender: { ...fallback.sender, ...(parsed.sender || {}) },
+          recipient: { ...fallback.recipient, ...(parsed.recipient || {}) },
+          meta: { ...fallback.meta, ...(parsed.meta || {}) },
+          content: { ...fallback.content, ...(parsed.content || {}) },
+        };
+      }
+      return fallback;
+    } catch (e) {
+      console.warn('Fehler bei KI-Anschreiben-Generierung, nutze Fallback:', e);
+      return fallback;
+    }
+  }
+
+  async refineCoverLetter(currentCoverLetter: CoverLetterData, userInstruction: string, job: JobMetadata | null): Promise<CoverLetterData> {
+    const settings = this.getSettings();
+    const config = this.getConfigForProvider(settings.activeProvider, settings);
+
+    if (!config.apiKey && settings.activeProvider !== 'custom_openai') {
+      return currentCoverLetter;
+    }
+
+    const systemPrompt = `Du bist ein Anschreiben-Editor Assistent. Wende den folgenden Änderungswunsch des Nutzers auf das bestehende Anschreiben-JSON an und gib das aktualisierte JSON im selben Format zurück.
+Antworte AUSSCHLIESSLICH als valides JSON ohne Erklärungen oder Markdown-Codeblöcke.`;
+
+    const promptText = `BEARBEITUNGSWUNSCH DES NUTZERS:
+"${userInstruction}"
+
+AKTUELLES ANSCHREIBEN-JSON:
+${JSON.stringify(currentCoverLetter, null, 2)}
+
+ZIEL-STELLE: ${job ? `${job.title} bei ${job.company}` : 'Allgemein'}
+
+Erstelle das aktualisierte Anschreiben-JSON:`;
+
+    try {
+      const responseText = await this.generateAssistantResponse(
+        `${systemPrompt}\n\n${promptText}`,
+        job
+      );
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as CoverLetterData;
+        return {
+          ...currentCoverLetter,
+          ...parsed,
+          sender: { ...currentCoverLetter.sender, ...(parsed.sender || {}) },
+          recipient: { ...currentCoverLetter.recipient, ...(parsed.recipient || {}) },
+          meta: { ...currentCoverLetter.meta, ...(parsed.meta || {}) },
+          content: { ...currentCoverLetter.content, ...(parsed.content || {}) },
+        };
+      }
+      return currentCoverLetter;
+    } catch (e) {
+      console.warn('Fehler bei KI-Anschreiben-Verfeinerung:', e);
+      return currentCoverLetter;
     }
   }
 

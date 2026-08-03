@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   ListTodo,
   FileText,
+  Mail,
   Sparkles,
   Trash2,
   Save,
@@ -56,6 +57,7 @@ interface JobDetailViewProps {
   onDeleteJob: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
   onOpenCVEditor?: () => void;
+  onOpenCoverLetterEditor?: () => void;
   feedbackThresholdWeeks?: number;
   cardLayoutConfig?: CardSectionConfig[];
 }
@@ -70,6 +72,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   onDeleteJob,
   onOpenAIAssistant: _onOpenAIAssistant,
   onOpenCVEditor,
+  onOpenCoverLetterEditor,
   feedbackThresholdWeeks = 6,
   cardLayoutConfig,
 }) => {
@@ -254,8 +257,16 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   const handleOpenFile = async (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
 
+    // If opening Anschreiben.json, open in CoverLetterEditorModal
+    if (fileName === 'Anschreiben.json' || fileName.toLowerCase().includes('anschreiben') && ext === 'json') {
+      if (onOpenCoverLetterEditor) {
+        onOpenCoverLetterEditor();
+        return;
+      }
+    }
+
     // If opening Lebenslauf.json or a CV json file, open in CVEditorModal
-    if (fileName === 'Lebenslauf.json' || ext === 'json') {
+    if (fileName === 'Lebenslauf.json' || (ext === 'json' && !fileName.toLowerCase().includes('anschreiben'))) {
       if (onOpenCVEditor) {
         onOpenCVEditor();
         return;
@@ -291,7 +302,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
 
   const getFileIcon = (fileName: string) => {
     if (fileName === 'Lebenslauf.json') {
-      return <FileText size={18} color="#c084fc" />;
+      return <FileText size={18} color="#34d399" />;
+    }
+    if (fileName === 'Anschreiben.json') {
+      return <Mail size={18} color="#818cf8" />;
     }
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return <FileText size={18} color="#f87171" />;
@@ -763,7 +777,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                     style={{
                       padding: '20px',
                       borderRadius: 'var(--radius-lg)',
-                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%)',
+                      background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%)',
                       border: '1px solid rgba(16, 185, 129, 0.3)',
                     }}
                   >
@@ -771,26 +785,42 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       <div>
                         <h3 style={{ fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Wand2 size={18} color="#34d399" />
-                          Lebenslauf Editor & PDF Generator
+                          KI Bewerbungsdokumente (Lebenslauf & Anschreiben Editor)
                         </h3>
                         <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '620px' }}>
-                          Erstelle und bearbeite einen maßgeschneiderten Lebenslauf für diese Stelle mit KI-Unterstützung, Live-Vorschau und PDF-Export.
+                          Erstelle und bearbeite maßgeschneiderte Bewerbungsdokumente für diese Stelle mit KI-Unterstützung, Live-Vorschau und PDF-Export.
                         </p>
                       </div>
 
-                      <button
-                        onClick={onOpenCVEditor}
-                        className="btn btn-primary"
-                        style={{
-                          gap: '8px',
-                          fontSize: '0.825rem',
-                          padding: '10px 16px',
-                          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        }}
-                      >
-                        <Sparkles size={16} />
-                        <span>📄 Lebenslauf Editor öffnen & PDF erstellen</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                        <button
+                          onClick={onOpenCVEditor}
+                          className="btn btn-primary"
+                          style={{
+                            gap: '8px',
+                            fontSize: '0.825rem',
+                            padding: '10px 16px',
+                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                          }}
+                        >
+                          <Sparkles size={16} />
+                          <span>📄 Lebenslauf Editor</span>
+                        </button>
+
+                        <button
+                          onClick={onOpenCoverLetterEditor}
+                          className="btn btn-primary"
+                          style={{
+                            gap: '8px',
+                            fontSize: '0.825rem',
+                            padding: '10px 16px',
+                            background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                          }}
+                        >
+                          <Sparkles size={16} />
+                          <span>✉️ Anschreiben Editor</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -866,14 +896,47 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         {[...files]
                           .sort((a, b) => {
-                            const isA = a.name === 'Lebenslauf.json';
-                            const isB = b.name === 'Lebenslauf.json';
-                            if (isA && !isB) return -1;
-                            if (!isA && isB) return 1;
+                            const isCV_A = a.name === 'Lebenslauf.json';
+                            const isCL_A = a.name === 'Anschreiben.json';
+                            const isSpecialA = isCV_A || isCL_A;
+
+                            const isCV_B = b.name === 'Lebenslauf.json';
+                            const isCL_B = b.name === 'Anschreiben.json';
+                            const isSpecialB = isCV_B || isCL_B;
+
+                            if (isSpecialA && !isSpecialB) return -1;
+                            if (!isSpecialA && isSpecialB) return 1;
+                            if (isCV_A && isCL_B) return -1;
+                            if (isCL_A && isCV_B) return 1;
                             return a.name.localeCompare(b.name);
                           })
                           .map((file) => {
                             const isCVFile = file.name === 'Lebenslauf.json';
+                            const isCLFile = file.name === 'Anschreiben.json';
+                            const isSpecialFile = isCVFile || isCLFile;
+
+                            const highlightColor = isCVFile ? '#34d399' : isCLFile ? '#818cf8' : undefined;
+                            const highlightBg = isCVFile
+                              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%)'
+                              : isCLFile
+                              ? 'linear-gradient(135deg, rgba(129, 140, 248, 0.12) 0%, rgba(192, 132, 252, 0.08) 100%)'
+                              : 'rgba(255,255,255,0.03)';
+                            const highlightBorder = isCVFile
+                              ? '1px solid rgba(16, 185, 129, 0.6)'
+                              : isCLFile
+                              ? '1px solid rgba(129, 140, 248, 0.6)'
+                              : '1px solid var(--border-color)';
+                            const highlightShadow = isCVFile
+                              ? '0 0 16px rgba(16, 185, 129, 0.25)'
+                              : isCLFile
+                              ? '0 0 16px rgba(129, 140, 248, 0.25)'
+                              : 'none';
+
+                            const displayName = isCVFile
+                              ? 'Lebenslauf'
+                              : isCLFile
+                              ? 'Anschreiben'
+                              : file.name;
 
                             return (
                               <div
@@ -883,23 +946,17 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   padding: '10px 14px',
-                                  background: isCVFile
-                                    ? 'linear-gradient(135deg, rgba(192, 132, 252, 0.12) 0%, rgba(99, 102, 241, 0.08) 100%)'
-                                    : 'rgba(255,255,255,0.03)',
+                                  background: highlightBg,
                                   borderRadius: 'var(--radius-md)',
-                                  border: isCVFile
-                                    ? '1px solid rgba(192, 132, 252, 0.6)'
-                                    : '1px solid var(--border-color)',
-                                  boxShadow: isCVFile
-                                    ? '0 0 16px rgba(192, 132, 252, 0.35)'
-                                    : 'none',
+                                  border: highlightBorder,
+                                  boxShadow: highlightShadow,
                                 }}
                               >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                   {getFileIcon(file.name)}
                                   <div>
-                                    <span style={{ fontSize: '0.875rem', fontWeight: isCVFile ? 700 : 600, color: isCVFile ? '#c084fc' : 'var(--text-main)', display: 'block' }}>
-                                      {file.name === 'Lebenslauf.json' ? 'Lebenslauf' : file.name}
+                                    <span style={{ fontSize: '0.875rem', fontWeight: isSpecialFile ? 700 : 600, color: highlightColor || 'var(--text-main)', display: 'block' }}>
+                                      {displayName}
                                     </span>
                                     <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
                                       {formatFileSize(file.size)} • Geändert: {new Date(file.lastModified).toLocaleDateString('de-DE')}
@@ -915,13 +972,13 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                                       padding: '4px 10px',
                                       fontSize: '0.75rem',
                                       gap: '4px',
-                                      borderColor: isCVFile ? 'rgba(192, 132, 252, 0.5)' : undefined,
-                                      color: isCVFile ? '#c084fc' : undefined,
+                                      borderColor: highlightColor ? `${highlightColor}80` : undefined,
+                                      color: highlightColor || undefined,
                                     }}
                                     title="In Applyo ansehen oder bearbeiten"
                                   >
-                                    <Eye size={13} color={isCVFile ? '#c084fc' : undefined} />
-                                    <span>{file.name === 'Lebenslauf.json' ? 'Im Editor öffnen' : file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
+                                    <Eye size={13} color={highlightColor || undefined} />
+                                    <span>{isSpecialFile ? 'Im Editor öffnen' : file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
                                   </button>
 
                                   <button

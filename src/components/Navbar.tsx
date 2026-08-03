@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays, BarChart3 } from 'lucide-react';
+import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays, BarChart3, FileText, Mail } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 type ViewMode = 'list' | 'board' | 'calendar' | 'stats';
@@ -12,6 +12,7 @@ interface NavbarProps {
   onOpenAddModal: () => void;
   onOpenSettingsModal: () => void;
   onOpenCVEditor?: () => void;
+  onOpenCoverLetterEditor?: () => void;
   aiSettings: AISettings;
   viewMode: ViewMode;
   onViewModeChange: (mode: ViewMode) => void;
@@ -299,6 +300,8 @@ const StandardNavbar: React.FC<NavbarProps> = ({
   onGrantPermission,
   onOpenAddModal,
   onOpenSettingsModal,
+  onOpenCVEditor,
+  onOpenCoverLetterEditor,
   aiSettings,
   viewMode,
   onViewModeChange,
@@ -379,6 +382,46 @@ const StandardNavbar: React.FC<NavbarProps> = ({
                 : currentDirName ? `Ordner: ${currentDirName}` : 'Ordner wählen'}
             </span>
           </button>
+
+          {/* Lebenslauf Editor Button */}
+          {onOpenCVEditor && (
+            <button
+              onClick={onOpenCVEditor}
+              className="btn btn-secondary"
+              style={{
+                height: '38px',
+                padding: '0 12px',
+                fontSize: '0.8rem',
+                gap: '6px',
+                borderColor: 'rgba(16, 185, 129, 0.4)',
+                color: '#34d399',
+              }}
+              title="AI Lebenslauf-Editor öffnen"
+            >
+              <FileText size={15} color="#34d399" />
+              <span>Lebenslauf</span>
+            </button>
+          )}
+
+          {/* Anschreiben Editor Button */}
+          {onOpenCoverLetterEditor && (
+            <button
+              onClick={onOpenCoverLetterEditor}
+              className="btn btn-secondary"
+              style={{
+                height: '38px',
+                padding: '0 12px',
+                fontSize: '0.8rem',
+                gap: '6px',
+                borderColor: 'rgba(99, 102, 241, 0.4)',
+                color: '#a5b4fc',
+              }}
+              title="AI Anschreiben-Editor öffnen"
+            >
+              <Mail size={15} color="#a5b4fc" />
+              <span>Anschreiben</span>
+            </button>
+          )}
 
           {/* Settings Button */}
           <button
