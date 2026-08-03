@@ -20,6 +20,9 @@ import {
   Upload,
   Eye,
   EyeOff,
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 import { JobMetadata } from '../types/job';
 import { CVData, CVStyleOptions, DEFAULT_CV_STYLE, CVTemplateId, CVAccentColor } from '../types/cv';
@@ -57,6 +60,79 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   const [saveSuccess, setSaveSuccess] = useState(false);
   // AI Refinement Prompt state
   const [refinePrompt, setRefinePrompt] = useState('');
+
+  // Drag & Drop State for Category Item Reordering
+  const [draggedItem, setDraggedItem] = useState<{
+    category: 'experiences' | 'education' | 'skills' | 'projects';
+    index: number;
+  } | null>(null);
+
+  const handleItemDragStart = (
+    e: React.DragEvent,
+    category: 'experiences' | 'education' | 'skills' | 'projects',
+    index: number
+  ) => {
+    setDraggedItem({ category, index });
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleItemDragOver = (
+    e: React.DragEvent,
+    category: 'experiences' | 'education' | 'skills' | 'projects',
+    targetIndex: number
+  ) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+
+    if (draggedItem && draggedItem.category === category && draggedItem.index !== targetIndex) {
+      if (!cvData) return;
+      const listKey: 'experiences' | 'education' | 'skillCategories' | 'projects' =
+        category === 'experiences'
+          ? 'experiences'
+          : category === 'education'
+          ? 'education'
+          : category === 'skills'
+          ? 'skillCategories'
+          : 'projects';
+
+      const list = [...((cvData[listKey] as any[]) || [])];
+      const [moved] = list.splice(draggedItem.index, 1);
+      list.splice(targetIndex, 0, moved);
+
+      setCvData({ ...cvData, [listKey]: list });
+      setDraggedItem({ category, index: targetIndex });
+    }
+  };
+
+  const handleItemDragEnd = () => {
+    setDraggedItem(null);
+  };
+
+  const moveItem = (
+    category: 'experiences' | 'education' | 'skills' | 'projects',
+    index: number,
+    direction: 'up' | 'down'
+  ) => {
+    if (!cvData) return;
+    const listKey: 'experiences' | 'education' | 'skillCategories' | 'projects' =
+      category === 'experiences'
+        ? 'experiences'
+        : category === 'education'
+        ? 'education'
+        : category === 'skills'
+        ? 'skillCategories'
+        : 'projects';
+
+    const list = [...((cvData[listKey] as any[]) || [])];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= list.length) return;
+
+    const [moved] = list.splice(index, 1);
+    list.splice(targetIndex, 0, moved);
+
+    setCvData({ ...cvData, [listKey]: list });
+  };
 
   // Merge CV data with master global libraries from UserProfile
   const mergeWithGlobalProfile = (cv: CVData, profile: any): CVData => {
@@ -624,11 +700,53 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                       const isGlobalMode = exp.activeVersion === 'global';
                       const currentPosition = isGlobalMode ? exp.position : (exp.tailoredPosition || exp.position);
                       const currentHighlights = isGlobalMode ? (exp.highlights || []) : (exp.tailoredHighlights || exp.highlights || []);
+                      const isDraggingThis = draggedItem?.category === 'experiences' && draggedItem?.index === idx;
 
                       return (
-                        <div key={exp.id} style={{ padding: '10px', borderRadius: '8px', background: exp.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: exp.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: exp.hidden ? 0.6 : 1 }}>
+                        <div
+                          key={exp.id}
+                          onDragOver={(e) => handleItemDragOver(e, 'experiences', idx)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: isDraggingThis ? 'rgba(99, 102, 241, 0.15)' : exp.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)',
+                            border: isDraggingThis ? '2px solid var(--accent-cyan)' : exp.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)',
+                            opacity: exp.hidden ? 0.6 : 1,
+                            transition: 'all 0.15s ease',
+                            transform: isDraggingThis ? 'scale(1.01)' : 'none',
+                          }}
+                        >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div
+                                draggable
+                                onDragStart={(e) => handleItemDragStart(e, 'experiences', idx)}
+                                onDragEnd={handleItemDragEnd}
+                                style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: 'var(--accent-cyan)', padding: '2px' }}
+                                title="Per Drag & Drop verschieben"
+                              >
+                                <GripVertical size={16} />
+                              </div>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
+                              <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
+                                <button
+                                  onClick={() => moveItem('experiences', idx, 'up')}
+                                  disabled={idx === 0}
+                                  style={{ background: 'none', border: 'none', color: idx === 0 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach oben verschieben"
+                                >
+                                  <ArrowUp size={13} />
+                                </button>
+                                <button
+                                  onClick={() => moveItem('experiences', idx, 'down')}
+                                  disabled={idx === cvData.experiences.length - 1}
+                                  style={{ background: 'none', border: 'none', color: idx === cvData.experiences.length - 1 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === cvData.experiences.length - 1 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach unten verschieben"
+                                >
+                                  <ArrowDown size={13} />
+                                </button>
+                              </div>
+                            </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               {/* 2-Tier Version Toggle */}
                               <div style={{ display: 'flex', gap: '2px', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '6px' }}>
@@ -776,11 +894,54 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                     {cvData.education.map((edu, idx) => {
                       const isGlobalMode = edu.activeVersion === 'global';
                       const currentDegree = isGlobalMode ? edu.degree : (edu.tailoredDegree || edu.degree);
+                      const currentDescription = isGlobalMode ? (edu.description || '') : (edu.tailoredDescription || edu.description || '');
+                      const isDraggingThis = draggedItem?.category === 'education' && draggedItem?.index === idx;
 
                       return (
-                        <div key={edu.id} style={{ padding: '10px', borderRadius: '8px', background: edu.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: edu.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: edu.hidden ? 0.6 : 1 }}>
+                        <div
+                          key={edu.id}
+                          onDragOver={(e) => handleItemDragOver(e, 'education', idx)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: isDraggingThis ? 'rgba(99, 102, 241, 0.15)' : edu.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)',
+                            border: isDraggingThis ? '2px solid var(--accent-cyan)' : edu.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)',
+                            opacity: edu.hidden ? 0.6 : 1,
+                            transition: 'all 0.15s ease',
+                            transform: isDraggingThis ? 'scale(1.01)' : 'none',
+                          }}
+                        >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div
+                                draggable
+                                onDragStart={(e) => handleItemDragStart(e, 'education', idx)}
+                                onDragEnd={handleItemDragEnd}
+                                style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: 'var(--accent-cyan)', padding: '2px' }}
+                                title="Per Drag & Drop verschieben"
+                              >
+                                <GripVertical size={16} />
+                              </div>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
+                              <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
+                                <button
+                                  onClick={() => moveItem('education', idx, 'up')}
+                                  disabled={idx === 0}
+                                  style={{ background: 'none', border: 'none', color: idx === 0 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach oben verschieben"
+                                >
+                                  <ArrowUp size={13} />
+                                </button>
+                                <button
+                                  onClick={() => moveItem('education', idx, 'down')}
+                                  disabled={idx === cvData.education.length - 1}
+                                  style={{ background: 'none', border: 'none', color: idx === cvData.education.length - 1 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === cvData.education.length - 1 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach unten verschieben"
+                                >
+                                  <ArrowDown size={13} />
+                                </button>
+                              </div>
+                            </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <div style={{ display: 'flex', gap: '2px', background: 'rgba(255,255,255,0.06)', padding: '2px', borderRadius: '6px' }}>
                                 <button
@@ -842,7 +1003,7 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                             updated[idx].institution = e.target.value;
                             setCvData({ ...cvData, education: updated });
                           }} />
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '4px' }}>
                             <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2017)" value={edu.startDate} onChange={(e) => {
                               const updated = [...cvData.education];
                               updated[idx].startDate = e.target.value;
@@ -854,6 +1015,22 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                               setCvData({ ...cvData, education: updated });
                             }} />
                           </div>
+                          <textarea
+                            rows={2}
+                            className="input-field"
+                            style={{ fontSize: '0.75rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
+                            placeholder={isGlobalMode ? 'Beschreibung / Fokus / Thesis (Global)...' : 'Beschreibung / Fokus / Thesis (KI-angepasst)...'}
+                            value={currentDescription}
+                            onChange={(e) => {
+                              const updated = [...cvData.education];
+                              if (isGlobalMode) {
+                                updated[idx].description = e.target.value;
+                              } else {
+                                updated[idx].tailoredDescription = e.target.value;
+                              }
+                              setCvData({ ...cvData, education: updated });
+                            }}
+                          />
                         </div>
                       );
                     })}
@@ -886,61 +1063,106 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
 
                 {activeTab === 'skills' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {cvData.skillCategories.map((cat, idx) => (
-                      <div key={cat.id} style={{ padding: '10px', borderRadius: '8px', background: cat.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: cat.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: cat.hidden ? 0.6 : 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cat.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Kategorie #{idx + 1}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <button
-                              onClick={() => {
-                                const updated = [...cvData.skillCategories];
-                                updated[idx].hidden = !updated[idx].hidden;
-                                setCvData({ ...cvData, skillCategories: updated });
-                              }}
-                              className={`btn ${cat.hidden ? 'btn-secondary' : 'btn-primary'}`}
-                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                              title={cat.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
-                            >
-                              {cat.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                              <span>{cat.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const filtered = cvData.skillCategories.filter((_, i) => i !== idx);
-                                setCvData({ ...cvData, skillCategories: filtered });
-                              }}
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                              title="Löschen"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                    {cvData.skillCategories.map((cat, idx) => {
+                      const isDraggingThis = draggedItem?.category === 'skills' && draggedItem?.index === idx;
+
+                      return (
+                        <div
+                          key={cat.id}
+                          onDragOver={(e) => handleItemDragOver(e, 'skills', idx)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: isDraggingThis ? 'rgba(99, 102, 241, 0.15)' : cat.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)',
+                            border: isDraggingThis ? '2px solid var(--accent-cyan)' : cat.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)',
+                            opacity: cat.hidden ? 0.6 : 1,
+                            transition: 'all 0.15s ease',
+                            transform: isDraggingThis ? 'scale(1.01)' : 'none',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div
+                                draggable
+                                onDragStart={(e) => handleItemDragStart(e, 'skills', idx)}
+                                onDragEnd={handleItemDragEnd}
+                                style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: 'var(--accent-cyan)', padding: '2px' }}
+                                title="Per Drag & Drop verschieben"
+                              >
+                                <GripVertical size={16} />
+                              </div>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cat.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Kategorie #{idx + 1}</span>
+                              <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
+                                <button
+                                  onClick={() => moveItem('skills', idx, 'up')}
+                                  disabled={idx === 0}
+                                  style={{ background: 'none', border: 'none', color: idx === 0 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach oben verschieben"
+                                >
+                                  <ArrowUp size={13} />
+                                </button>
+                                <button
+                                  onClick={() => moveItem('skills', idx, 'down')}
+                                  disabled={idx === cvData.skillCategories.length - 1}
+                                  style={{ background: 'none', border: 'none', color: idx === cvData.skillCategories.length - 1 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === cvData.skillCategories.length - 1 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach unten verschieben"
+                                >
+                                  <ArrowDown size={13} />
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <button
+                                onClick={() => {
+                                  const updated = [...cvData.skillCategories];
+                                  updated[idx].hidden = !updated[idx].hidden;
+                                  setCvData({ ...cvData, skillCategories: updated });
+                                }}
+                                className={`btn ${cat.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                                style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                                title={cat.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                              >
+                                {cat.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                                <span>{cat.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const filtered = cvData.skillCategories.filter((_, i) => i !== idx);
+                                  setCvData({ ...cvData, skillCategories: filtered });
+                                }}
+                                style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                                title="Löschen"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </div>
+                          <input
+                            type="text"
+                            className="input-field"
+                            style={{ marginBottom: '6px', fontWeight: 700, fontSize: '0.8rem' }}
+                            value={cat.category}
+                            onChange={(e) => {
+                              const updated = [...cvData.skillCategories];
+                              updated[idx].category = e.target.value;
+                              setCvData({ ...cvData, skillCategories: updated });
+                            }}
+                          />
+                          <textarea
+                            rows={2}
+                            className="input-field"
+                            style={{ fontSize: '0.775rem' }}
+                            placeholder="Kommagetrennte Skills..."
+                            value={cat.skills.join(', ')}
+                            onChange={(e) => {
+                              const updated = [...cvData.skillCategories];
+                              updated[idx].skills = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
+                              setCvData({ ...cvData, skillCategories: updated });
+                            }}
+                          />
                         </div>
-                        <input
-                          type="text"
-                          className="input-field"
-                          style={{ marginBottom: '6px', fontWeight: 700, fontSize: '0.8rem' }}
-                          value={cat.category}
-                          onChange={(e) => {
-                            const updated = [...cvData.skillCategories];
-                            updated[idx].category = e.target.value;
-                            setCvData({ ...cvData, skillCategories: updated });
-                          }}
-                        />
-                        <textarea
-                          rows={2}
-                          className="input-field"
-                          style={{ fontSize: '0.775rem' }}
-                          placeholder="Kommagetrennte Skills..."
-                          value={cat.skills.join(', ')}
-                          onChange={(e) => {
-                            const updated = [...cvData.skillCategories];
-                            updated[idx].skills = e.target.value.split(',').map((s) => s.trim()).filter(Boolean);
-                            setCvData({ ...cvData, skillCategories: updated });
-                          }}
-                        />
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     <button
                       onClick={() => {
@@ -967,53 +1189,98 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
 
                 {activeTab === 'projects' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {(cvData.projects || []).map((proj, idx) => (
-                      <div key={proj.id} style={{ padding: '10px', borderRadius: '8px', background: proj.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)', border: proj.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)', opacity: proj.hidden ? 0.6 : 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                          <span style={{ fontSize: '0.8rem', fontWeight: 700, color: proj.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Projekt #{idx + 1}</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <button
-                              onClick={() => {
-                                const updated = [...(cvData.projects || [])];
-                                updated[idx].hidden = !updated[idx].hidden;
-                                setCvData({ ...cvData, projects: updated });
-                              }}
-                              className={`btn ${proj.hidden ? 'btn-secondary' : 'btn-primary'}`}
-                              style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                              title={proj.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
-                            >
-                              {proj.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                              <span>{proj.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
-                            </button>
-                            <button
-                              onClick={() => {
-                                const filtered = (cvData.projects || []).filter((_, i) => i !== idx);
-                                setCvData({ ...cvData, projects: filtered });
-                              }}
-                              style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                              title="Löschen"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                    {(cvData.projects || []).map((proj, idx) => {
+                      const isDraggingThis = draggedItem?.category === 'projects' && draggedItem?.index === idx;
+
+                      return (
+                        <div
+                          key={proj.id}
+                          onDragOver={(e) => handleItemDragOver(e, 'projects', idx)}
+                          style={{
+                            padding: '10px',
+                            borderRadius: '8px',
+                            background: isDraggingThis ? 'rgba(99, 102, 241, 0.15)' : proj.hidden ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.03)',
+                            border: isDraggingThis ? '2px solid var(--accent-cyan)' : proj.hidden ? '1px dashed rgba(255,255,255,0.1)' : '1px solid var(--border-color)',
+                            opacity: proj.hidden ? 0.6 : 1,
+                            transition: 'all 0.15s ease',
+                            transform: isDraggingThis ? 'scale(1.01)' : 'none',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div
+                                draggable
+                                onDragStart={(e) => handleItemDragStart(e, 'projects', idx)}
+                                onDragEnd={handleItemDragEnd}
+                                style={{ cursor: 'grab', display: 'flex', alignItems: 'center', color: 'var(--accent-cyan)', padding: '2px' }}
+                                title="Per Drag & Drop verschieben"
+                              >
+                                <GripVertical size={16} />
+                              </div>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: proj.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Projekt #{idx + 1}</span>
+                              <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
+                                <button
+                                  onClick={() => moveItem('projects', idx, 'up')}
+                                  disabled={idx === 0}
+                                  style={{ background: 'none', border: 'none', color: idx === 0 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === 0 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach oben verschieben"
+                                >
+                                  <ArrowUp size={13} />
+                                </button>
+                                <button
+                                  onClick={() => moveItem('projects', idx, 'down')}
+                                  disabled={idx === (cvData.projects || []).length - 1}
+                                  style={{ background: 'none', border: 'none', color: idx === (cvData.projects || []).length - 1 ? 'rgba(255,255,255,0.2)' : '#94a3b8', cursor: idx === (cvData.projects || []).length - 1 ? 'default' : 'pointer', padding: '2px' }}
+                                  title="Nach unten verschieben"
+                                >
+                                  <ArrowDown size={13} />
+                                </button>
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <button
+                                onClick={() => {
+                                  const updated = [...(cvData.projects || [])];
+                                  updated[idx].hidden = !updated[idx].hidden;
+                                  setCvData({ ...cvData, projects: updated });
+                                }}
+                                className={`btn ${proj.hidden ? 'btn-secondary' : 'btn-primary'}`}
+                                style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
+                                title={proj.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
+                              >
+                                {proj.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
+                                <span>{proj.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const filtered = (cvData.projects || []).filter((_, i) => i !== idx);
+                                  setCvData({ ...cvData, projects: filtered });
+                                }}
+                                style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                                title="Löschen"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
                           </div>
+                          <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem', fontWeight: 700 }} placeholder="Projektname" value={proj.title} onChange={(e) => {
+                            const updated = [...(cvData.projects || [])];
+                            updated[idx].title = e.target.value;
+                            setCvData({ ...cvData, projects: updated });
+                          }} />
+                          <textarea rows={2} className="input-field" style={{ marginBottom: '4px', fontSize: '0.775rem' }} placeholder="Kurze Beschreibung" value={proj.description} onChange={(e) => {
+                            const updated = [...(cvData.projects || [])];
+                            updated[idx].description = e.target.value;
+                            setCvData({ ...cvData, projects: updated });
+                          }} />
+                          <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Tech-Stack (z.B. React, TypeScript)" value={proj.techStack ? proj.techStack.join(', ') : ''} onChange={(e) => {
+                            const updated = [...(cvData.projects || [])];
+                            updated[idx].techStack = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
+                            setCvData({ ...cvData, projects: updated });
+                          }} />
                         </div>
-                        <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem', fontWeight: 700 }} placeholder="Projektname" value={proj.title} onChange={(e) => {
-                          const updated = [...(cvData.projects || [])];
-                          updated[idx].title = e.target.value;
-                          setCvData({ ...cvData, projects: updated });
-                        }} />
-                        <textarea rows={2} className="input-field" style={{ marginBottom: '4px', fontSize: '0.775rem' }} placeholder="Kurze Beschreibung" value={proj.description} onChange={(e) => {
-                          const updated = [...(cvData.projects || [])];
-                          updated[idx].description = e.target.value;
-                          setCvData({ ...cvData, projects: updated });
-                        }} />
-                        <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Tech-Stack (z.B. React, TypeScript)" value={proj.techStack ? proj.techStack.join(', ') : ''} onChange={(e) => {
-                          const updated = [...(cvData.projects || [])];
-                          updated[idx].techStack = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
-                          setCvData({ ...cvData, projects: updated });
-                        }} />
-                      </div>
-                    ))}
+                      );
+                    })}
 
                     <button
                       onClick={() => {
