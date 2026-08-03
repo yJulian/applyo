@@ -353,8 +353,8 @@ export default function App() {
           onMouseLeave={() => setIsFabHovered(false)}
           style={{
             position: 'fixed',
-            bottom: '28px',
-            right: '28px',
+            bottom: '20px',
+            right: '20px',
             height: '52px',
             minWidth: '52px',
             borderRadius: '26px',

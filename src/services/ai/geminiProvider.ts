@@ -82,7 +82,8 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     prompt: string,
     contextJob: JobMetadata | null,
     config: AIProviderConfig,
-    attachmentFile?: File | null
+    attachmentFile?: File | null,
+    systemContext?: string
   ): Promise<string> {
     if (!config.apiKey) {
       throw new Error('Google Gemini API Key fehlt.');
@@ -91,9 +92,12 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     const model = config.model || 'gemini-2.0-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`;
 
-    let context = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
-    if (contextJob) {
-      context += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
+    let context = systemContext;
+    if (!context) {
+      context = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
+      if (contextJob) {
+        context += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
+      }
     }
 
     const parts: any[] = [];

@@ -31,6 +31,7 @@ export interface IAIProvider {
     prompt: string,
     contextJob: JobMetadata | null,
     config: AIProviderConfig,
-    attachmentFile?: File | null
+    attachmentFile?: File | null,
+    systemContext?: string
   ): Promise<string>;
 }

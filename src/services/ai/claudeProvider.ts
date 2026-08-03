@@ -82,16 +82,20 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format (kein Markdown, keine Erklärung
     prompt: string,
     contextJob: JobMetadata | null,
     config: AIProviderConfig,
-    attachmentFile?: File | null
+    attachmentFile?: File | null,
+    systemContext?: string
   ): Promise<string> {
     if (!config.apiKey) {
       throw new Error('Anthropic Claude API Key fehlt.');
     }
 
     const model = config.model || 'claude-haiku-4-5-20251001';
-    let system = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
-    if (contextJob) {
-      system += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
+    let system = systemContext;
+    if (!system) {
+      system = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
+      if (contextJob) {
+        system += `\nAktueller Job:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg für Juniors ohne Firmen-Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}`;
+      }
     }
 
     let userMessagesContent: any = prompt;

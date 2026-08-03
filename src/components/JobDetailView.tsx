@@ -319,7 +319,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
 
   return (
-    <main style={{ flex: 1, overflowY: 'auto', padding: '28px' }}>
+    <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
       <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header Card */}
         <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', position: 'relative' }}>

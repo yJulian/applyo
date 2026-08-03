@@ -424,6 +424,61 @@ select option {
   color: #fbbf24;
 }
 
+/* AI Chat Markdown Custom Styles */
+.ai-chat-markdown h1 {
+  font-size: 1.15rem;
+  margin: 10px 0 6px 0;
+  color: #a5b4fc;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.ai-chat-markdown h2 {
+  font-size: 1.05rem;
+  margin: 8px 0 4px 0;
+  color: #38bdf8;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.ai-chat-markdown h3 {
+  font-size: 0.95rem;
+  margin: 6px 0 4px 0;
+  color: #34d399;
+}
+.ai-chat-markdown p {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+.ai-chat-markdown p:last-child {
+  margin-bottom: 0;
+}
+.ai-chat-markdown ul, .ai-chat-markdown ol {
+  margin-bottom: 8px;
+  padding-left: 20px;
+}
+.ai-chat-markdown li {
+  margin-bottom: 4px;
+}
+.ai-chat-markdown code {
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #fbbf24;
+}
+.ai-chat-markdown pre {
+  background: rgba(0, 0, 0, 0.45);
+  padding: 10px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.ai-chat-markdown pre code {
+  background: transparent;
+  padding: 0;
+  color: #f8fafc;
+}
+
 /* ==========================================
    WINDOW CONTROLS OVERLAY (PWA Titlebar)
    ========================================== */

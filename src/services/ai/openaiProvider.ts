@@ -79,16 +79,20 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
     prompt: string,
     contextJob: JobMetadata | null,
     config: AIProviderConfig,
-    _attachmentFile?: File | null
+    _attachmentFile?: File | null,
+    systemContext?: string
   ): Promise<string> {
     if (!config.apiKey) {
       throw new Error('OpenAI API Key fehlt.');
     }
 
     const model = config.model || 'gpt-4o-mini';
-    let systemContext = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
-    if (contextJob) {
-      systemContext += `\nAktueller Job im Kontext:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg/Junior ohne mehrjährige Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}\nZusammenfassung: ${contextJob.summary}`;
+    let finalSystemContext = systemContext;
+    if (!finalSystemContext) {
+      finalSystemContext = 'Du bist ein intelligenter Karriere- und Bewerbungsassistent.';
+      if (contextJob) {
+        finalSystemContext += `\nAktueller Job im Kontext:\nFirma: ${contextJob.company}\nTitel: ${contextJob.title}\nVorherige Firmen-Anstellung gefordert: ${contextJob.requiresWorkExperience ? 'Ja (Explizit mehrjährige Firmen-Berufserfahrung gefordert)' : 'Nein (Direkteinstieg/Junior ohne mehrjährige Vorerfahrung möglich)'}\nDetails: ${contextJob.experienceDetails}\nZusammenfassung: ${contextJob.summary}`;
+      }
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -100,7 +104,7 @@ Antworte AUSSCHLIESSLICH im validen JSON-Format ohne Markdown-Codeblöcke mit fo
       body: JSON.stringify({
         model: model,
         messages: [
-          { role: 'system', content: systemContext },
+          { role: 'system', content: finalSystemContext },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7

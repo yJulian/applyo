@@ -45,12 +45,107 @@ export const DEFAULT_GLOBAL_AI_SETTINGS: GlobalAISettings = {
   showSystemAlerts: true,
 };
 
-export const DEFAULT_AI_SETTINGS: AISettings = {
-  ...DEFAULT_GLOBAL_AI_SETTINGS,
-  feedbackThresholdWeeks: 6,
-  cardLayoutConfig: DEFAULT_CARD_SECTIONS,
-  showSystemAlerts: true,
-};
+export function buildSystemContext(userProfile: UserProfile, job: JobMetadata | null): string {
+  let context = `Du bist ein hochqualifizierter, intelligenter Karriere- und Bewerbungsassistent (KI Karrierelotse).
+Deine Antworten sind präzise, professionell, lösungsorientiert und strukturiert.
+Nutze Markdown-Formatierung (Überschriften, Fett- und Kursivdruck, Aufzählungslisten, Tabellen oder Codeblöcke), um deine Antworten übersichtlich und ansprechend zu gestalten.
+
+=== NUTZERPROFIL & GLOBALE INFORMATIONEN ÜBER DEN BEWERBER ===
+Name: ${userProfile.fullName || 'Nicht angegeben'}
+E-Mail: ${userProfile.email || 'Nicht angegeben'}
+Telefon: ${userProfile.phone || 'Nicht angegeben'}
+Wohnort: ${userProfile.location || 'Nicht angegeben'}
+Staatsbürgerschaft: ${userProfile.citizenship || 'Nicht angegeben'}
+Website / Portfolio: ${userProfile.website || userProfile.portfolio || 'Nicht angegeben'}
+GitHub: ${userProfile.github || 'Nicht angegeben'}
+LinkedIn: ${userProfile.linkedin || 'Nicht angegeben'}
+Xing: ${userProfile.xing || 'Nicht angegeben'}
+
+--- PROFILBESCHREIBUNG & WERDEGANG (MARKDOWN) ---
+${userProfile.markdownDescription || 'Keine Beschreibung vorhanden.'}`;
+
+  if (userProfile.globalExperiences && userProfile.globalExperiences.length > 0) {
+    context += `\n\n--- BERUFSERFAHRUNG ---`;
+    userProfile.globalExperiences.forEach((exp, idx) => {
+      context += `\n${idx + 1}. ${exp.position} bei ${exp.company} (${exp.startDate} - ${exp.endDate || (exp.isCurrent ? 'Heute' : '')})`;
+      if (exp.location) context += ` | Ort: ${exp.location}`;
+      if (exp.summary) context += `\n   Zusammenfassung: ${exp.summary}`;
+      if (exp.highlights && exp.highlights.length > 0) {
+        context += `\n   Highlights:\n   - ` + exp.highlights.join('\n   - ');
+      }
+    });
+  }
+
+  if (userProfile.globalEducation && userProfile.globalEducation.length > 0) {
+    context += `\n\n--- AUSBILDUNG & STUDIUM ---`;
+    userProfile.globalEducation.forEach((edu, idx) => {
+      context += `\n${idx + 1}. ${edu.degree} in ${edu.fieldOfStudy} an der ${edu.institution} (${edu.startDate} - ${edu.endDate})`;
+      if (edu.description) context += `\n   Details: ${edu.description}`;
+    });
+  }
+
+  if (userProfile.globalSkillCategories && userProfile.globalSkillCategories.length > 0) {
+    context += `\n\n--- FÄHIGKEITEN & KENNTNISSE ---`;
+    userProfile.globalSkillCategories.forEach((cat) => {
+      context += `\n- ${cat.category}: ${cat.skills.join(', ')}`;
+    });
+  }
+
+  if (userProfile.globalProjects && userProfile.globalProjects.length > 0) {
+    context += `\n\n--- PROJEKTE ---`;
+    userProfile.globalProjects.forEach((proj, idx) => {
+      context += `\n${idx + 1}. ${proj.title}: ${proj.description}`;
+      if (proj.techStack && proj.techStack.length > 0) {
+        context += ` (Tech Stack: ${proj.techStack.join(', ')})`;
+      }
+    });
+  }
+
+  if (job) {
+    context += `\n\n=== AKTUELLE GEÖFFNETE STELLE (KONTEXT) ===
+Firmenname: ${job.company}
+Stellentitel: ${job.title}
+Status: ${job.status}
+Standort: ${job.location || 'Nicht angegeben'}
+Gehalt: ${job.salary || 'Nicht angegeben'}
+Erstellt am: ${job.createdDate || 'Nicht angegeben'}
+Zuletzt aktualisiert am: ${job.updatedDate || 'Nicht angegeben'}
+Persönliche Bewertung: ${job.personalRating ? `${job.personalRating}/5 Sterne` : 'Keine'}
+
+--- ERFORDERLICHE BERUFSERFAHRUNG ---
+Erfahrungs-Level: ${job.experienceLevel}
+Berufserfahrung an Firma gefordert: ${job.requiresWorkExperience ? 'Ja (Explizit mehrjährige Unternehmens-Berufserfahrung zwingend gefordert)' : 'Nein (Direkteinstieg/Junior ohne Firmen-Vorerfahrung möglich)'}
+Details zur Erfahrung: ${job.experienceDetails || 'Keine spezifischen Angaben'}
+Vorwissens-Skala (0-9): ${job.priorKnowledgeLevel ?? 'Nicht angegeben'}
+
+--- ZUSAMMENFASSUNG DER STELLE ---
+${job.summary || 'Keine Zusammenfassung vorhanden'}
+
+--- HAUPTAUFGABEN ---
+${job.tasks && job.tasks.length > 0 ? job.tasks.map((t) => `- ${t}`).join('\n') : 'Keine Aufgaben gelistet'}
+
+--- ANFORDERUNGEN ---
+${job.requirements && job.requirements.length > 0 ? job.requirements.map((r) => `- ${r}`).join('\n') : 'Keine Anforderungen gelistet'}
+
+--- BENEFITS ---
+${job.benefits && job.benefits.length > 0 ? job.benefits.map((b) => `- ${b}`).join('\n') : 'Keine Benefits gelistet'}`;
+
+    if (job.customTags && job.customTags.length > 0) {
+      context += `\n\n--- BENUTZERDEFINIERTE TAGS ---
+- ${job.customTags.join(', ')}`;
+    }
+
+    if (job.notes) {
+      context += `\n\n--- PERSÖNLICHE NOTIZEN DES BEWERBERS ZUR STELLE ---
+${job.notes}`;
+    }
+  } else {
+    context += `\n\n=== AKTUELLE STELLE ===
+(Aktuell ist keine spezifische Stelle in der Anwendung geöffnet. Hilf dem Nutzer basierend auf seinem globalen Nutzerprofil allgemein bei Karrierefragen, Anschreiben, Lebensläufen oder Vorbereitung.)`;
+  }
+
+  return context;
+}
 
 class AIService {
   private globalAiSettings: GlobalAISettings = { ...DEFAULT_GLOBAL_AI_SETTINGS };
@@ -188,7 +283,10 @@ class AIService {
       throw new Error(`API Key für ${activeProvider.name} fehlt. Bitte in den Einstellungen eintragen.`);
     }
 
-    return await activeProvider.generateResponse(prompt, contextJob, config, attachmentFile);
+    const userProfile = await profileService.getProfile();
+    const systemContext = buildSystemContext(userProfile, contextJob);
+
+    return await activeProvider.generateResponse(prompt, contextJob, config, attachmentFile, systemContext);
   }
 
   async generateTailoredCV(userProfile: UserProfile, job: JobMetadata | null): Promise<CVData> {
