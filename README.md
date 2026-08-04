@@ -2,6 +2,8 @@
 
 Applyo is a privacy-focused, local-first web application designed for managing, tracking, and automating job applications. Built with React, TypeScript, and Vite, Applyo integrates local file system storage with multi-provider AI capabilities to help applicants track job listings, parse job requirements, and generate tailored cover letters and resumes.
 
+![Applyo PWA](doc/pwa.png)
+
 ## Key Features
 
 ### Job Application Tracking
