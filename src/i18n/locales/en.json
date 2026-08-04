@@ -267,7 +267,38 @@
     "notes_saved": "Notes saved to job folder!",
     "open_in_editor": "Open in editor",
     "view_edit": "View & Edit",
-    "open_file": "Open"
+    "open_file": "Open",
+    "no_job_selected": "No job selected",
+    "no_job_desc": "Please select an application from the sidebar."
+  },
+  "add_job": {
+    "modal_title": "Add New Application",
+    "modal_subtitle": "Add a job via link, plain text, or manual entry",
+    "tab_link": "Link / URL",
+    "tab_text": "Job Text",
+    "tab_manual": "Manual Entry",
+    "company_label": "Company / Employer",
+    "title_label": "Job Title",
+    "exp_required_label": "Work experience required?",
+    "exp_junior_opt": "Junior / Entry level (no prior company exp.)",
+    "exp_req_opt": "Experience required (e.g. >2 years)",
+    "exp_details_label": "Experience details (optional)",
+    "summary_label": "Short Summary",
+    "tasks_label": "Main Tasks (one per line)",
+    "requirements_label": "Requirements (one per line)",
+    "create_manual_btn": "Create Job Manually",
+    "link_field_label": "Job posting URL",
+    "text_field_label": "Job posting text (Paste text here)",
+    "analyzing": "Analyzing job posting...",
+    "analyze_btn": "Analyze with AI",
+    "folder_preview": "Folder Preview",
+    "will_be_saved_in": "Will be saved in",
+    "back_btn": "Back",
+    "save_extracted_btn": "Create Folder & Save Job",
+    "error_empty_input": "Please enter a URL or paste the job posting text.",
+    "error_authwall": "The external link could not be fetched directly (e.g. LinkedIn Authwall). Please copy the job text into the 'Job Text' tab.",
+    "error_ai_failed": "AI analysis of the job posting failed.",
+    "error_missing_company_title": "Please provide at least a company name and job title."
   },
   "add_modal": {
     "title": "Add New Application",
@@ -371,6 +402,10 @@
     "chip_interview": "🎯 Interview Questions",
     "chip_strengths": "📊 Strengths & Match",
     "chip_career_tips": "💡 Career Tips & Profile Check",
+    "prompt_cover_letter": "Write a compelling, professional cover letter for the position \"{{title}}\" at \"{{company}}\". Specifically reference my qualifications and the job requirements.",
+    "prompt_interview": "What 5 specific questions might the interviewer ask at \"{{company}}\" for the position \"{{title}}\"? Please provide answer tips tailored to my career background.",
+    "prompt_strengths": "Analyze the match between my user profile and the position \"{{title}}\" at \"{{company}}\". What are my biggest strengths and where are potential gaps?",
+    "prompt_career_tips": "Give me feedback on my profile and practical advice for my application strategy.",
     "generating": "AI Career Guide is generating a response...",
     "input_placeholder": "Ask the AI Career Guide..."
   },
@@ -382,7 +417,8 @@
   },
   "cover_letter_editor": {
     "title": "AI Cover Letter Editor",
-    "subtitle": "Generate tailored cover letter from profile & job posting and export to PDF"
+    "subtitle": "Generate tailored cover letter from profile & job posting and export to PDF",
+    "select_job": "Select Job"
   },
   "legal": {
     "title": "Legal Information",

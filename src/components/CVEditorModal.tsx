@@ -48,7 +48,6 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   selectedJob,
 }) => {
   const { t } = useTranslation();
-  if (!isOpen) return null;
 
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [styleOptions, setStyleOptions] = useState<CVStyleOptions>(DEFAULT_CV_STYLE);
@@ -205,6 +204,8 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
 
   // Initial Load
   useEffect(() => {
+    if (!isOpen) return;
+
     async function initCV() {
       setIsGenerating(true);
       const profile = await profileService.getProfile();
@@ -248,7 +249,9 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
     }
 
     initCV();
-  }, [selectedJob]);
+  }, [isOpen, selectedJob]);
+
+  if (!isOpen) return null;
 
   // Update style options and persist globally
   const handleStyleChange = (newStyle: CVStyleOptions) => {

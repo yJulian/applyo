@@ -14,7 +14,6 @@ interface AddJobModalProps {
 
 export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJobAdded }) => {
   const { t } = useTranslation();
-  if (!isOpen) return null;
 
   const [inputMode, setInputMode] = useState<'link' | 'text' | 'manual'>('link');
   const [linkUrl, setLinkUrl] = useState('');
@@ -35,6 +34,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
   const [extracted, setExtracted] = useState<ExtractedJobData | null>(null);
   const [editableCompany, setEditableCompany] = useState('');
   const [editableTitle, setEditableTitle] = useState('');
+
+  if (!isOpen) return null;
 
   const handleAnalyze = async () => {
     const rawInput = inputMode === 'link' ? `${linkUrl}\n${jobText}` : jobText;

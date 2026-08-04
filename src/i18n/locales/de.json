@@ -267,7 +267,38 @@
     "notes_saved": "Notizen wurden im Job-Ordner gespeichert!",
     "open_in_editor": "Im Editor öffnen",
     "view_edit": "Ansehen & Editieren",
-    "open_file": "Öffnen"
+    "open_file": "Öffnen",
+    "no_job_selected": "Keine Bewerbung ausgewählt",
+    "no_job_desc": "Bitte wähle eine Bewerbung in der linken Leiste aus."
+  },
+  "add_job": {
+    "modal_title": "Neue Bewerbung hinzufügen",
+    "modal_subtitle": "Füge eine Stelle per Link, Freitext oder manueller Eingabe hinzu",
+    "tab_link": "Link / URL",
+    "tab_text": "Stellentext",
+    "tab_manual": "Manuell eingeben",
+    "company_label": "Firma / Arbeitgeber",
+    "title_label": "Stellentitel",
+    "exp_required_label": "Berufserfahrung erforderlich?",
+    "exp_junior_opt": "Junior / Einstieg (ohne Firmen-Vorerfahrung)",
+    "exp_req_opt": "Erfahrung erforderlich (z.B. >2 Jahre)",
+    "exp_details_label": "Details zur Erfahrung (optional)",
+    "summary_label": "Kurze Zusammenfassung",
+    "tasks_label": "Hauptaufgaben (zeilenweise)",
+    "requirements_label": "Anforderungen (zeilenweise)",
+    "create_manual_btn": "Bewerbung manuell anlegen",
+    "link_field_label": "Link zur Stellenanzeige (URL)",
+    "text_field_label": "Stellenanzeigentext (Kopiere den Text hier hinein)",
+    "analyzing": "Analysiere Stellenanzeige...",
+    "analyze_btn": "Mit KI analysieren",
+    "folder_preview": "Vorschau Ordnerstruktur",
+    "will_be_saved_in": "Wird gespeichert unter",
+    "back_btn": "Zurück",
+    "save_extracted_btn": "Ordner anlegen & Job speichern",
+    "error_empty_input": "Bitte gib eine URL oder einen Stellenanzeigentext ein.",
+    "error_authwall": "Der externe Link konnte nicht direkt abgerufen werden (z.B. LinkedIn Authwall). Bitte kopiere den Stellenanzeigentext in den Tab 'Stellentext'.",
+    "error_ai_failed": "Die KI-Analyse der Stellenanzeige ist fehlgeschlagen.",
+    "error_missing_company_title": "Bitte gib mindestens eine Firma und einen Stellentitel an."
   },
   "add_modal": {
     "title": "Neue Bewerbung hinzufügen",
@@ -371,6 +402,10 @@
     "chip_interview": "🎯 Interview Fragen",
     "chip_strengths": "📊 Stärken & Match",
     "chip_career_tips": "💡 Karriere-Tipps & Profilcheck",
+    "prompt_cover_letter": "Schreibe ein überzeugendes, professionelles Anschreiben für die Stelle \"{{title}}\" bei \"{{company}}\". Beziehe dich dabei genau auf meine Qualifikationen und die Anforderungen.",
+    "prompt_interview": "Welche 5 spezifischen Fragen könnte der Interviewer bei \"{{company}}\" für die Position \"{{title}}\" stellen? Bitte mit Antwort-Tipps passend zu meinem Werdegang.",
+    "prompt_strengths": "Analysiere den Match zwischen meinem Nutzerprofil und der Stelle \"{{title}}\" bei \"{{company}}\". Wo sind meine größten Stärken und wo gibt es Lücken?",
+    "prompt_career_tips": "Gib mir Feedback zu meinem Profil und praktische Tipps für meine Bewerbungsstrategie.",
     "generating": "KI Karrierelotse generiert Antwort...",
     "input_placeholder": "Frage an den KI Karrierelotsen..."
   },
@@ -382,7 +417,8 @@
   },
   "cover_letter_editor": {
     "title": "AI Anschreiben Editor",
-    "subtitle": "Professionelles Bewerbungsschreiben aus Profil & Stelle generieren & als PDF exportieren"
+    "subtitle": "Professionelles Bewerbungsschreiben aus Profil & Stelle generieren & als PDF exportieren",
+    "select_job": "Stelle auswählen"
   },
   "legal": {
     "title": "Rechtliche Informationen",

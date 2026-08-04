@@ -203,21 +203,21 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
           {job ? (
             <>
               <button
-                onClick={() => handleSendPrompt(`Schreibe ein überzeugendes, professionelles Anschreiben für die Stelle "${job.title}" bei "${job.company}". Beziehe dich dabei genau auf meine Qualifikationen und die Anforderungen.`)}
+                onClick={() => handleSendPrompt(t('ai_assistant.prompt_cover_letter', { title: job.title, company: job.company }))}
                 className="btn btn-secondary"
                 style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap', gap: '4px' }}
               >
                 {t('ai_assistant.chip_cover_letter')}
               </button>
               <button
-                onClick={() => handleSendPrompt(`Welche 5 spezifischen Fragen könnte der Interviewer bei "${job.company}" für die Position "${job.title}" stellen? Bitte mit Antwort-Tipps passend zu meinem Werdegang.`)}
+                onClick={() => handleSendPrompt(t('ai_assistant.prompt_interview', { title: job.title, company: job.company }))}
                 className="btn btn-secondary"
                 style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap', gap: '4px' }}
               >
                 {t('ai_assistant.chip_interview')}
               </button>
               <button
-                onClick={() => handleSendPrompt(`Analysiere den Match zwischen meinem Nutzerprofil und der Stelle "${job.title}" bei "${job.company}". Wo sind meine größten Stärken und wo gibt es Lücken?`)}
+                onClick={() => handleSendPrompt(t('ai_assistant.prompt_strengths', { title: job.title, company: job.company }))}
                 className="btn btn-secondary"
                 style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap', gap: '4px' }}
               >
@@ -226,7 +226,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
             </>
           ) : (
             <button
-              onClick={() => handleSendPrompt('Gib mir Feedback zu meinem Profil und praktische Tipps für meine Bewerbungsstrategie.')}
+              onClick={() => handleSendPrompt(t('ai_assistant.prompt_career_tips'))}
               className="btn btn-secondary"
               style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap' }}
             >

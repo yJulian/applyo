@@ -48,7 +48,6 @@ export const CoverLetterEditorModal: React.FC<CoverLetterEditorModalProps> = ({
   onSelectJob,
 }) => {
   const { t } = useTranslation();
-  if (!isOpen) return null;
 
   const [coverLetterData, setCoverLetterData] = useState<CoverLetterData | null>(null);
   const [styleOptions, setStyleOptions] = useState<CoverLetterStyleOptions>(DEFAULT_COVER_LETTER_STYLE);
@@ -66,6 +65,8 @@ export const CoverLetterEditorModal: React.FC<CoverLetterEditorModalProps> = ({
 
   // Initial Load
   useEffect(() => {
+    if (!isOpen) return;
+
     async function initCoverLetter() {
       setIsGenerating(true);
       const profile = await profileService.getProfile();
@@ -98,7 +99,9 @@ export const CoverLetterEditorModal: React.FC<CoverLetterEditorModalProps> = ({
     }
 
     initCoverLetter();
-  }, [selectedJob]);
+  }, [isOpen, selectedJob]);
+
+  if (!isOpen) return null;
 
   // Handle Style Change
   const handleStyleChange = (newStyle: CoverLetterStyleOptions) => {
