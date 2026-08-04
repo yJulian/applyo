@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Sparkles } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
@@ -20,6 +21,7 @@ import { aiService } from './services/ai/aiService';
 import { profileService } from './services/storage/profileService';
 
 export default function App() {
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<JobMetadata[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [currentDirName, setCurrentDirName] = useState<string | null>(null);
@@ -174,7 +176,7 @@ export default function App() {
   };
 
   const handleDeleteJob = async (jobToDelete: JobMetadata) => {
-    if (confirm(`Möchtest du die Bewerbung "${jobToDelete.title}" bei "${jobToDelete.company}" wirklich löschen?`)) {
+    if (confirm(t('app.delete_confirm', { title: jobToDelete.title, company: jobToDelete.company }))) {
       await fileSystemService.deleteJob(jobToDelete);
       const handle = await fileSystemService.getStoredRootHandle();
       if (handle) {
@@ -392,7 +394,7 @@ export default function App() {
             overflow: 'hidden',
             whiteSpace: 'nowrap',
           }}
-          title={`KI-Karrierelotse öffnen (${aiSettings.activeProvider.toUpperCase()})`}
+          title={t('app.ai_assistant_title', { provider: aiSettings.activeProvider.toUpperCase() })}
         >
           <Sparkles size={22} color="#a5b4fc" style={{ flexShrink: 0 }} />
           <span
@@ -410,7 +412,7 @@ export default function App() {
               verticalAlign: 'middle',
             }}
           >
-            KI-Assistent
+            {t('app.ai_assistant_btn')}
           </span>
         </button>
       )}

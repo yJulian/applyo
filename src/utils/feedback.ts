@@ -56,13 +56,13 @@ export function isFeedbackOverdue(dateIsoString: string, thresholdWeeks: number 
 }
 
 /**
- * Formats ISO date string into German local format (e.g. "02.08.2026 16:30").
+ * Formats ISO date string into local format according to active locale.
  */
-export function formatFeedbackDate(dateIsoString: string): string {
+export function formatFeedbackDate(dateIsoString: string, locale: string = 'de-DE'): string {
   try {
     const d = new Date(dateIsoString);
     if (isNaN(d.getTime())) return dateIsoString;
-    return d.toLocaleString('de-DE', {
+    return d.toLocaleString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -91,35 +91,51 @@ export interface FeedbackBadgeInfo {
  */
 export function getFeedbackBadgeInfo(
   dateIsoString: string | null,
-  thresholdWeeks: number = 6
+  thresholdWeeks: number = 6,
+  t?: (key: string, opts?: any) => string,
+  locale?: string
 ): FeedbackBadgeInfo | null {
   if (!dateIsoString) return null;
 
   const overdue = isFeedbackOverdue(dateIsoString, thresholdWeeks);
   const weeksAgo = getWeeksSince(dateIsoString);
-  const formattedDate = formatFeedbackDate(dateIsoString);
+  const formattedDate = formatFeedbackDate(dateIsoString, locale || 'de-DE');
 
   if (overdue) {
+    const label = t
+      ? t('feedback_badge.overdue_label', { weeks: weeksAgo, date: formattedDate })
+      : `⚠️ Lange her (vor ${weeksAgo} Wo. — ${formattedDate})`;
+    const shortLabel = t
+      ? t('feedback_badge.overdue_short', { weeks: weeksAgo, date: formattedDate })
+      : `⚠️ Lange her (${weeksAgo} Wo.)`;
+
     return {
       hasFeedback: true,
       isOverdue: true,
       weeksAgo,
       formattedDate,
-      label: `⚠️ Lange her (vor ${weeksAgo} Wo. — ${formattedDate})`,
-      shortLabel: `⚠️ Lange her (${weeksAgo} Wo.)`,
+      label,
+      shortLabel,
       bg: 'rgba(239, 68, 68, 0.15)',
       color: '#f87171',
       border: 'rgba(239, 68, 68, 0.4)',
     };
   }
 
+  const label = t
+    ? t('feedback_badge.normal_label', { date: formattedDate })
+    : `💬 Rückmeldung: ${formattedDate}`;
+  const shortLabel = t
+    ? t('feedback_badge.normal_short', { date: formattedDate.split(' ')[0] })
+    : `💬 Rückmeldung: ${formattedDate.split(' ')[0]}`;
+
   return {
     hasFeedback: true,
     isOverdue: false,
     weeksAgo,
     formattedDate,
-    label: `💬 Rückmeldung: ${formattedDate}`,
-    shortLabel: `💬 Rückmeldung: ${formattedDate.split(' ')[0]}`,
+    label,
+    shortLabel,
     bg: 'rgba(56, 189, 248, 0.15)',
     color: '#38bdf8',
     border: 'rgba(56, 189, 248, 0.4)',

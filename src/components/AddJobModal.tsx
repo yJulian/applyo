@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Sparkles, Link as LinkIcon, FileText, CheckCircle2, AlertTriangle, Edit3 } from 'lucide-react';
-import { JobMetadata, ExperienceLevel, EXPERIENCE_LABELS } from '../types/job';
+import { JobMetadata, ExperienceLevel, getExperienceMeta } from '../types/job';
 import { aiService } from '../services/ai/aiService';
 import { fileSystemService } from '../services/storage/fileSystem';
 import { ExtractedJobData } from '../services/ai/types';
@@ -12,6 +13,7 @@ interface AddJobModalProps {
 }
 
 export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJobAdded }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const [inputMode, setInputMode] = useState<'link' | 'text' | 'manual'>('link');
@@ -37,7 +39,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
   const handleAnalyze = async () => {
     const rawInput = inputMode === 'link' ? `${linkUrl}\n${jobText}` : jobText;
     if (!rawInput.trim()) {
-      setErrorMessage('Bitte gib einen Link oder eine Stellenbeschreibung ein.');
+      setErrorMessage(t('add_job.error_empty_input'));
       return;
     }
 
@@ -49,7 +51,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
       
       // Detect if AI complained about link access (LinkedIn AuthWall)
       if (data.summary && data.summary.includes('nicht auf externe Links') && !jobText) {
-        setErrorMessage('LinkedIn blockiert direkte Link-Abfragen ohne Login (AuthWall). Bitte kopiere den Stellenanzeigentext einfach kurz in das Textfeld darunter ein!');
+        setErrorMessage(t('add_job.error_authwall'));
         setInputMode('text');
         return;
       }
@@ -59,7 +61,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
       setEditableTitle(data.title || '');
     } catch (err: any) {
       console.error('Fehler bei der KI-Analyse:', err);
-      setErrorMessage(err.message || 'Fehler beim Analysieren des Jobs mit KI.');
+      setErrorMessage(err.message || t('add_job.error_ai_failed'));
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +69,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
 
   const handleSaveManual = async () => {
     if (!manualCompany.trim() || !manualTitle.trim()) {
-      setErrorMessage('Bitte gib mindestens Firma und Jobtitel an.');
+      setErrorMessage(t('add_job.error_missing_company_title'));
       return;
     }
 
@@ -193,9 +195,9 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
               <Sparkles size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.2rem' }}>Bewerbung anlegen</h2>
+              <h2 style={{ fontSize: '1.2rem' }}>{t('add_job.modal_title')}</h2>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Verwende KI-Extraktion oder erstelle den Ordner direkt manuell ohne Token-Verbrauch
+                {t('add_job.modal_subtitle')}
               </span>
             </div>
           </div>
@@ -234,7 +236,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                 style={{ flex: 1, gap: '6px', padding: '8px 10px', fontSize: '0.8rem' }}
               >
                 <LinkIcon size={14} />
-                <span>LinkedIn / Link (KI)</span>
+                <span>{t('add_job.tab_link')}</span>
               </button>
               <button
                 onClick={() => setInputMode('text')}
@@ -242,7 +244,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                 style={{ flex: 1, gap: '6px', padding: '8px 10px', fontSize: '0.8rem' }}
               >
                 <FileText size={14} />
-                <span>Text KI-Analyse</span>
+                <span>{t('add_job.tab_text')}</span>
               </button>
               <button
                 onClick={() => setInputMode('manual')}
@@ -256,7 +258,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                 }}
               >
                 <Edit3 size={14} color="#34d399" />
-                <span>Manuell (Ohne KI)</span>
+                <span>{t('add_job.tab_manual')}</span>
               </button>
             </div>
 
@@ -266,7 +268,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
                     <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                      Firma (Ordner 1) *
+                      {t('add_job.company_label')} *
                     </label>
                     <input
                       type="text"
@@ -278,7 +280,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                   </div>
                   <div>
                     <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                      Jobtitel (Ordner 2) *
+                      {t('add_job.title_label')} *
                     </label>
                     <input
                       type="text"
@@ -292,21 +294,21 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
 
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Vorerfahrung erforderlich?
+                    {t('add_job.exp_required_label')}
                   </label>
                   <select
                     className="input-field"
                     value={manualRequiresExp ? 'required' : 'junior'}
                     onChange={(e) => setManualRequiresExp(e.target.value === 'required')}
                   >
-                    <option value="junior">🟢 Junior / Ohne Vorerfahrung (Direkte Bewerbung möglich)</option>
-                    <option value="required">🔴 Berufserfahrung zwingend erforderlich</option>
+                    <option value="junior">🟢 {t('add_job.exp_junior_opt')}</option>
+                    <option value="required">🔴 {t('add_job.exp_req_opt')}</option>
                   </select>
                 </div>
 
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Erfahrungs-Details (optional)
+                    {t('add_job.exp_details_label')}
                   </label>
                   <input
                     type="text"
@@ -319,7 +321,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
 
                 <div>
                   <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                    Kurze Zusammenfassung
+                    {t('add_job.summary_label')}
                   </label>
                   <input
                     type="text"
@@ -333,7 +335,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                   <div>
                     <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                      Aufgaben (zeilenweise)
+                      {t('add_job.tasks_label')}
                     </label>
                     <textarea
                       className="input-field"
@@ -345,7 +347,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                   </div>
                   <div>
                     <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
-                      Anforderungen (zeilenweise)
+                      {t('add_job.requirements_label')}
                     </label>
                     <textarea
                       className="input-field"
@@ -363,7 +365,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                   style={{ width: '100%', gap: '8px', padding: '12px', marginTop: '6px' }}
                 >
                   <CheckCircle2 size={18} />
-                  <span>Ordner anlegen & Speichern (Manuell)</span>
+                  <span>{t('add_job.create_manual_btn')}</span>
                 </button>
               </div>
             ) : (
@@ -372,7 +374,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                 {inputMode === 'link' && (
                   <div style={{ marginBottom: '14px' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                      LinkedIn Link oder Job-URL
+                      {t('add_job.link_field_label')}
                     </label>
                     <input
                       type="url"
@@ -386,7 +388,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
 
                 <div style={{ marginBottom: '20px' }}>
                   <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                    Stellenbeschreibung / Text (optional bei Link)
+                    {t('add_job.text_field_label')}
                   </label>
                   <textarea
                     className="input-field"
@@ -405,11 +407,11 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                   style={{ width: '100%', gap: '8px', padding: '12px' }}
                 >
                   {isLoading ? (
-                    <span>Analysiere mit KI...</span>
+                    <span>{t('add_job.analyzing')}</span>
                   ) : (
                     <>
                       <Sparkles size={18} />
-                      <span>Stelle mit KI analysieren & extrahieren</span>
+                      <span>{t('add_job.analyze_btn')}</span>
                     </>
                   )}
                 </button>
@@ -422,16 +424,16 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
             <div style={{ background: 'rgba(99,102,241,0.1)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid rgba(99,102,241,0.2)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--accent-primary)', textTransform: 'uppercase' }}>
-                  Vorschau der Ordnerstruktur
+                  {t('add_job.folder_preview')}
                 </span>
-                <span className={`badge ${EXPERIENCE_LABELS[extracted.experienceLevel]?.tagClass}`}>
-                  {EXPERIENCE_LABELS[extracted.experienceLevel]?.label}
+                <span className={`badge ${getExperienceMeta(extracted.experienceLevel || 'none', t).tagClass}`}>
+                  {getExperienceMeta(extracted.experienceLevel || 'none', t).label}
                 </span>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Firma (Ordner ebene 1)</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('add_job.company_label')}</label>
                   <input
                     type="text"
                     className="input-field"
@@ -441,7 +443,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Jobtitel (Ordner ebene 2)</label>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('add_job.title_label')}</label>
                   <input
                     type="text"
                     className="input-field"
@@ -453,20 +455,20 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
               </div>
 
               <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                Wird gespeichert in: <code>{editableCompany || 'Firma'}/{editableTitle || 'Titel'}/metadata.json</code>
+                {t('add_job.will_be_saved_in')}: <code>{editableCompany || 'Firma'}/{editableTitle || 'Titel'}/metadata.json</code>
               </p>
             </div>
 
             {/* Tasks & Requirements Preview */}
             <div style={{ maxHeight: '200px', overflowY: 'auto', paddingRight: '6px' }}>
-              <h4 style={{ fontSize: '0.85rem', color: '#818cf8', marginBottom: '6px' }}>Aufgaben ({extracted.tasks.length})</h4>
+              <h4 style={{ fontSize: '0.85rem', color: '#818cf8', marginBottom: '6px' }}>{t('job_detail.tasks_title')} ({extracted.tasks.length})</h4>
               <ul style={{ paddingLeft: '18px', fontSize: '0.8rem', marginBottom: '12px', color: 'var(--text-muted)' }}>
-                {extracted.tasks.map((t, idx) => (
-                  <li key={idx}>{t}</li>
+                {extracted.tasks.map((tItem, idx) => (
+                  <li key={idx}>{tItem}</li>
                 ))}
               </ul>
 
-              <h4 style={{ fontSize: '0.85rem', color: '#34d399', marginBottom: '6px' }}>Anforderungen ({extracted.requirements.length})</h4>
+              <h4 style={{ fontSize: '0.85rem', color: '#34d399', marginBottom: '6px' }}>{t('job_detail.requirements_title')} ({extracted.requirements.length})</h4>
               <ul style={{ paddingLeft: '18px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                 {extracted.requirements.map((r, idx) => (
                   <li key={idx}>{r}</li>
@@ -477,11 +479,11 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({ isOpen, onClose, onJob
             {/* Actions */}
             <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
               <button onClick={() => setExtracted(null)} className="btn btn-secondary" style={{ flex: 1 }}>
-                Zurück / Erneut versuchen
+                {t('add_job.back_btn')}
               </button>
               <button onClick={handleSaveExtracted} className="btn btn-primary" style={{ flex: 1, gap: '6px' }}>
                 <CheckCircle2 size={16} />
-                <span>Ordner anlegen & Speichern</span>
+                <span>{t('add_job.save_extracted_btn')}</span>
               </button>
             </div>
           </div>

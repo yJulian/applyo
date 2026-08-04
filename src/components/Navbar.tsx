@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays, BarChart3, FileText, Mail } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { Folder, FolderCheck, Plus, Settings, Briefcase, Unlock, LayoutList, Kanban, CalendarDays, BarChart3 } from 'lucide-react';
 import { AISettings } from '../types/job';
 
 type ViewMode = 'list' | 'board' | 'calendar' | 'stats';
@@ -18,23 +19,23 @@ interface NavbarProps {
   onViewModeChange: (mode: ViewMode) => void;
 }
 
-const TABS: { id: ViewMode; label: string; icon: React.ReactNode; title: string }[] = [
-  { id: 'list',     label: 'Liste',       icon: <LayoutList size={14} />,   title: 'Listenansicht' },
-  { id: 'board',    label: 'Board',       icon: <Kanban size={14} />,       title: 'Kanban Board Ansicht' },
-  { id: 'calendar', label: 'Kalender',    icon: <CalendarDays size={14} />, title: 'Kalenderansicht' },
-  { id: 'stats',    label: 'Statistiken', icon: <BarChart3 size={14} />,    title: 'Statistiken & Badges' },
-];
-
-// ─── Option 3: Underline Minimalist Tabs ────────────────────────────────────
 const ViewSwitcher: React.FC<{
   viewMode: ViewMode;
   onViewModeChange: (m: ViewMode) => void;
   compact?: boolean;
 }> = ({ viewMode, onViewModeChange, compact = false }) => {
+  const { t } = useTranslation();
   const containerRef = useRef<HTMLDivElement>(null);
   const btnRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [underline, setUnderline] = useState<{ left: number; width: number } | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  const TABS: { id: ViewMode; label: string; icon: React.ReactNode; title: string }[] = [
+    { id: 'list',     label: t('nav.list'),     icon: <LayoutList size={14} />,   title: t('nav.list_title') },
+    { id: 'board',    label: t('nav.board'),    icon: <Kanban size={14} />,       title: t('nav.board_title') },
+    { id: 'calendar', label: t('nav.calendar'), icon: <CalendarDays size={14} />, title: t('nav.calendar_title') },
+    { id: 'stats',    label: t('nav.stats'),    icon: <BarChart3 size={14} />,    title: t('nav.stats_title') },
+  ];
 
   const updateUnderline = useCallback(() => {
     const activeIdx = TABS.findIndex(t => t.id === viewMode);
@@ -188,6 +189,7 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
   viewMode,
   onViewModeChange,
 }) => {
+  const { t } = useTranslation();
   const [isFolderHovered, setIsFolderHovered] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
   const [isAddHovered, setIsAddHovered] = useState(false);
@@ -205,8 +207,8 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
             className="wco-bare-btn"
             title={
               needsPermission && currentDirName
-                ? `Zugriff auf '${currentDirName}' freigeben`
-                : currentDirName ? `Ordner: ${currentDirName}` : 'Lokalen Arbeitsordner wählen'
+                ? t('nav.grant_folder', { name: currentDirName })
+                : currentDirName ? t('nav.folder', { name: currentDirName }) : t('nav.select_folder')
             }
           >
             {needsPermission && currentDirName ? (
@@ -227,8 +229,8 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}>
               {needsPermission && currentDirName
-                ? `'${currentDirName}' freigeben`
-                : currentDirName ?? 'Ordner wählen'}
+                ? t('nav.grant_folder', { name: currentDirName })
+                : currentDirName ?? t('nav.select_folder')}
             </span>
           </button>
         </div>
@@ -245,7 +247,7 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
             onMouseEnter={() => setIsAddHovered(true)}
             onMouseLeave={() => setIsAddHovered(false)}
             className="wco-bare-btn"
-            title="Neue Bewerbung hinzufügen"
+            title={t('nav.add_job_title')}
           >
             <Plus size={15} color="#38bdf8" style={{ flexShrink: 0 }} />
             <span style={{
@@ -258,7 +260,7 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
               overflow: 'hidden',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}>
-              Neue Stelle
+              {t('nav.add_job')}
             </span>
           </button>
 
@@ -267,7 +269,7 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
             onMouseEnter={() => setIsSettingsHovered(true)}
             onMouseLeave={() => setIsSettingsHovered(false)}
             className="wco-bare-btn"
-            title={`Einstellungen (KI: ${aiSettings.activeProvider.toUpperCase()})`}
+            title={t('nav.settings_title', { provider: aiSettings.activeProvider.toUpperCase() })}
           >
             <Settings size={15} color="#c084fc" style={{ flexShrink: 0 }} />
             <span style={{
@@ -280,7 +282,7 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
               overflow: 'hidden',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             }}>
-              Einstellungen
+              {t('nav.settings')}
             </span>
           </button>
         </div>
@@ -300,12 +302,11 @@ const StandardNavbar: React.FC<NavbarProps> = ({
   onGrantPermission,
   onOpenAddModal,
   onOpenSettingsModal,
-  onOpenCVEditor,
-  onOpenCoverLetterEditor,
   aiSettings,
   viewMode,
   onViewModeChange,
 }) => {
+  const { t } = useTranslation();
   const [isFolderHovered, setIsFolderHovered] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
 
@@ -323,7 +324,7 @@ const StandardNavbar: React.FC<NavbarProps> = ({
           }}>
             <Briefcase size={20} color="#ffffff" />
           </div>
-          <h1 className="gradient-text" style={{ fontSize: '1.35rem', lineHeight: 1.1 }}>Applyo</h1>
+          <h1 className="gradient-text" style={{ fontSize: '1.35rem', lineHeight: 1.1 }}>{t('app.title')}</h1>
         </div>
 
         {/* Center: Sliding Pill Switcher */}
@@ -358,8 +359,8 @@ const StandardNavbar: React.FC<NavbarProps> = ({
             }}
             title={
               needsPermission && currentDirName
-                ? `Zugriff auf '${currentDirName}' freigeben`
-                : currentDirName ? `Ordner: ${currentDirName}` : 'Lokalen Arbeitsordner wählen'
+                ? t('nav.grant_folder', { name: currentDirName })
+                : currentDirName ? t('nav.folder', { name: currentDirName }) : t('nav.select_folder')
             }
           >
             {needsPermission && currentDirName ? (
@@ -378,50 +379,12 @@ const StandardNavbar: React.FC<NavbarProps> = ({
               display: 'inline-block', verticalAlign: 'middle',
             }}>
               {needsPermission && currentDirName
-                ? `Zugriff auf '${currentDirName}' freigeben`
-                : currentDirName ? `Ordner: ${currentDirName}` : 'Ordner wählen'}
+                ? t('nav.grant_folder', { name: currentDirName })
+                : currentDirName ? t('nav.folder', { name: currentDirName }) : t('nav.select_folder')}
             </span>
           </button>
 
-          {/* Lebenslauf Editor Button */}
-          {onOpenCVEditor && (
-            <button
-              onClick={onOpenCVEditor}
-              className="btn btn-secondary"
-              style={{
-                height: '38px',
-                padding: '0 12px',
-                fontSize: '0.8rem',
-                gap: '6px',
-                borderColor: 'rgba(16, 185, 129, 0.4)',
-                color: '#34d399',
-              }}
-              title="AI Lebenslauf-Editor öffnen"
-            >
-              <FileText size={15} color="#34d399" />
-              <span>Lebenslauf</span>
-            </button>
-          )}
 
-          {/* Anschreiben Editor Button */}
-          {onOpenCoverLetterEditor && (
-            <button
-              onClick={onOpenCoverLetterEditor}
-              className="btn btn-secondary"
-              style={{
-                height: '38px',
-                padding: '0 12px',
-                fontSize: '0.8rem',
-                gap: '6px',
-                borderColor: 'rgba(99, 102, 241, 0.4)',
-                color: '#a5b4fc',
-              }}
-              title="AI Anschreiben-Editor öffnen"
-            >
-              <Mail size={15} color="#a5b4fc" />
-              <span>Anschreiben</span>
-            </button>
-          )}
 
           {/* Settings Button */}
           <button
@@ -438,7 +401,7 @@ const StandardNavbar: React.FC<NavbarProps> = ({
               cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap',
               transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
-            title={`Einstellungen & Profil (KI-Provider: ${aiSettings.activeProvider.toUpperCase()})`}
+            title={t('nav.settings_title', { provider: aiSettings.activeProvider.toUpperCase() })}
           >
             <Settings size={16} color="#c084fc" style={{ flexShrink: 0 }} />
             <span style={{
@@ -448,14 +411,14 @@ const StandardNavbar: React.FC<NavbarProps> = ({
               transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'inline-block', verticalAlign: 'middle',
             }}>
-              Settings
+              {t('nav.settings')}
             </span>
           </button>
 
           {/* Add Job Button */}
-          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.825rem', gap: '6px' }}>
+          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.825rem', gap: '6px' }} title={t('nav.add_job_title')}>
             <Plus size={16} />
-            <span>Neue Stelle</span>
+            <span>{t('nav.add_job')}</span>
           </button>
         </div>
       </div>

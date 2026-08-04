@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   Sparkles,
@@ -46,6 +47,7 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   jobs,
   selectedJob,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const [cvData, setCvData] = useState<CVData | null>(null);
@@ -420,8 +422,8 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               <FileText size={20} color="#fff" />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>AI Lebenslauf Editor</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Profil & Stelle verknüpfen, anpassen und als PDF exportieren</p>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>{t('cv_editor.title')}</h2>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('cv_editor.subtitle')}</p>
             </div>
           </div>
 
@@ -435,8 +437,8 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
                 onChange={(e) => handleStyleChange({ ...styleOptions, templateId: e.target.value as CVTemplateId })}
                 style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.775rem', cursor: 'pointer', outline: 'none' }}
               >
-                <option value="modern_glass">Vorlage: Modern Glass</option>
-                <option value="minimal_clean">Vorlage: Minimal Clean</option>
+                <option value="modern_glass">Modern Glass</option>
+                <option value="minimal_clean">Minimal Clean</option>
               </select>
             </div>
 
@@ -470,7 +472,7 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               title="Lebenslauf auf Basis von Profil und Stelle per KI neu generieren"
             >
               {isGenerating ? <Loader2 size={14} className="spin-icon" /> : <Sparkles size={14} color="var(--accent-primary)" />}
-              <span>KI Neu Generieren</span>
+              <span>{t('cv_editor.ai_regenerate')}</span>
             </button>
 
             <label
@@ -501,7 +503,7 @@ ${cvData.education.map(edu => `- **${edu.degree}** (${edu.institution}, ${edu.st
               style={{ gap: '6px', fontSize: '0.8rem', padding: '7px 14px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}
             >
               {isExportingPDF ? <Loader2 size={14} className="spin-icon" /> : <Download size={14} />}
-              <span>PDF Exportieren</span>
+              <span>{t('cv_editor.export_pdf')}</span>
             </button>
 
             <button onClick={onClose} className="btn-icon" style={{ width: '32px', height: '32px' }}>

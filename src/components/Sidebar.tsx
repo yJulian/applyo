@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock, Clock, Star, Tag, ArrowUpDown } from 'lucide-react';
-import { JobMetadata, ApplicationStatus, ExperienceLevel, STATUS_LABELS, EXPERIENCE_LABELS } from '../types/job';
+import { JobMetadata, ApplicationStatus, ExperienceLevel, getStatusMeta, getExperienceMeta } from '../types/job';
 import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
 interface SidebarProps {
@@ -38,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   feedbackThresholdWeeks = 6,
   onOpenLegal,
 }) => {
+  const { t, i18n } = useTranslation();
   const [groupByCompany, setGroupByCompany] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'knowledge'>('date');
 
@@ -119,20 +121,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Group by Company if enabled
   const groupedJobs = filteredJobs.reduce<Record<string, JobMetadata[]>>((acc, job) => {
-    const companyKey = job.company || 'Unbekannte Firma';
+    const companyKey = job.company || t('sidebar.unknown_company');
     if (!acc[companyKey]) acc[companyKey] = [];
     acc[companyKey].push(job);
     return acc;
   }, {});
 
   const statusOptions: Array<{ id: ApplicationStatus | 'all'; label: string }> = [
-    { id: 'all', label: 'Alle' },
-    { id: 'interested', label: STATUS_LABELS.interested.label },
-    { id: 'applied', label: STATUS_LABELS.applied.label },
-    { id: 'response_received', label: STATUS_LABELS.response_received.label },
-    { id: 'interviewing', label: STATUS_LABELS.interviewing.label },
-    { id: 'offer', label: STATUS_LABELS.offer.label },
-    { id: 'rejected', label: STATUS_LABELS.rejected.label },
+    { id: 'all', label: t('sidebar.filter_all') },
+    { id: 'interested', label: getStatusMeta('interested', t).label },
+    { id: 'applied', label: getStatusMeta('applied', t).label },
+    { id: 'response_received', label: getStatusMeta('response_received', t).label },
+    { id: 'interviewing', label: getStatusMeta('interviewing', t).label },
+    { id: 'offer', label: getStatusMeta('offer', t).label },
+    { id: 'rejected', label: getStatusMeta('rejected', t).label },
   ];
 
   return (
@@ -160,7 +162,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             type="text"
             className="input-field"
             style={{ paddingLeft: '36px' }}
-            placeholder="Firma, Titel oder Skill suchen..."
+            placeholder={t('sidebar.search_placeholder')}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -237,10 +239,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   backgroundImage: 'none',
                 }}
               >
-                <option value="all" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Filter: Alle Stellen</option>
-                <option value="junior" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>🟢 Junior / Ohne Vorerfahrung</option>
-                <option value="required" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>🔴 Erfahrung erforderlich</option>
-                <option value="desired" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>🟡 Erfahrung gewünscht</option>
+                <option value="all" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.exp_filter_all')}</option>
+                <option value="junior" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.exp_junior')}</option>
+                <option value="required" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.exp_required')}</option>
+                <option value="desired" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.exp_desired')}</option>
               </select>
             </div>
 
@@ -260,9 +262,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   backgroundImage: 'none',
                 }}
               >
-                <option value="date" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Sortierung: Datum</option>
-                <option value="rating" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Sortierung: Rangliste ⭐</option>
-                <option value="knowledge" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>Sortierung: Vorwissen 🧠</option>
+                <option value="date" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.sort_date')}</option>
+                <option value="rating" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.sort_rating')}</option>
+                <option value="knowledge" style={{ backgroundColor: '#0f172a', color: '#f8fafc' }}>{t('sidebar.sort_knowledge')}</option>
               </select>
             </div>
           </div>
@@ -271,7 +273,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             onClick={() => setGroupByCompany(!groupByCompany)}
             className="btn-icon"
             style={{ width: '26px', height: '26px', flexShrink: 0, padding: 0 }}
-            title={groupByCompany ? 'Graphen/Listen-Ansicht umschalten' : 'Nach Firma gruppieren'}
+            title={t('sidebar.toggle_grouping')}
           >
             <Layers size={13} color={groupByCompany ? 'var(--accent-primary)' : 'var(--text-muted)'} />
           </button>
@@ -283,9 +285,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {needsPermission && currentDirName ? (
           <div style={{ textAlign: 'center', padding: '36px 16px', color: '#f59e0b' }}>
             <Unlock size={42} style={{ marginBottom: '14px', opacity: 0.8 }} />
-            <h3 style={{ fontSize: '0.95rem', color: '#f59e0b', marginBottom: '6px' }}>Ordner-Zugriff freigeben</h3>
+            <h3 style={{ fontSize: '0.95rem', color: '#f59e0b', marginBottom: '6px' }}>{t('sidebar.grant_title')}</h3>
             <p style={{ fontSize: '0.75rem', lineHeight: 1.5, marginBottom: '16px', color: 'var(--text-muted)' }}>
-              Der Browser benötigt nach dem Neuladen deine Einmal-Bestätigung für den Ordner <strong>"{currentDirName}"</strong>.
+              {t('sidebar.grant_desc', { name: currentDirName })}
             </p>
             <button
               onClick={onGrantPermission}
@@ -300,27 +302,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
               }}
             >
               <Unlock size={15} />
-              <span>Zugriff jetzt freigeben</span>
+              <span>{t('sidebar.grant_btn')}</span>
             </button>
           </div>
         ) : !currentDirName ? (
           <div style={{ textAlign: 'center', padding: '36px 16px', color: 'var(--text-muted)' }}>
             <Folder size={42} color="var(--accent-primary)" style={{ opacity: 0.6, marginBottom: '14px' }} />
-            <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '6px' }}>Kein Ordner verknüpft</h3>
+            <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '6px' }}>{t('sidebar.no_folder_title')}</h3>
             <p style={{ fontSize: '0.75rem', lineHeight: 1.5, marginBottom: '16px' }}>
-              Bitte wähle zuerst einen Ordner auf deiner Festplatte aus, um deine Bewerbungen zu verwalten.
+              {t('sidebar.no_folder_desc')}
             </p>
             <button onClick={onSelectDirectory} className="btn btn-primary" style={{ width: '100%', gap: '8px', fontSize: '0.8rem', padding: '8px 12px' }}>
               <Folder size={15} />
-              <span>Ordner auswählen</span>
+              <span>{t('sidebar.select_folder_btn')}</span>
             </button>
           </div>
         ) : filteredJobs.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 16px', color: 'var(--text-muted)' }}>
             <Briefcase size={36} style={{ marginBottom: '12px', opacity: 0.3 }} />
-            <p style={{ fontSize: '0.9rem' }}>Keine Bewerbungen in diesem Ordner.</p>
+            <p style={{ fontSize: '0.9rem' }}>{t('sidebar.no_jobs_title')}</p>
             <span style={{ fontSize: '0.75rem', display: 'block', marginTop: '4px' }}>
-              Klicke oben auf "+ Stelle hinzufügen", um einen neuen Ordner zu erstellen.
+              {t('sidebar.no_jobs_desc')}
             </span>
           </div>
         ) : groupByCompany ? (
@@ -338,10 +340,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {companyJobs.map((job) => {
                     const isSelected = job.id === selectedJobId;
-                    const statusMeta = STATUS_LABELS[job.status] || STATUS_LABELS.interested;
-                    const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
+                    const statusMeta = getStatusMeta(job.status, t);
+                    const expMeta = getExperienceMeta(job.experienceLevel, t);
                     const latestFeedback = getLatestFeedbackDate(job);
-                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
+                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks, t, i18n.language);
 
                     return (
                       <div
@@ -423,7 +425,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                   minHeight: '20px',
                                   padding: '0 8px',
                                 }}
-                                title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
+                                title={level >= 8 ? t('experience.required_tooltip') : (level === 0 ? t('experience.none_tooltip') : t('experience.knowledge_tooltip'))}
                               >
                                 🧠 {level}/9
                               </span>
@@ -477,10 +479,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {filteredJobs.map((job) => {
               const isSelected = job.id === selectedJobId;
-              const statusMeta = STATUS_LABELS[job.status] || STATUS_LABELS.interested;
-              const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
+              const statusMeta = getStatusMeta(job.status, t);
+              const expMeta = getExperienceMeta(job.experienceLevel, t);
               const latestFeedback = getLatestFeedbackDate(job);
-              const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
+              const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks, t, i18n.language);
 
               return (
                 <div
@@ -549,7 +551,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <span
                           className="badge"
                           style={{ background: bg, color: color, border: `1px solid ${border}` }}
-                          title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
+                          title={level >= 8 ? t('experience.required_tooltip') : (level === 0 ? t('experience.none_tooltip') : t('experience.knowledge_tooltip'))}
                         >
                           🧠 {level}/9
                         </span>
@@ -619,7 +621,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
         >
-          Impressum
+          {t('sidebar.impressum')}
         </button>
         <span style={{ opacity: 0.4 }}>•</span>
         <button
@@ -636,7 +638,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
           onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
         >
-          Datenschutz
+          {t('sidebar.datenschutz')}
         </button>
       </div>
     </aside>

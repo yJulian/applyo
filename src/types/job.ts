@@ -116,9 +116,29 @@ export const STATUS_LABELS: Record<ApplicationStatus, { label: string; color: st
   rejected: { label: 'Abgesagt', color: '#f87171', bg: 'rgba(248, 113, 113, 0.12)' },
 };
 
+export function getStatusMeta(status: ApplicationStatus, t?: (key: string) => string) {
+  const base = STATUS_LABELS[status] || STATUS_LABELS.interested;
+  if (t) {
+    return { ...base, label: t(`status.${status}`) };
+  }
+  return base;
+}
+
 export const EXPERIENCE_LABELS: Record<ExperienceLevel, { label: string; tagClass: string; entryBadge: string; color: string; bg: string; borderColor: string }> = {
   junior: { label: 'Junior / Berufseinsteiger', tagClass: 'badge-emerald', entryBadge: '🟢 Junior Einstieg', color: '#34d399', bg: 'rgba(52, 211, 153, 0.12)', borderColor: 'rgba(52, 211, 153, 0.3)' },
   required: { label: 'Berufserfahrung erforderlich', tagClass: 'badge-rose', entryBadge: '🔴 Erfahrung erforderlich', color: '#fb7185', bg: 'rgba(244, 63, 94, 0.12)', borderColor: 'rgba(244, 63, 94, 0.3)' },
   desired: { label: 'Berufserfahrung gewünscht', tagClass: 'badge-amber', entryBadge: '🟡 Erfahrung gewünscht', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.12)', borderColor: 'rgba(251, 191, 36, 0.3)' },
   none: { label: 'Keine Angabe zur Erfahrung', tagClass: 'badge-sky', entryBadge: '⚪ k.A.', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.12)', borderColor: 'rgba(148, 163, 184, 0.3)' },
 };
+
+export function getExperienceMeta(level: ExperienceLevel, t?: (key: string) => string) {
+  const base = EXPERIENCE_LABELS[level] || EXPERIENCE_LABELS.none;
+  if (t) {
+    return {
+      ...base,
+      label: t(`experience.${level}`),
+      entryBadge: t(`experience.${level}_badge`),
+    };
+  }
+  return base;
+}

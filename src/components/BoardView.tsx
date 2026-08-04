@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   MapPin,
@@ -16,8 +17,9 @@ import {
   JobMetadata,
   ApplicationStatus,
   ExperienceLevel,
+  getStatusMeta,
+  getExperienceMeta,
   STATUS_LABELS,
-  EXPERIENCE_LABELS,
 } from '../types/job';
 import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
@@ -65,6 +67,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
   onOpenDetailModal,
   feedbackThresholdWeeks = 6,
 }) => {
+  const { t, i18n } = useTranslation();
   // Drag & Drop State
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<ApplicationStatus | null>(null);
@@ -98,18 +101,19 @@ export const BoardView: React.FC<BoardViewProps> = ({
 
   // Helper to render experience level badge using standard CSS tag classes
   const renderExperienceDot = (expLevel: ExperienceLevel) => {
+    const meta = getExperienceMeta(expLevel, t);
     let className = 'badge tag-none';
-    let label = 'k.A.';
+    let label = t('experience.none_badge');
 
     if (expLevel === 'required') {
       className = 'badge tag-required';
-      label = 'Erforderlich';
+      label = t('experience.required');
     } else if (expLevel === 'junior') {
       className = 'badge tag-junior';
-      label = 'Junior';
+      label = t('experience.junior');
     } else if (expLevel === 'desired') {
       className = 'badge tag-desired';
-      label = 'Gewünscht';
+      label = t('experience.desired');
     }
 
     return (
@@ -122,7 +126,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
           padding: '0 8px',
           borderRadius: '12px',
         }}
-        title={EXPERIENCE_LABELS[expLevel]?.label || 'Erfahrung'}
+        title={meta.label}
       >
         {label}
       </span>
@@ -212,9 +216,9 @@ export const BoardView: React.FC<BoardViewProps> = ({
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
         <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '460px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
           <Unlock size={56} color="#f59e0b" style={{ opacity: 0.8, marginBottom: '20px' }} />
-          <h2 style={{ fontSize: '1.4rem', marginBottom: '10px', color: '#f59e0b' }}>Zugriff auf Ordner freigeben</h2>
+          <h2 style={{ fontSize: '1.4rem', marginBottom: '10px', color: '#f59e0b' }}>{t('sidebar.grant_title')}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
-            Der Browser benötigt deine Bestätigung, um auf <strong>"{currentDirName}"</strong> zuzugreifen und das Board anzuzeigen.
+            {t('sidebar.grant_desc', { name: currentDirName })}
           </p>
           <button
             onClick={onGrantPermission}
@@ -230,7 +234,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
             }}
           >
             <Unlock size={18} />
-            <span>Zugriff jetzt freigeben</span>
+            <span>{t('sidebar.grant_btn')}</span>
           </button>
         </div>
       </main>
@@ -242,13 +246,13 @@ export const BoardView: React.FC<BoardViewProps> = ({
       <main style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
         <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '460px' }}>
           <Folder size={56} color="var(--accent-primary)" style={{ opacity: 0.6, marginBottom: '20px' }} />
-          <h2 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Kein Ordner ausgewählt</h2>
+          <h2 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>{t('board.no_folder_title')}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
-            Bitte wähle deinen Arbeitsordner aus, um das Bewerbungs-Board zu laden.
+            {t('board.no_folder_desc')}
           </p>
           <button onClick={onSelectDirectory} className="btn btn-primary" style={{ width: '100%', gap: '10px', padding: '12px', fontSize: '0.95rem' }}>
             <Folder size={18} />
-            <span>Lokalen Ordner wählen</span>
+            <span>{t('sidebar.select_folder_btn')}</span>
           </button>
         </div>
       </main>
@@ -273,7 +277,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
         }}
       >
         {BOARD_COLUMNS.map((statusKey) => {
-          const statusMeta = STATUS_LABELS[statusKey];
+          const statusMeta = getStatusMeta(statusKey, t);
           const columnJobs = jobsByStatus[statusKey] || [];
           const isDropTarget = dragOverStatus === statusKey;
           const isSearchExpanded = expandedColumnSearches[statusKey];
@@ -354,7 +358,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                       <input
                         type="text"
                         autoFocus
-                        placeholder="In Phase..."
+                        placeholder={t('board.search_in_phase')}
                         value={colSearchText}
                         onChange={(e) => updateColumnSearch(statusKey, e.target.value)}
                         style={{
@@ -380,7 +384,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                           alignItems: 'center',
                           padding: '2px',
                         }}
-                        title="Schließen"
+                        title={t('board.close')}
                       >
                         <X size={12} />
                       </button>
@@ -396,7 +400,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                         background: colSearchText ? 'rgba(99, 102, 241, 0.25)' : 'transparent',
                         border: colSearchText ? '1px solid var(--accent-primary)' : '1px solid transparent',
                       }}
-                      title="Diese Phase filtern"
+                      title={t('board.filter_phase')}
                     >
                       <Search size={13} color={colSearchText ? 'var(--accent-primary)' : 'var(--text-muted)'} />
                     </button>
@@ -445,13 +449,13 @@ export const BoardView: React.FC<BoardViewProps> = ({
                       gap: '8px',
                     }}
                   >
-                    <span>{colSearchText ? 'Keine Treffer' : 'Hierher ziehen (Drag & Drop)'}</span>
+                    <span>{colSearchText ? t('board.no_hits') : t('board.drag_here')}</span>
                   </div>
                 ) : (
                   columnJobs.map((job) => {
                     const isDraggingThis = draggedJobId === job.id;
                     const latestFeedback = getLatestFeedbackDate(job);
-                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
+                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks, t, i18n.language);
 
                     return (
                       <div
@@ -582,7 +586,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                                   minHeight: '22px',
                                   padding: '0 8px',
                                 }}
-                                title={level >= 8 ? 'Reale Firmen-Arbeitserfahrung erforderlich' : (level === 0 ? 'Keine Vorkenntnisse gefordert' : 'Skills & Vorkenntnisse')}
+                                title={level >= 8 ? t('experience.required_tooltip') : (level === 0 ? t('experience.none_tooltip') : t('experience.knowledge_tooltip'))}
                               >
                                 🧠 {level}/9
                               </span>
@@ -660,9 +664,9 @@ export const BoardView: React.FC<BoardViewProps> = ({
                               cursor: 'pointer',
                             }}
                           >
-                            {Object.entries(STATUS_LABELS).map(([k, meta]) => (
+                            {Object.entries(STATUS_LABELS).map(([k]) => (
                               <option key={k} value={k}>
-                                {meta.label}
+                                {getStatusMeta(k as ApplicationStatus, t).label}
                               </option>
                             ))}
                           </select>
@@ -675,7 +679,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                             }}
                             className="btn-icon"
                             style={{ width: '26px', height: '26px', borderRadius: '6px' }}
-                            title="Details öffnen"
+                            title={t('board.open_details')}
                           >
                             <ChevronRight size={14} color="var(--text-muted)" />
                           </button>

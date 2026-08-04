@@ -1,0 +1,398 @@
+{
+  "app": {
+    "title": "Applyo",
+    "ai_assistant_btn": "AI Assistant",
+    "ai_assistant_title": "Open AI Career Guide ({{provider}})",
+    "delete_confirm": "Are you sure you want to delete application \"{{title}}\" at \"{{company}}\"?"
+  },
+  "nav": {
+    "list": "List",
+    "list_title": "List View",
+    "board": "Board",
+    "board_title": "Kanban Board View",
+    "calendar": "Calendar",
+    "calendar_title": "Calendar View",
+    "stats": "Statistics",
+    "stats_title": "Statistics & Badges",
+    "grant_folder": "Grant access to '{{name}}'",
+    "folder": "Folder: {{name}}",
+    "select_folder": "Select local workspace folder",
+    "cv_editor": "Resume",
+    "cv_editor_title": "Open AI Resume Editor",
+    "cover_letter_editor": "Cover Letter",
+    "cover_letter_editor_title": "Open AI Cover Letter Editor",
+    "settings": "Settings",
+    "settings_title": "Settings & Profile (AI Provider: {{provider}})",
+    "add_job": "New Job",
+    "add_job_title": "Add new application"
+  },
+  "sidebar": {
+    "search_placeholder": "Search company, title, or skill...",
+    "filter_all": "All",
+    "exp_filter_all": "Filter: All jobs",
+    "exp_junior": "🟢 Junior / Entry Level",
+    "exp_required": "🔴 Experience Required",
+    "exp_desired": "🟡 Experience Preferred",
+    "sort_date": "Sort: Date",
+    "sort_rating": "Sort: Rating ⭐",
+    "sort_knowledge": "Sort: Knowledge 🧠",
+    "toggle_grouping": "Toggle graph/list view",
+    "group_by_company": "Group by company",
+    "grant_title": "Grant folder access",
+    "grant_desc": "The browser requires your one-time permission for folder \"{{name}}\" after reloading.",
+    "grant_btn": "Grant access now",
+    "no_folder_title": "No folder linked",
+    "no_folder_desc": "Please select a folder on your disk first to manage your job applications.",
+    "select_folder_btn": "Select folder",
+    "no_jobs_title": "No applications in this folder.",
+    "no_jobs_desc": "Click \"+ New Job\" above to create a new folder.",
+    "unknown_company": "Unknown company",
+    "impressum": "Legal Notice",
+    "datenschutz": "Privacy Policy"
+  },
+  "status": {
+    "interested": "Interested",
+    "applied": "Applied",
+    "response_received": "Response Received",
+    "interviewing": "Interviewing",
+    "offer": "Offer / Accepted",
+    "rejected": "Rejected"
+  },
+  "experience": {
+    "junior": "Junior / Entry Level",
+    "required": "Experience Required",
+    "desired": "Experience Preferred",
+    "none": "Unspecified",
+    "junior_badge": "🟢 Entry Level",
+    "required_badge": "🔴 Experience Required",
+    "desired_badge": "🟡 Experience Preferred",
+    "none_badge": "⚪ N/A",
+    "required_tooltip": "Real company work experience required",
+    "none_tooltip": "No prior experience required",
+    "knowledge_tooltip": "Skills & Prior Knowledge"
+  },
+  "board": {
+    "no_hits": "No matches",
+    "drag_here": "Drag & drop here",
+    "search_in_phase": "In phase...",
+    "close": "Close",
+    "filter_phase": "Filter this phase",
+    "open_details": "Open details",
+    "no_folder_title": "No folder selected",
+    "no_folder_desc": "Please select your workspace folder to load the application board."
+  },
+  "calendar": {
+    "title": "Application Calendar",
+    "subtitle": "Overview of deadlines, interviews, and appointments",
+    "today": "Today",
+    "month_view": "Month",
+    "week_view": "Week",
+    "no_events": "No events in selected date range",
+    "events_count": "{{count}} Events",
+    "status_changed": "Status changed"
+  },
+  "stats": {
+    "title": "Application Statistics & Badges",
+    "subtitle": "Analytics, conversion rates, and unlocked badges",
+    "total_jobs": "Total Saved",
+    "total_applied": "Submitted Applications",
+    "response_rate": "Response Rate",
+    "interview_rate": "Interview Rate",
+    "offer_rate": "Offer Rate",
+    "rejection_rate": "Rejection Rate",
+    "avg_rating": "Avg Personal Rating",
+    "night_owl": "Night Owl Actions",
+    "ghosted": "Ghosted Applications",
+    "tab_overview": "Overview & Metrics",
+    "tab_badges": "Badges & Achievements",
+    "badges_unlocked": "Unlocked: {{unlocked}} / {{total}}",
+    "cat_applications": "Application Tiers",
+    "cat_resilience": "Resilience & Endurance",
+    "cat_success": "Success & Interviews",
+    "cat_activity": "Activity & Details",
+    "cat_secret": "Secret Achievements",
+    "secret_badge_title": "??? (Secret Badge)",
+    "secret_badge_desc": "Continue your journey to unlock this achievement!",
+    "unlocked_status": "Unlocked",
+    "secret_status": "Secret",
+    "progress": "Progress",
+    "status_distribution": "Status Distribution"
+  },
+  "badges": {
+    "first_step": {
+      "title": "First Step",
+      "desc": "Add your first job to the list."
+    },
+    "applicant_bronze": {
+      "title": "Applicant Bronze",
+      "desc": "Submit at least 5 applications."
+    },
+    "applicant_silver": {
+      "title": "Applicant Silver",
+      "desc": "Submit 15 applications."
+    },
+    "applicant_gold": {
+      "title": "Applicant Gold",
+      "desc": "Hard worker! Sent 30 applications."
+    },
+    "applicant_machine": {
+      "title": "Application Machine",
+      "desc": "Impressive! 60 applications sent out."
+    },
+    "applicant_legend": {
+      "title": "Job Legend",
+      "desc": "Unstoppable! 100 applications submitted."
+    },
+    "iron_shield_1": {
+      "title": "Resilient I",
+      "desc": "Handled 5 rejections. Keep your head up!"
+    },
+    "iron_shield_2": {
+      "title": "Resilient II",
+      "desc": "Endured 10 rejections. The right job is coming!"
+    },
+    "iron_shield_3": {
+      "title": "Resilient III",
+      "desc": "Pushed through 15 rejections. Staying strong!"
+    },
+    "armored_heart": {
+      "title": "Armored Heart",
+      "desc": "Survived 30 rejections. Nothing can break your spirit!"
+    },
+    "indestructible": {
+      "title": "Indestructible",
+      "desc": "Withstood 60 rejections. A true role model of persistence!"
+    },
+    "titan_shield": {
+      "title": "Titan Shield",
+      "desc": "100 rejections! Your resilience is legendary."
+    },
+    "conversion_master": {
+      "title": "Action Over Wishes",
+      "desc": "Applied to more than 50% of your saved jobs."
+    },
+    "first_interview": {
+      "title": "Interview Secured",
+      "desc": "Reach the interview stage."
+    },
+    "triple_interview": {
+      "title": "High Demand",
+      "desc": "3 active interview processes running at the same time."
+    },
+    "job_offer": {
+      "title": "Goal Achieved!",
+      "desc": "Received a job offer!"
+    },
+    "star_evaluator": {
+      "title": "Star Critic",
+      "desc": "Rate 5 jobs with full 5 stars."
+    },
+    "note_taker": {
+      "title": "Record Keeper",
+      "desc": "Add notes to at least 5 applications."
+    },
+    "researcher": {
+      "title": "Researcher",
+      "desc": "Add salary or location for 5 jobs."
+    },
+    "ghosted_victim": {
+      "title": "Ghosting Risk",
+      "desc": "At least 1 application with no response for over 4 weeks."
+    },
+    "full_dossier_master": {
+      "title": "Perfect Dossier",
+      "desc": "Completely fill out a job (stars, notes, location, salary & requirements)."
+    },
+    "night_owl": {
+      "title": "Night Owl",
+      "desc": "Update or create an application late at night (11 PM - 5 AM)."
+    }
+  },
+  "job_detail": {
+    "open_folder": "Open folder in Explorer",
+    "edit_job": "Edit Job",
+    "delete_job": "Delete",
+    "ai_assistant": "AI Career Guide",
+    "cv_editor": "AI Resume",
+    "cover_letter_editor": "AI Cover Letter",
+    "open_url": "Open job posting",
+    "rating": "Personal Rating",
+    "rating_not_set": "Not rated",
+    "salary": "Salary",
+    "location": "Location",
+    "created": "Created on",
+    "updated": "Last updated",
+    "section_feedback": "Feedback & Deadlines",
+    "section_tailored_cv": "Tailored Resume",
+    "section_documents": "Documents & Files",
+    "section_summary": "Summary",
+    "section_experience_check": "Experience & Entry Check",
+    "section_tasks_requirements": "Tasks & Requirements",
+    "section_benefits": "Benefits & Perks",
+    "section_notes": "Notes",
+    "feedback_overdue_warning": "⚠️ Last response was {{weeks}} weeks ago! Consider following up.",
+    "add_feedback": "Register feedback",
+    "undo_feedback": "Undo",
+    "tailored_cv_desc": "Generate or customize a resume tailored specifically for this job posting.",
+    "documents_desc": "Files in folder:",
+    "no_documents": "No documents found in job folder.",
+    "summary_title": "Summary",
+    "experience_check_title": "Requirement Profile",
+    "tasks_title": "Main Tasks",
+    "requirements_title": "Requirements & Qualifications",
+    "benefits_title": "Offered Benefits",
+    "notes_placeholder": "Enter personal notes here...",
+    "save_notes": "Save Notes",
+    "status_history": "Status History",
+    "no_status_history": "No status changes logged yet.",
+    "feedback_today": "Feedback today",
+    "pick_datetime": "Pick Date & Time",
+    "no_feedback_yet": "No feedback recorded for this application yet.",
+    "ai_documents_title": "AI Application Documents (Resume & Cover Letter Editor)",
+    "ai_documents_desc": "Create and edit tailored application documents for this job with AI support, live preview, and PDF export.",
+    "drag_files_here": "Drag and drop files (e.g., Lebenslauf.md, CoverLetter.md) here",
+    "add_document": "Add document",
+    "loading_files": "Loading folder files...",
+    "drop_file_now": "Drop file now to save!",
+    "drag_drop_hint": "Drag & drop files here",
+    "drag_drop_subhint": "Or click \"+ Add document\" or \"Customize Resume\" above.",
+    "experience_req_title": "Prior company employment mandatory",
+    "experience_junior_title": "Direct entry as junior / graduate without prior company employment possible",
+    "tasks_header": "Tasks & Responsibilities",
+    "no_tasks": "No tasks listed.",
+    "req_header": "What you need to bring",
+    "no_reqs": "No requirements listed.",
+    "benefits_header": "Benefits & Perks",
+    "notes_header": "Notes & Interview Notes",
+    "notes_saved": "Notes saved to job folder!",
+    "open_in_editor": "Open in editor",
+    "view_edit": "View & Edit",
+    "open_file": "Open"
+  },
+  "add_modal": {
+    "title": "Add New Application",
+    "tab_manual": "Manual Entry",
+    "tab_url": "Parse via URL",
+    "tab_text": "Parse via Text",
+    "company": "Company / Employer *",
+    "job_title": "Job Title *",
+    "url": "Job posting URL",
+    "status": "Application Status",
+    "experience": "Experience Level",
+    "rating": "Personal Rating (1-5 stars)",
+    "salary": "Salary info (e.g. $60,000 / year)",
+    "location": "Location / Remote",
+    "tasks": "Tasks (one per line)",
+    "requirements": "Requirements (one per line)",
+    "benefits": "Benefits (one per line)",
+    "notes": "Notes",
+    "save": "Create Application",
+    "cancel": "Cancel",
+    "parsing": "Analyzing job posting...",
+    "parse_btn": "Analyze with AI",
+    "url_placeholder": "https://example-company.com/jobs/developer",
+    "text_placeholder": "Paste full text of job posting here..."
+  },
+  "settings": {
+    "title": "Settings & Profile",
+    "subtitle": "Global resume, feedback reminders, card layout & AI provider",
+    "profile_tab": "Profile",
+    "ui_tab": "UI & Interface",
+    "language": "Language",
+    "feedback_tab": "Feedback",
+    "layout_tab": "Layout",
+    "ai_tab": "AI Provider",
+    "lang_desc": "Select your preferred interface language. GeoIP / browser language is used by default.",
+    "lang_auto": "Automatic (GeoIP / Browser)",
+    "lang_auto_desc": "Automatically detects your country & browser language.",
+    "lang_de": "German default for Germany, Austria, Switzerland & Liechtenstein.",
+    "lang_en": "English for international users.",
+    "detected_country": "Detected country",
+    "full_name": "Full Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "location": "Location",
+    "citizenship": "Citizenship",
+    "linkedin": "LinkedIn Profile URL",
+    "github": "GitHub Profile URL",
+    "xing": "XING Profile URL",
+    "website": "Website / Portfolio / Blog",
+    "profile_markdown": "Global Resume & Profile (Markdown)",
+    "profile_markdown_desc": "Enter your career history, skills, and projects in Markdown here. The AI will use this to generate a tailored Resume.md for each application.",
+    "feedback_deadline_title": "Deadline for Feedback Reminders",
+    "feedback_deadline_desc": "When you record when you last received feedback on an application, the system automatically checks how much time has passed. If more time passes than specified below, the status is set to 'Long ago'.",
+    "feedback_threshold": "Deadline for 'Long ago' status (in weeks)",
+    "weeks": "weeks",
+    "feedback_threshold_desc": "Default: 6 weeks. If the last response is older, the badge is highlighted in red as '⚠️ Long ago'.",
+    "alerts_title": "Pop-up Notifications (Alerts)",
+    "alerts_desc": "Confirmation pop-ups when creating, editing, or deleting files and jobs.",
+    "alerts_active": "Active",
+    "alerts_muted": "Muted",
+    "card_layout_title": "Card Section Arrangement",
+    "card_layout_desc": "Drag cards up or down to reorder, or use the arrows ⬆️ ⬇️.",
+    "reset": "Reset",
+    "reset_title": "Reset card section layout to default",
+    "move_up": "Move up",
+    "move_down": "Move down",
+    "active": "Active",
+    "off": "Off",
+    "hide_card": "Hide card section",
+    "show_card": "Show card section",
+    "ai_provider": "Active AI Provider for Extraction, Assistant & Resume Customization:",
+    "custom_openai_title": "Custom OpenAI-Compatible Endpoint (Ollama, OpenRouter, LM Studio)",
+    "base_url": "Base URL / API Endpoint",
+    "fast_model": "⚡ Extraction & Summary Model",
+    "gen_model": "🧠 Generation & Writing Model",
+    "optional_key": "API Key (Optional for local servers like Ollama)",
+    "cors_proxy": "🌐 Optional CORS Proxy Server URL (e.g. http://localhost:8080)",
+    "cors_proxy_desc": "If the AI server does not send CORS headers, this proxy forwards requests securely.",
+    "cors_token": "🔑 CORS Proxy Auth Token / Secret (Optional)",
+    "cors_token_desc": "If a password or token is configured on your proxy server.",
+    "gemini_title": "Google Gemini Configuration",
+    "openai_title": "OpenAI Configuration",
+    "claude_title": "Anthropic Claude Configuration",
+    "save": "Save",
+    "saved": "Settings & Profile saved!"
+  },
+  "card_sections": {
+    "feedback": "Manage Feedback",
+    "tailored_cv": "Tailored Resume",
+    "documents": "Documents & Files",
+    "summary": "Summary",
+    "experience_check": "Experience & Entry Check",
+    "tasks_requirements": "Tasks & Requirements",
+    "benefits": "Benefits & Perks",
+    "notes": "Notes & Interview Notes"
+  },
+  "ai_assistant": {
+    "welcome_job": "Hello! I am your AI Career Guide for the **{{title}}** position at **{{company}}**.\nI have full access to your career profile and job details. How can I assist you today?",
+    "welcome_general": "Hello! I am your AI Career Guide. Please select a job application or ask me a general career question.",
+    "chip_cover_letter": "📝 Cover Letter Draft",
+    "chip_interview": "🎯 Interview Questions",
+    "chip_strengths": "📊 Strengths & Match",
+    "chip_career_tips": "💡 Career Tips & Profile Check",
+    "generating": "AI Career Guide is generating a response...",
+    "input_placeholder": "Ask the AI Career Guide..."
+  },
+  "cv_editor": {
+    "title": "AI Resume Editor",
+    "subtitle": "Connect profile & job posting, customize, and export to PDF",
+    "ai_regenerate": "AI Regenerate",
+    "export_pdf": "Export PDF"
+  },
+  "cover_letter_editor": {
+    "title": "AI Cover Letter Editor",
+    "subtitle": "Generate tailored cover letter from profile & job posting and export to PDF"
+  },
+  "legal": {
+    "title": "Legal Information",
+    "tab_impressum": "Legal Notice",
+    "tab_privacy": "Privacy Policy"
+  },
+  "feedback_badge": {
+    "overdue_label": "⚠️ Long ago ({{weeks}} wks ago — {{date}})",
+    "overdue_short": "⚠️ Long ago ({{weeks}} wks)",
+    "normal_label": "💬 Response: {{date}}",
+    "normal_short": "💬 Response: {{date}}"
+  }
+}

@@ -171,19 +171,19 @@ export function calculateStats(jobs: JobMetadata[]): StatMetrics {
   };
 }
 
-export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
+export function getBadges(_jobs: JobMetadata[], stats: StatMetrics, t?: (key: string) => string): Badge[] {
   const totalSubmissions = stats.totalApplied + stats.totalResponseReceived + stats.totalInterviewing + stats.totalOffer + stats.totalRejected;
 
-  const badgeDefinitions: Badge[] = [
+  const rawBadges: Array<Omit<Badge, 'title' | 'description'> & { defaultTitle: string; defaultDesc: string }> = [
     // --- 1. APPLICATIONS PROGRESSION (Bewerbungen) ---
     {
       id: 'first_step',
-      title: 'Erster Schritt',
+      defaultTitle: 'Erster Schritt',
+      defaultDesc: 'Lege deinen ersten Job in der Liste an.',
       category: 'applications',
       group: 'applications_tier',
       tier: 1,
       tierLabel: 'Tier I',
-      description: 'Lege deinen ersten Job in der Liste an.',
       iconType: 'footprints',
       currentValue: stats.totalJobs,
       targetValue: 1,
@@ -192,12 +192,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'applicant_bronze',
-      title: 'Bewerber Bronze',
+      defaultTitle: 'Bewerber Bronze',
+      defaultDesc: 'Reiche mindestens 5 Bewerbungen ein.',
       category: 'applications',
       group: 'applications_tier',
       tier: 2,
       tierLabel: 'Tier II',
-      description: 'Reiche mindestens 5 Bewerbungen ein.',
       iconType: 'send',
       currentValue: totalSubmissions,
       targetValue: 5,
@@ -206,12 +206,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'applicant_silver',
-      title: 'Bewerber Silber',
+      defaultTitle: 'Bewerber Silber',
+      defaultDesc: 'Reiche 15 Bewerbungen ein.',
       category: 'applications',
       group: 'applications_tier',
       tier: 3,
       tierLabel: 'Tier III',
-      description: 'Reiche 15 Bewerbungen ein.',
       iconType: 'rocket',
       currentValue: totalSubmissions,
       targetValue: 15,
@@ -220,12 +220,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'applicant_gold',
-      title: 'Bewerber Gold',
+      defaultTitle: 'Bewerber Gold',
+      defaultDesc: 'Fleißig! 30 Bewerbungen verschickt.',
       category: 'applications',
       group: 'applications_tier',
       tier: 4,
       tierLabel: 'Tier IV',
-      description: 'Fleißig! 30 Bewerbungen verschickt.',
       iconType: 'award',
       currentValue: totalSubmissions,
       targetValue: 30,
@@ -234,12 +234,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'applicant_machine',
-      title: 'Bewerbungs-Maschine',
+      defaultTitle: 'Bewerbungs-Maschine',
+      defaultDesc: 'Beeindruckend! 60 Bewerbungen auf den Weg gebracht.',
       category: 'applications',
       group: 'applications_tier',
       tier: 5,
       tierLabel: 'Tier V',
-      description: 'Beeindruckend! 60 Bewerbungen auf den Weg gebracht.',
       iconType: 'zap',
       currentValue: totalSubmissions,
       targetValue: 60,
@@ -248,12 +248,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'applicant_legend',
-      title: 'Job-Legende',
+      defaultTitle: 'Job-Legende',
+      defaultDesc: 'Unaufhaltsam! 100 Bewerbungen eingereicht.',
       category: 'applications',
       group: 'applications_tier',
       tier: 6,
       tierLabel: 'Tier VI',
-      description: 'Unaufhaltsam! 100 Bewerbungen eingereicht.',
       iconType: 'crown',
       currentValue: totalSubmissions,
       targetValue: 100,
@@ -264,12 +264,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     // --- 2. RESILIENCE PROGRESSION (Absagen / Stehaufmännchen) ---
     {
       id: 'iron_shield_1',
-      title: 'Stehaufmännchen I',
+      defaultTitle: 'Stehaufmännchen I',
+      defaultDesc: '5 Absagen verkraftet. Kopf hoch!',
       category: 'resilience',
       group: 'resilience_tier',
       tier: 1,
       tierLabel: 'Tier I',
-      description: '5 Absagen verkraftet. Kopf hoch!',
       iconType: 'shield',
       currentValue: stats.totalRejected,
       targetValue: 5,
@@ -278,12 +278,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'iron_shield_2',
-      title: 'Stehaufmännchen II',
+      defaultTitle: 'Stehaufmännchen II',
+      defaultDesc: '10 Absagen überstanden. Die richtige Stelle kommt noch!',
       category: 'resilience',
       group: 'resilience_tier',
       tier: 2,
       tierLabel: 'Tier II',
-      description: '10 Absagen überstanden. Die richtige Stelle kommt noch!',
       iconType: 'shield-check',
       currentValue: stats.totalRejected,
       targetValue: 10,
@@ -292,12 +292,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'iron_shield_3',
-      title: 'Stehaufmännchen III',
+      defaultTitle: 'Stehaufmännchen III',
+      defaultDesc: '15 Absagen wegsteckt. Du bleibst am Ball!',
       category: 'resilience',
       group: 'resilience_tier',
       tier: 3,
       tierLabel: 'Tier III',
-      description: '15 Absagen wegsteckt. Du bleibst am Ball!',
       iconType: 'shield-alert',
       currentValue: stats.totalRejected,
       targetValue: 15,
@@ -306,12 +306,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'armored_heart',
-      title: 'Panzerglas-Herz',
+      defaultTitle: 'Panzerglas-Herz',
+      defaultDesc: '30 Absagen verkraftet. Nichts bringt dich aus der Ruhe!',
       category: 'resilience',
       group: 'resilience_tier',
       tier: 4,
       tierLabel: 'Tier IV',
-      description: '30 Absagen verkraftet. Nichts bringt dich aus der Ruhe!',
       iconType: 'shield-off',
       currentValue: stats.totalRejected,
       targetValue: 30,
@@ -320,12 +320,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'indestructible',
-      title: 'Unzerstörbar',
+      defaultTitle: 'Unzerstörbar',
+      defaultDesc: '60 Absagen überstanden. Ein wahres Vorbild an Ausdauer!',
       category: 'resilience',
       group: 'resilience_tier',
       tier: 5,
       tierLabel: 'Tier V',
-      description: '60 Absagen überstanden. Ein wahres Vorbild an Ausdauer!',
       iconType: 'flame',
       currentValue: stats.totalRejected,
       targetValue: 60,
@@ -334,12 +334,12 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'titan_shield',
-      title: 'Titan-Schild',
+      defaultTitle: 'Titan-Schild',
+      defaultDesc: '100 Absagen! Deine Resilienz ist absolut legendär.',
       category: 'resilience',
       group: 'resilience_tier',
       tier: 6,
       tierLabel: 'Tier VI',
-      description: '100 Absagen! Deine Resilienz ist absolut legendär.',
       iconType: 'sparkles',
       currentValue: stats.totalRejected,
       targetValue: 100,
@@ -350,9 +350,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     // --- 3. SUCCESS & CONVERSION (Erfolge) ---
     {
       id: 'conversion_master',
-      title: 'Taten statt Wünsche',
+      defaultTitle: 'Taten statt Wünsche',
+      defaultDesc: 'Mehr als 50% deiner gemerkten Jobs tatsächlich beworben.',
       category: 'success',
-      description: 'Mehr als 50% deiner gemerkten Jobs tatsächlich beworben.',
       iconType: 'target',
       currentValue: stats.interestedToAppliedRate,
       targetValue: 50,
@@ -361,9 +361,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'first_interview',
-      title: 'Einladung im Kasten',
+      defaultTitle: 'Einladung im Kasten',
+      defaultDesc: 'Erreiche die Phase Vorstellungsgespräch.',
       category: 'success',
-      description: 'Erreiche die Phase Vorstellungsgespräch.',
       iconType: 'user-check',
       currentValue: stats.totalInterviewing + stats.totalOffer,
       targetValue: 1,
@@ -372,9 +372,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'triple_interview',
-      title: 'Heißbegehrt',
+      defaultTitle: 'Heißbegehrt',
+      defaultDesc: '3 Vorstellungsgespräche gleichzeitig am Laufen.',
       category: 'success',
-      description: '3 Vorstellungsgespräche gleichzeitig am Laufen.',
       iconType: 'users',
       currentValue: stats.totalInterviewing,
       targetValue: 3,
@@ -383,9 +383,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'job_offer',
-      title: 'Ziel erreicht!',
+      defaultTitle: 'Ziel erreicht!',
+      defaultDesc: 'Ein Angebot oder eine Zusage erhalten!',
       category: 'success',
-      description: 'Ein Angebot oder eine Zusage erhalten!',
       iconType: 'trophy',
       currentValue: stats.totalOffer,
       targetValue: 1,
@@ -396,9 +396,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     // --- 4. ACTIVITIES & DETAILS (Aktivität) ---
     {
       id: 'star_evaluator',
-      title: 'Sterne-Kritiker',
+      defaultTitle: 'Sterne-Kritiker',
+      defaultDesc: 'Bewerte 5 Jobs mit vollen 5 Sternen.',
       category: 'activity',
-      description: 'Bewerte 5 Jobs mit vollen 5 Sternen.',
       iconType: 'star',
       currentValue: stats.fiveStarCount,
       targetValue: 5,
@@ -407,9 +407,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'note_taker',
-      title: 'Aktenkundig',
+      defaultTitle: 'Aktenkundig',
+      defaultDesc: 'Füge bei mindestens 5 Bewerbungen Notizen hinzu.',
       category: 'activity',
-      description: 'Füge bei mindestens 5 Bewerbungen Notizen hinzu.',
       iconType: 'file-text',
       currentValue: stats.jobsWithNotesCount,
       targetValue: 5,
@@ -418,9 +418,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'researcher',
-      title: 'Rechercheur',
+      defaultTitle: 'Rechercheur',
+      defaultDesc: 'Hinterlege Gehalt oder Standort bei 5 Stellen.',
       category: 'activity',
-      description: 'Hinterlege Gehalt oder Standort bei 5 Stellen.',
       iconType: 'map-pin',
       currentValue: stats.jobsWithSalaryOrLocationCount,
       targetValue: 5,
@@ -431,9 +431,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     // --- 5. SECRET / HIDDEN BADGES (Geheime Auszeichnungen) ---
     {
       id: 'ghosted_victim',
-      title: 'Ghosting-Gefahr',
+      defaultTitle: 'Ghosting-Gefahr',
+      defaultDesc: 'Mindestens 1 Bewerbung seit über 4 Wochen ohne jede Antwort.',
       category: 'secret',
-      description: 'Mindestens 1 Bewerbung seit über 4 Wochen ohne jede Antwort.',
       iconType: 'ghost',
       currentValue: stats.ghostedCount,
       targetValue: 1,
@@ -443,9 +443,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'full_dossier_master',
-      title: 'Perfektes Dossier',
+      defaultTitle: 'Perfektes Dossier',
+      defaultDesc: 'Fülle eine Stelle komplett aus (Sterne, Notizen, Standort, Gehalt & Anforderungen).',
       category: 'secret',
-      description: 'Fülle eine Stelle komplett aus (Sterne, Notizen, Standort, Gehalt & Anforderungen).',
       iconType: 'folder-check',
       currentValue: stats.fullDossierCount,
       targetValue: 1,
@@ -455,9 +455,9 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
     {
       id: 'night_owl',
-      title: 'Nachteule',
+      defaultTitle: 'Nachteule',
+      defaultDesc: 'Aktualisiere oder erstelle eine Bewerbung zu später Stunde (23:00 - 05:00 Uhr).',
       category: 'secret',
-      description: 'Aktualisiere oder erstelle eine Bewerbung zu später Stunde (23:00 - 05:00 Uhr).',
       iconType: 'moon',
       currentValue: stats.nightOwlCount,
       targetValue: 1,
@@ -467,5 +467,23 @@ export function getBadges(_jobs: JobMetadata[], stats: StatMetrics): Badge[] {
     },
   ];
 
-  return badgeDefinitions;
+  return rawBadges.map((b) => {
+    const title = t ? t(`badges.${b.id}.title`) : b.defaultTitle;
+    const description = t ? t(`badges.${b.id}.desc`) : b.defaultDesc;
+    return {
+      id: b.id,
+      title,
+      category: b.category,
+      group: b.group,
+      tier: b.tier,
+      tierLabel: b.tierLabel,
+      description,
+      iconType: b.iconType,
+      currentValue: b.currentValue,
+      targetValue: b.targetValue,
+      isUnlocked: b.isUnlocked,
+      color: b.color,
+      isHidden: b.isHidden,
+    };
+  });
 }

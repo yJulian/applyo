@@ -1,0 +1,398 @@
+{
+  "app": {
+    "title": "Applyo",
+    "ai_assistant_btn": "KI-Assistent",
+    "ai_assistant_title": "KI-Karrierelotse öffnen ({{provider}})",
+    "delete_confirm": "Möchtest du die Bewerbung \"{{title}}\" bei \"{{company}}\" wirklich löschen?"
+  },
+  "nav": {
+    "list": "Liste",
+    "list_title": "Listenansicht",
+    "board": "Board",
+    "board_title": "Kanban Board Ansicht",
+    "calendar": "Kalender",
+    "calendar_title": "Kalenderansicht",
+    "stats": "Statistiken",
+    "stats_title": "Statistiken & Badges",
+    "grant_folder": "Zugriff auf '{{name}}' freigeben",
+    "folder": "Ordner: {{name}}",
+    "select_folder": "Lokalen Arbeitsordner wählen",
+    "cv_editor": "Lebenslauf",
+    "cv_editor_title": "AI Lebenslauf-Editor öffnen",
+    "cover_letter_editor": "Anschreiben",
+    "cover_letter_editor_title": "AI Anschreiben-Editor öffnen",
+    "settings": "Einstellungen",
+    "settings_title": "Einstellungen & Profil (KI-Provider: {{provider}})",
+    "add_job": "Neue Stelle",
+    "add_job_title": "Neue Bewerbung hinzufügen"
+  },
+  "sidebar": {
+    "search_placeholder": "Firma, Titel oder Skill suchen...",
+    "filter_all": "Alle",
+    "exp_filter_all": "Filter: Alle Stellen",
+    "exp_junior": "🟢 Junior / Ohne Vorerfahrung",
+    "exp_required": "🔴 Erfahrung erforderlich",
+    "exp_desired": "🟡 Erfahrung gewünscht",
+    "sort_date": "Sortierung: Datum",
+    "sort_rating": "Sortierung: Rangliste ⭐",
+    "sort_knowledge": "Sortierung: Vorwissen 🧠",
+    "toggle_grouping": "Graphen/Listen-Ansicht umschalten",
+    "group_by_company": "Nach Firma gruppieren",
+    "grant_title": "Ordner-Zugriff freigeben",
+    "grant_desc": "Der Browser benötigt nach dem Neuladen deine Einmal-Bestätigung für den Ordner \"{{name}}\".",
+    "grant_btn": "Zugriff jetzt freigeben",
+    "no_folder_title": "Kein Ordner verknüpft",
+    "no_folder_desc": "Bitte wähle zuerst einen Ordner auf deiner Festplatte aus, um deine Bewerbungen zu verwalten.",
+    "select_folder_btn": "Ordner auswählen",
+    "no_jobs_title": "Keine Bewerbungen in diesem Ordner.",
+    "no_jobs_desc": "Klicke oben auf \"+ Neue Stelle\", um einen neuen Ordner zu erstellen.",
+    "unknown_company": "Unbekannte Firma",
+    "impressum": "Impressum",
+    "datenschutz": "Datenschutz"
+  },
+  "status": {
+    "interested": "Interessiert",
+    "applied": "Beworben",
+    "response_received": "Antwort erhalten",
+    "interviewing": "Vorstellungsgespräch",
+    "offer": "Zusage / Offer",
+    "rejected": "Abgesagt"
+  },
+  "experience": {
+    "junior": "Junior / Berufseinsteiger",
+    "required": "Berufserfahrung erforderlich",
+    "desired": "Berufserfahrung gewünscht",
+    "none": "Keine Angabe zur Erfahrung",
+    "junior_badge": "🟢 Junior Einstieg",
+    "required_badge": "🔴 Erfahrung erforderlich",
+    "desired_badge": "🟡 Erfahrung gewünscht",
+    "none_badge": "⚪ k.A.",
+    "required_tooltip": "Reale Firmen-Arbeitserfahrung erforderlich",
+    "none_tooltip": "Keine Vorkenntnisse gefordert",
+    "knowledge_tooltip": "Skills & Vorkenntnisse"
+  },
+  "board": {
+    "no_hits": "Keine Treffer",
+    "drag_here": "Hierher ziehen (Drag & Drop)",
+    "search_in_phase": "In Phase...",
+    "close": "Schließen",
+    "filter_phase": "Diese Phase filtern",
+    "open_details": "Details öffnen",
+    "no_folder_title": "Kein Ordner ausgewählt",
+    "no_folder_desc": "Bitte wähle deinen Arbeitsordner aus, um das Bewerbungs-Board zu laden."
+  },
+  "calendar": {
+    "title": "Bewerbungs-Kalender",
+    "subtitle": "Übersicht deiner Fristen, Vorstellungsgespräche und Termine",
+    "today": "Heute",
+    "month_view": "Monat",
+    "week_view": "Woche",
+    "no_events": "Keine Termine im ausgewählten Zeitraum",
+    "events_count": "{{count}} Termine",
+    "status_changed": "Status geändert"
+  },
+  "stats": {
+    "title": "Bewerbungs-Statistiken & Erfolge",
+    "subtitle": "Analysen, Conversion-Rates und freigeschaltete Badges",
+    "total_jobs": "Gesamt gemerkt",
+    "total_applied": "Eingereichte Bewerbungen",
+    "response_rate": "Antwort-Quote",
+    "interview_rate": "Einladungs-Quote",
+    "offer_rate": "Zusagen-Quote",
+    "rejection_rate": "Absage-Quote",
+    "avg_rating": "Ø persönliche Bewertung",
+    "night_owl": "Nachteulen-Aktionen",
+    "ghosted": "Ghosted Stellen",
+    "tab_overview": "Übersicht & Kennzahlen",
+    "tab_badges": "Badges & Erfolge",
+    "badges_unlocked": "Freigeschaltet: {{unlocked}} / {{total}}",
+    "cat_applications": "Bewerbungs-Stufen",
+    "cat_resilience": "Resilienz & Ausdauer",
+    "cat_success": "Erfolge & Einladungen",
+    "cat_activity": "Aktivität & Details",
+    "cat_secret": "Geheime Auszeichnungen",
+    "secret_badge_title": "??? (Geheimer Badge)",
+    "secret_badge_desc": "Setze deine Reise fort, um diesen Erfolg freizuschalten!",
+    "unlocked_status": "Freigeschaltet",
+    "secret_status": "Geheim",
+    "progress": "Fortschritt",
+    "status_distribution": "Status-Verteilung"
+  },
+  "badges": {
+    "first_step": {
+      "title": "Erster Schritt",
+      "desc": "Lege deinen ersten Job in der Liste an."
+    },
+    "applicant_bronze": {
+      "title": "Bewerber Bronze",
+      "desc": "Reiche mindestens 5 Bewerbungen ein."
+    },
+    "applicant_silver": {
+      "title": "Bewerber Silber",
+      "desc": "Reiche 15 Bewerbungen ein."
+    },
+    "applicant_gold": {
+      "title": "Bewerber Gold",
+      "desc": "Fleißig! 30 Bewerbungen verschickt."
+    },
+    "applicant_machine": {
+      "title": "Bewerbungs-Maschine",
+      "desc": "Beeindruckend! 60 Bewerbungen auf den Weg gebracht."
+    },
+    "applicant_legend": {
+      "title": "Job-Legende",
+      "desc": "Unaufhaltsam! 100 Bewerbungen eingereicht."
+    },
+    "iron_shield_1": {
+      "title": "Stehaufmännchen I",
+      "desc": "5 Absagen verkraftet. Kopf hoch!"
+    },
+    "iron_shield_2": {
+      "title": "Stehaufmännchen II",
+      "desc": "10 Absagen überstanden. Die richtige Stelle kommt noch!"
+    },
+    "iron_shield_3": {
+      "title": "Stehaufmännchen III",
+      "desc": "15 Absagen wegsteckt. Du bleibst am Ball!"
+    },
+    "armored_heart": {
+      "title": "Panzerglas-Herz",
+      "desc": "30 Absagen verkraftet. Nichts bringt dich aus der Ruhe!"
+    },
+    "indestructible": {
+      "title": "Unzerstörbar",
+      "desc": "60 Absagen überstanden. Ein wahres Vorbild an Ausdauer!"
+    },
+    "titan_shield": {
+      "title": "Titan-Schild",
+      "desc": "100 Absagen! Deine Resilienz ist absolut legendär."
+    },
+    "conversion_master": {
+      "title": "Taten statt Wünsche",
+      "desc": "Mehr als 50% deiner gemerkten Jobs tatsächlich beworben."
+    },
+    "first_interview": {
+      "title": "Einladung im Kasten",
+      "desc": "Erreiche die Phase Vorstellungsgespräch."
+    },
+    "triple_interview": {
+      "title": "Heißbegehrt",
+      "desc": "3 Vorstellungsgespräche gleichzeitig am Laufen."
+    },
+    "job_offer": {
+      "title": "Ziel erreicht!",
+      "desc": "Ein Angebot oder eine Zusage erhalten!"
+    },
+    "star_evaluator": {
+      "title": "Sterne-Kritiker",
+      "desc": "Bewerte 5 Jobs mit vollen 5 Sternen."
+    },
+    "note_taker": {
+      "title": "Aktenkundig",
+      "desc": "Füge bei mindestens 5 Bewerbungen Notizen hinzu."
+    },
+    "researcher": {
+      "title": "Rechercheur",
+      "desc": "Hinterlege Gehalt oder Standort bei 5 Stellen."
+    },
+    "ghosted_victim": {
+      "title": "Ghosting-Gefahr",
+      "desc": "Mindestens 1 Bewerbung seit über 4 Wochen ohne jede Antwort."
+    },
+    "full_dossier_master": {
+      "title": "Perfektes Dossier",
+      "desc": "Fülle eine Stelle komplett aus (Sterne, Notizen, Standort, Gehalt & Anforderungen)."
+    },
+    "night_owl": {
+      "title": "Nachteule",
+      "desc": "Aktualisiere oder erstelle eine Bewerbung zu später Stunde (23:00 - 05:00 Uhr)."
+    }
+  },
+  "job_detail": {
+    "open_folder": "Ordner im Explorer öffnen",
+    "edit_job": "Stelle bearbeiten",
+    "delete_job": "Löschen",
+    "ai_assistant": "KI-Karrierelotse",
+    "cv_editor": "AI Lebenslauf",
+    "cover_letter_editor": "AI Anschreiben",
+    "open_url": "Stellenanzeige öffnen",
+    "rating": "Persönliche Rangliste",
+    "rating_not_set": "Nicht bewertet",
+    "salary": "Gehalt",
+    "location": "Standort",
+    "created": "Erstellt am",
+    "updated": "Zuletzt geändert",
+    "section_feedback": "Rückmeldungen & Fristen",
+    "section_tailored_cv": "Maßgeschneiderter Lebenslauf",
+    "section_documents": "Dokumente & Ordner",
+    "section_summary": "Zusammenfassung",
+    "section_experience_check": "Berufserfahrung & Einstieg Check",
+    "section_tasks_requirements": "Aufgaben & Anforderungen",
+    "section_benefits": "Benefits & Vorteile",
+    "section_notes": "Notizen",
+    "feedback_overdue_warning": "⚠️ Letzte Rückmeldung vor {{weeks}} Wochen! Überlege nachzufassen.",
+    "add_feedback": "Rückmeldung registrieren",
+    "undo_feedback": "Rückgängig",
+    "tailored_cv_desc": "Generiere oder passe ein individuell auf diese Stelle abgestimmtes Lebenslauf-Dokument an.",
+    "documents_desc": "Dateien im Ordner:",
+    "no_documents": "Keine Dokumente im Job-Ordner gefunden.",
+    "summary_title": "Kurzzusammenfassung",
+    "experience_check_title": "Anforderungsprofil",
+    "tasks_title": "Hauptaufgaben",
+    "requirements_title": "Anforderungen & Qualifikationen",
+    "benefits_title": "Gebotene Benefits",
+    "notes_placeholder": "Hier eigene Notizen eingeben...",
+    "save_notes": "Notizen speichern",
+    "status_history": "Status-Verlauf",
+    "no_status_history": "Bisher keine Statusänderungen protokolliert.",
+    "feedback_today": "Rückmeldung heute",
+    "pick_datetime": "Datum & Uhrzeit wählen",
+    "no_feedback_yet": "Noch keine Rückmeldung zu dieser Stelle erfasst.",
+    "ai_documents_title": "KI Bewerbungsdokumente (Lebenslauf & Anschreiben Editor)",
+    "ai_documents_desc": "Erstelle und bearbeite maßgeschneiderte Bewerbungsdokumente für diese Stelle mit KI-Unterstützung, Live-Vorschau und PDF-Export.",
+    "drag_files_here": "Dateien (z.B. Lebenslauf.md, Anschreiben) einfach hierher hineinziehen (Drag & Drop)",
+    "add_document": "Dokument hinzufügen",
+    "loading_files": "Lade Ordnerdateien...",
+    "drop_file_now": "Datei jetzt loslassen zum Speichern!",
+    "drag_drop_hint": "Dateien per Drag & Drop hierher ziehen",
+    "drag_drop_subhint": "Oder klicke oben auf \"+ Dokument hinzufügen\" oder \"Lebenslauf.md anpassen\".",
+    "experience_req_title": "Vorherige Anstellung in einer Firma zwingend erforderlich",
+    "experience_junior_title": "Direkter Einstieg als Junior / Absolvent ohne bisherige Firmen-Anstellung möglich",
+    "tasks_header": "Aufgaben & Verantwortung",
+    "no_tasks": "Keine Aufgaben aufgeführt.",
+    "req_header": "Was du mitbringen musst",
+    "no_reqs": "Keine Anforderungen aufgeführt.",
+    "benefits_header": "Benefits & Vorteile",
+    "notes_header": "Notizen & Notizen zum Gespräch",
+    "notes_saved": "Notizen wurden im Job-Ordner gespeichert!",
+    "open_in_editor": "Im Editor öffnen",
+    "view_edit": "Ansehen & Editieren",
+    "open_file": "Öffnen"
+  },
+  "add_modal": {
+    "title": "Neue Bewerbung hinzufügen",
+    "tab_manual": "Manuell eingeben",
+    "tab_url": "Per URL parsen",
+    "tab_text": "Per Freitext / Text parsen",
+    "company": "Firma / Arbeitgeber *",
+    "job_title": "Stellentitel *",
+    "url": "URL zur Stellenanzeige",
+    "status": "Bewerbungs-Status",
+    "experience": "Erfahrungslevel",
+    "rating": "Persönliche Bewertung (1-5 Sterne)",
+    "salary": "Gehaltsangabe (z.B. 60.000 € / Jahr)",
+    "location": "Standort / Remote",
+    "tasks": "Aufgaben (zeilenweise)",
+    "requirements": "Anforderungen (zeilenweise)",
+    "benefits": "Benefits (zeilenweise)",
+    "notes": "Notizen",
+    "save": "Bewerbung anlegen",
+    "cancel": "Abbrechen",
+    "parsing": "Analysiere Stellenanzeige...",
+    "parse_btn": "Mit KI analysieren",
+    "url_placeholder": "https://beispiel-firma.de/jobs/developer",
+    "text_placeholder": "Kopiere hier den gesamten Text der Stellenanzeige hinein..."
+  },
+  "settings": {
+    "title": "Einstellungen & Profil",
+    "subtitle": "Globaler Lebenslauf, Rückmeldungen, Karten-Layout & KI-Anbieter",
+    "profile_tab": "Profil",
+    "ui_tab": "UI & Oberfläche",
+    "language": "Sprache",
+    "feedback_tab": "Feedback",
+    "layout_tab": "Layout",
+    "ai_tab": "KI",
+    "lang_desc": "Wähle deine bevorzugte Sprache für die Benutzeroberfläche aus. Standardmäßig wird GeoIP / Browser-Sprache verwendet.",
+    "lang_auto": "Automatisch (GeoIP / Browser)",
+    "lang_auto_desc": "Erkennt automatisch dein Land & deine Browser-Sprache.",
+    "lang_de": "Deutsch als Standard für Deutschland, Österreich, Schweiz & Liechtenstein.",
+    "lang_en": "English for international users.",
+    "detected_country": "Erkanntes Land",
+    "full_name": "Vollständiger Name",
+    "email": "E-Mail Adresse",
+    "phone": "Telefonnummer",
+    "location": "Wohnort / Standort",
+    "citizenship": "Staatsbürgerschaft",
+    "linkedin": "LinkedIn Profile URL",
+    "github": "GitHub Profile URL",
+    "xing": "XING Profile URL",
+    "website": "Website / Portfolio / Blog",
+    "profile_markdown": "Globaler Lebenslauf & Profil (Markdown)",
+    "profile_markdown_desc": "Trage hier deinen Werdegang, deine bisherigen Stationen, Kenntnisse und Projekte als Markdown ein. Auf dieser Basis kann die KI für jede Stelle eine angepasste Lebenslauf.md im jeweiligen Ordner erzeugen.",
+    "feedback_deadline_title": "Frist für Rückmeldung-Erinnerungen",
+    "feedback_deadline_desc": "Wenn du bei einer Stelle einträgst, wann du das letzte Mal Rückmeldung bekommen hast, wird automatisch geprüft, wie viel Zeit seitdem vergangen ist. Verstreicht mehr Zeit als unten angegeben, wird der Status auf 'Lange her' gesetzt.",
+    "feedback_threshold": "Frist für Status 'Lange her' (in Wochen)",
+    "weeks": "Wochen",
+    "feedback_threshold_desc": "Standardwert: 6 Wochen. Ist die letzte Rückmeldung älter, wird der Badge rot hervorgehoben und als '⚠️ Lange her' dargestellt.",
+    "alerts_title": "Pop-up Benachrichtigungen (Alerts)",
+    "alerts_desc": "Bestätigungs-Popups beim Anlegen, Bearbeiten oder Löschen von Dateien und Stellen.",
+    "alerts_active": "Aktiv",
+    "alerts_muted": "Stumm",
+    "card_layout_title": "Anordnung der Detail-Karten",
+    "card_layout_desc": "Ziehe eine Karte per Drag & Drop hoch/runter (reagiert sofort) oder nutze die Pfeile ⬆️ ⬇️.",
+    "reset": "Zurücksetzen",
+    "reset_title": "Kartenanordnung auf Standard zurücksetzen",
+    "move_up": "Nach oben verschieben",
+    "move_down": "Nach unten verschieben",
+    "active": "Aktiv",
+    "off": "Aus",
+    "hide_card": "Karte entfernen / ausblenden",
+    "show_card": "Karte wieder einblenden",
+    "ai_provider": "Aktiver KI-Anbieter für Extraktion, Assistent & Lebenslauf-Anpassung:",
+    "custom_openai_title": "Custom OpenAI-Kompatibler Endpunkt (Ollama, OpenRouter, LM Studio)",
+    "base_url": "Base URL / API Endpunkt",
+    "fast_model": "⚡ Extraktion & Zusammenfassung",
+    "gen_model": "🧠 Generierung & Schreibmodell",
+    "optional_key": "API Key (Optional bei lokalen Servern wie Ollama)",
+    "cors_proxy": "🌐 Optionaler CORS Proxy Server URL (z.B. http://localhost:8080)",
+    "cors_proxy_desc": "Falls der KI-Server keine Browser-CORS-Header mitsendet, leitet dieser Proxy die Anfragen sicher weiter.",
+    "cors_token": "🔑 CORS Proxy Auth Token / Secret (Optional)",
+    "cors_token_desc": "Falls auf deinem Proxy-Server per PROXY_TOKEN ein Passwort / Token hinterlegt ist.",
+    "gemini_title": "Google Gemini Konfiguration",
+    "openai_title": "OpenAI Konfiguration",
+    "claude_title": "Anthropic Claude Konfiguration",
+    "save": "Speichern",
+    "saved": "Einstellungen & Profil gespeichert!"
+  },
+  "card_sections": {
+    "feedback": "Letzte Rückmeldung verwalten",
+    "tailored_cv": "Maßgeschneiderter Lebenslauf",
+    "documents": "Dokumente & Ordner",
+    "summary": "Zusammenfassung",
+    "experience_check": "Berufserfahrung & Einstieg Check",
+    "tasks_requirements": "Aufgaben & Anforderungen",
+    "benefits": "Benefits & Vorteile",
+    "notes": "Notizen & Notizen zum Gespräch"
+  },
+  "ai_assistant": {
+    "welcome_job": "Hallo! Ich bin dein KI-Bewerbungsassistent für die Stelle **{{title}}** bei **{{company}}**.\nIch habe vollen Zugriff auf deinen Werdegang sowie alle Daten dieser Stelle. Wie kann ich dich heute unterstützen?",
+    "welcome_general": "Hallo! Ich bin dein KI-Karrierelotse. Bitte wähle eine Stelle aus oder stelle mir eine allgemeine Karrierefrage.",
+    "chip_cover_letter": "📝 Anschreiben Entwurf",
+    "chip_interview": "🎯 Interview Fragen",
+    "chip_strengths": "📊 Stärken & Match",
+    "chip_career_tips": "💡 Karriere-Tipps & Profilcheck",
+    "generating": "KI Karrierelotse generiert Antwort...",
+    "input_placeholder": "Frage an den KI Karrierelotsen..."
+  },
+  "cv_editor": {
+    "title": "AI Lebenslauf Editor",
+    "subtitle": "Profil & Stelle verknüpfen, anpassen und als PDF exportieren",
+    "ai_regenerate": "KI Neu Generieren",
+    "export_pdf": "PDF Exportieren"
+  },
+  "cover_letter_editor": {
+    "title": "AI Anschreiben Editor",
+    "subtitle": "Professionelles Bewerbungsschreiben aus Profil & Stelle generieren & als PDF exportieren"
+  },
+  "legal": {
+    "title": "Rechtliche Informationen",
+    "tab_impressum": "Impressum",
+    "tab_privacy": "Datenschutzerklärung"
+  },
+  "feedback_badge": {
+    "overdue_label": "⚠️ Lange her (vor {{weeks}} Wo. — {{date}})",
+    "overdue_short": "⚠️ Lange her ({{weeks}} Wo.)",
+    "normal_label": "💬 Rückmeldung: {{date}}",
+    "normal_short": "💬 Rückmeldung: {{date}}"
+  }
+}

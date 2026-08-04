@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   Sparkles,
@@ -46,6 +47,7 @@ export const CoverLetterEditorModal: React.FC<CoverLetterEditorModalProps> = ({
   selectedJob,
   onSelectJob,
 }) => {
+  const { t } = useTranslation();
   if (!isOpen) return null;
 
   const [coverLetterData, setCoverLetterData] = useState<CoverLetterData | null>(null);
@@ -311,7 +313,7 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
                 )}
               </div>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Professionelles Bewerbungsschreiben aus Profil & Stelle generieren & als PDF exportieren
+                {t('cover_letter_editor.subtitle')}
               </p>
             </div>
           </div>
@@ -345,9 +347,9 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
                   outline: 'none',
                 }}
               >
-                <option value="modern_glass">Vorlage: Modern Glass</option>
-                <option value="minimal_clean">Vorlage: Minimal Clean</option>
-                <option value="classic_din">Vorlage: Klassisch (DIN 5008)</option>
+                <option value="modern_glass">Modern Glass</option>
+                <option value="minimal_clean">Minimal Clean</option>
+                <option value="classic_din">Klassisch (DIN 5008)</option>
               </select>
             </div>
 
@@ -385,7 +387,7 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
               ) : (
                 <Sparkles size={14} color="var(--accent-primary)" />
               )}
-              <span>KI Neu Generieren</span>
+              <span>{t('cv_editor.ai_regenerate')}</span>
             </button>
 
             <label
@@ -421,7 +423,7 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
               }}
             >
               {isExportingPDF ? <Loader2 size={14} className="spin-icon" /> : <Download size={14} />}
-              <span>PDF Exportieren</span>
+              <span>{t('cv_editor.export_pdf')}</span>
             </button>
 
             <button onClick={onClose} className="btn-icon" style={{ width: '32px', height: '32px' }}>

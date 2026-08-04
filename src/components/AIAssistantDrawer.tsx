@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Sparkles, Send, Bot, Copy, Check, Briefcase, User } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { JobMetadata } from '../types/job';
@@ -18,6 +19,7 @@ interface ChatMessage {
 }
 
 export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, onClose, job }) => {
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -31,8 +33,8 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
       id: 'welcome',
       sender: 'assistant',
       text: job
-        ? `Hallo! Ich bin dein KI-Bewerbungsassistent für die Stelle **${job.title}** bei **${job.company}**.\nIch habe vollen Zugriff auf deinen Werdegang sowie alle Daten dieser Stelle. Wie kann ich dich heute unterstützen?`
-        : 'Hallo! Ich bin dein KI-Karrierelotse. Bitte wähle eine Stelle aus oder stelle mir eine allgemeine Karrierefrage.',
+        ? t('ai_assistant.welcome_job', { title: job.title, company: job.company })
+        : t('ai_assistant.welcome_general'),
     },
   ]);
 
@@ -205,21 +207,21 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
                 className="btn btn-secondary"
                 style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap', gap: '4px' }}
               >
-                📝 Anschreiben Entwurf
+                {t('ai_assistant.chip_cover_letter')}
               </button>
               <button
                 onClick={() => handleSendPrompt(`Welche 5 spezifischen Fragen könnte der Interviewer bei "${job.company}" für die Position "${job.title}" stellen? Bitte mit Antwort-Tipps passend zu meinem Werdegang.`)}
                 className="btn btn-secondary"
                 style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap', gap: '4px' }}
               >
-                🎯 Interview Fragen
+                {t('ai_assistant.chip_interview')}
               </button>
               <button
                 onClick={() => handleSendPrompt(`Analysiere den Match zwischen meinem Nutzerprofil und der Stelle "${job.title}" bei "${job.company}". Wo sind meine größten Stärken und wo gibt es Lücken?`)}
                 className="btn btn-secondary"
                 style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap', gap: '4px' }}
               >
-                📊 Stärken & Match
+                {t('ai_assistant.chip_strengths')}
               </button>
             </>
           ) : (
@@ -228,7 +230,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
               className="btn btn-secondary"
               style={{ fontSize: '0.75rem', padding: '6px 10px', borderRadius: '14px', whiteSpace: 'nowrap' }}
             >
-              💡 Karriere-Tipps & Profilcheck
+              {t('ai_assistant.chip_career_tips')}
             </button>
           )}
         </div>
@@ -290,7 +292,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
           {isGenerating && (
             <div style={{ alignSelf: 'flex-start', color: 'var(--text-muted)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.04)', padding: '8px 12px', borderRadius: '12px' }}>
               <Bot size={16} color="var(--accent-primary)" />
-              <span>KI Karrierelotse generiert Antwort...</span>
+              <span>{t('ai_assistant.generating')}</span>
             </div>
           )}
         </div>
@@ -300,7 +302,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({ isOpen, on
           <input
             type="text"
             className="input-field"
-            placeholder="Frage an den KI Karrierelotsen..."
+            placeholder={t('ai_assistant.input_placeholder')}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendPrompt(inputText)}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Scale, ShieldCheck, Mail, Server, Database, Key, Info } from 'lucide-react';
 
 interface LegalModalProps {
@@ -12,6 +13,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
   onClose,
   initialTab = 'impressum',
 }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'impressum' | 'datenschutz'>(initialTab);
 
   useEffect(() => {
@@ -47,9 +49,9 @@ export const LegalModal: React.FC<LegalModalProps> = ({
               {activeTab === 'impressum' ? <Scale size={20} /> : <ShieldCheck size={20} />}
             </div>
             <div>
-              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>Rechtliche Informationen</h2>
+              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>{t('legal.title')}</h2>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                Impressum gem. § 5 DDG & Datenschutzerklärung gem. DSGVO
+                {t('sidebar.impressum')} & {t('sidebar.datenschutz')}
               </span>
             </div>
           </div>
@@ -66,7 +68,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
           >
             <Scale size={15} />
-            <span>Impressum</span>
+            <span>{t('legal.tab_impressum')}</span>
           </button>
           <button
             onClick={() => setActiveTab('datenschutz')}
@@ -74,7 +76,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             style={{ flex: 1, gap: '6px', fontSize: '0.85rem' }}
           >
             <ShieldCheck size={15} />
-            <span>Datenschutzerklärung</span>
+            <span>{t('legal.tab_privacy')}</span>
           </button>
         </div>
 

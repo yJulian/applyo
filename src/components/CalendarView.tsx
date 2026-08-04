@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,6 +13,7 @@ import {
 import {
   JobMetadata,
   ApplicationStatus,
+  getStatusMeta,
   STATUS_LABELS,
 } from '../types/job';
 
@@ -36,19 +38,8 @@ interface CalendarEvent {
   timestamp: string;
 }
 
-const MONTH_NAMES = [
-  'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-  'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
-];
-const DAY_NAMES = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-
 function isoToDateKey(iso: string): string {
   return iso.slice(0, 10);
-}
-
-function formatDateKey(key: string): string {
-  const [y, m, d] = key.split('-').map(Number);
-  return `${d}. ${MONTH_NAMES[m - 1]} ${y}`;
 }
 
 const EventPill: React.FC<{ event: CalendarEvent }> = ({ event }) => {
@@ -173,6 +164,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   onGrantPermission,
   onSelectJob,
 }) => {
+  const { t, i18n } = useTranslation();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -180,6 +172,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [filterJobId, setFilterJobId] = useState<string>('all');
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
   const [showFilter, setShowFilter] = useState(false);
+
+  const monthName = new Date(year, month, 1).toLocaleString(i18n.language, { month: 'long' });
+
+  const formatDateKey = (key: string): string => {
+    const [y, m, d] = key.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    return dateObj.toLocaleDateString(i18n.language, { day: 'numeric', month: 'long', year: 'numeric' });
+  };
 
   const goToPrevMonth = () => {
     if (month === 0) { setMonth(11); setYear(y => y - 1); }
@@ -283,11 +283,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px', color: 'var(--text-muted)' }}>
         <CalendarDays size={56} style={{ opacity: 0.3 }} />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Kein Ordner geöffnet</p>
-          <p style={{ fontSize: '0.875rem' }}>Wähle einen Arbeitsordner, um den Kalender zu sehen.</p>
+          <p style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>{t('board.no_folder_title')}</p>
+          <p style={{ fontSize: '0.875rem' }}>{t('board.no_folder_desc')}</p>
         </div>
         <button onClick={onSelectDirectory} className="btn btn-primary" style={{ gap: '8px' }}>
-          <Folder size={16} />Ordner wählen
+          <Folder size={16} />{t('sidebar.select_folder_btn')}
         </button>
       </div>
     );
@@ -298,11 +298,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px', color: 'var(--text-muted)' }}>
         <Unlock size={56} style={{ opacity: 0.3 }} />
         <div style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>Zugriff erforderlich</p>
-          <p style={{ fontSize: '0.875rem' }}>Bitte gib den Zugriff auf '{currentDirName}' frei.</p>
+          <p style={{ fontSize: '1.1rem', marginBottom: '8px', color: 'var(--text-secondary)' }}>{t('sidebar.grant_title')}</p>
+          <p style={{ fontSize: '0.875rem' }}>{t('sidebar.grant_desc', { name: currentDirName })}</p>
         </div>
         <button onClick={onGrantPermission} className="btn btn-primary" style={{ gap: '8px' }}>
-          <Unlock size={16} />Zugriff freigeben
+          <Unlock size={16} />{t('sidebar.grant_btn')}
         </button>
       </div>
     );
@@ -320,13 +320,12 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', cursor: 'pointer',
               color: 'var(--text-secondary)', transition: 'all 0.2s ease',
             }}
-            title="Vorheriger Monat"
           >
             <ChevronLeft size={16} />
           </button>
           <div style={{ minWidth: '170px', textAlign: 'center' }}>
             <span style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
-              {MONTH_NAMES[month]} {year}
+              {monthName} {year}
             </span>
           </div>
           <button
@@ -336,7 +335,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.25)', cursor: 'pointer',
               color: 'var(--text-secondary)', transition: 'all 0.2s ease',
             }}
-            title="Nächster Monat"
           >
             <ChevronRight size={16} />
           </button>
@@ -348,13 +346,13 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
               cursor: 'pointer', color: '#a5b4fc', transition: 'all 0.2s ease',
             }}
           >
-            Heute
+            {t('calendar.today')}
           </button>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            {currentMonthCount} {currentMonthCount === 1 ? 'Ereignis' : 'Ereignisse'} diesen Monat
+            {t('calendar.events_count', { count: currentMonthCount })}
           </span>
           <button
             onClick={() => setShowFilter(f => !f)}
@@ -388,14 +386,14 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 color: 'var(--text-primary)', fontSize: '0.8rem', padding: '5px 10px', cursor: 'pointer',
               }}
             >
-              <option value="all">Alle Status</option>
-              {Object.entries(STATUS_LABELS).map(([key, val]) => (
-                <option key={key} value={key}>{val.label}</option>
+              <option value="all">{t('sidebar.filter_all')}</option>
+              {Object.entries(STATUS_LABELS).map(([key]) => (
+                <option key={key} value={key}>{getStatusMeta(key as ApplicationStatus, t).label}</option>
               ))}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>Bewerbung:</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-muted)' }}>{t('cover_letter_editor.select_job')}:</span>
             <select
               value={filterJobId}
               onChange={e => setFilterJobId(e.target.value)}
@@ -405,7 +403,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 maxWidth: '220px',
               }}
             >
-              <option value="all">Alle Bewerbungen</option>
+              <option value="all">{t('sidebar.exp_filter_all')}</option>
               {jobOptions.map(j => (
                 <option key={j.id} value={j.id}>{j.company}: {j.title}</option>
               ))}
@@ -420,7 +418,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                 borderRadius: '8px', padding: '5px 10px', cursor: 'pointer',
               }}
             >
-              <X size={12} />Filter zurücksetzen
+              <X size={12} />Reset
             </button>
           )}
         </div>
@@ -432,14 +430,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {/* Day headers */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', marginBottom: '4px' }}>
-            {DAY_NAMES.map(d => (
-              <div key={d} style={{
-                textAlign: 'center', fontSize: '0.72rem', fontWeight: 700,
-                color: 'var(--text-muted)', padding: '5px 0', letterSpacing: '0.06em', textTransform: 'uppercase',
-              }}>
-                {d}
-              </div>
-            ))}
+            {['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'].map((d, i) => {
+              const dayStr = new Date(2026, 7, 3 + i).toLocaleDateString(i18n.language, { weekday: 'short' });
+              return (
+                <div key={d} style={{
+                  textAlign: 'center', fontSize: '0.72rem', fontWeight: 700,
+                  color: 'var(--text-muted)', padding: '5px 0', letterSpacing: '0.06em', textTransform: 'uppercase',
+                }}>
+                  {dayStr}
+                </div>
+              );
+            })}
           </div>
 
           {/* Cells */}
@@ -499,7 +500,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
                     {dayEvents.slice(0, 3).map((ev, i) => <EventPill key={i} event={ev} />)}
                     {dayEvents.length > 3 && (
                       <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>
-                        +{dayEvents.length - 3} mehr
+                        +{dayEvents.length - 3}
                       </span>
                     )}
                   </div>
@@ -518,7 +519,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
                 <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '3px' }}>
-                  Aktivitäten
+                  {t('calendar.title')}
                 </p>
                 <p style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
                   {formatDateKey(selectedDayKey)}
@@ -537,7 +538,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
 
             {selectedDayEvents.length === 0 ? (
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '16px' }}>
-                Keine Ereignisse
+                {t('calendar.no_events')}
               </p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto', flex: 1 }}>

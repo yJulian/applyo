@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   BarChart3, 
   Send, 
@@ -24,7 +25,7 @@ import {
   MapPin,
   HelpCircle
 } from 'lucide-react';
-import { JobMetadata } from '../types/job';
+import { JobMetadata, getStatusMeta } from '../types/job';
 import { calculateStats, getBadges } from '../utils/statsCalculator';
 
 interface StatsViewProps {
@@ -34,8 +35,9 @@ interface StatsViewProps {
 type BadgeCategoryFilter = 'all' | 'unlocked' | 'locked' | 'secret' | 'applications' | 'resilience' | 'success';
 
 export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
+  const { t } = useTranslation();
   const stats = calculateStats(jobs);
-  const badges = getBadges(jobs, stats);
+  const badges = getBadges(jobs, stats, t);
   const [activeCategory, setActiveCategory] = useState<BadgeCategoryFilter>('all');
 
   const unlockedCount = badges.filter((b) => b.isUnlocked).length;
@@ -149,10 +151,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
             <BarChart3 size={24} style={{ color: '#38bdf8' }} />
-            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>Statistiken</h2>
+            <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>{t('stats.title')}</h2>
           </div>
           <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
-            Übersicht und Kennzahlen deiner Bewerbungsaktivitäten
+            {t('stats.subtitle')}
           </p>
         </div>
 
@@ -169,7 +171,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
             padding: '16px',
             backdropFilter: 'blur(8px)',
           }}>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>Gesamt Jobs</span>
+            <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>{t('stats.total_jobs')}</span>
             <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#f8fafc', marginTop: '4px' }}>
               {stats.totalJobs}
             </div>
@@ -182,7 +184,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
             padding: '16px',
             backdropFilter: 'blur(8px)',
           }}>
-            <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>Verschickt</span>
+            <span style={{ fontSize: '0.78rem', color: '#94a3b8', fontWeight: 500 }}>{t('stats.total_applied')}</span>
             <div style={{ fontSize: '1.8rem', fontWeight: 700, color: '#60a5fa', marginTop: '4px' }}>
               {stats.totalApplied + stats.totalResponseReceived + stats.totalInterviewing + stats.totalOffer + stats.totalRejected}
             </div>
@@ -200,13 +202,13 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
           gap: '16px',
         }}>
           <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 600, color: '#cbd5e1' }}>
-            Erfolgsquoten & Konvertierung
+            {t('stats.tab_overview')}
           </h3>
 
           {/* Interested -> Applied */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
-              <span style={{ color: '#94a3b8' }}>Interessiert ➔ Beworben Rate</span>
+              <span style={{ color: '#94a3b8' }}>{getStatusMeta('interested', t).label} ➔ {getStatusMeta('applied', t).label}</span>
               <span style={{ fontWeight: 600, color: '#38bdf8' }}>{stats.interestedToAppliedRate}%</span>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -217,7 +219,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
           {/* Response Rate */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
-              <span style={{ color: '#94a3b8' }}>Rückmeldequote</span>
+              <span style={{ color: '#94a3b8' }}>{t('stats.response_rate')}</span>
               <span style={{ fontWeight: 600, color: '#818cf8' }}>{stats.responseRate}%</span>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -228,7 +230,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
           {/* Rejection Rate */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
-              <span style={{ color: '#94a3b8' }}>Absagequote</span>
+              <span style={{ color: '#94a3b8' }}>{t('stats.rejection_rate')}</span>
               <span style={{ fontWeight: 600, color: '#f87171' }}>{stats.rejectionRate}%</span>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -239,7 +241,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
           {/* Offer Rate */}
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '6px' }}>
-              <span style={{ color: '#94a3b8' }}>Zusage / Angebot Quote</span>
+              <span style={{ color: '#94a3b8' }}>{t('stats.offer_rate')}</span>
               <span style={{ fontWeight: 600, color: '#facc15' }}>{stats.offerRate}%</span>
             </div>
             <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.06)', borderRadius: '4px', overflow: 'hidden' }}>
@@ -256,15 +258,15 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
           padding: '20px',
         }}>
           <h3 style={{ margin: '0 0 14px 0', fontSize: '0.95rem', fontWeight: 600, color: '#cbd5e1' }}>
-            Status-Verteilung
+            {t('stats.status_distribution')}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <StatusRow label="Interessiert" count={stats.totalInterested} total={stats.totalJobs} color="#94a3b8" />
-            <StatusRow label="Beworben" count={stats.totalApplied} total={stats.totalJobs} color="#3b82f6" />
-            <StatusRow label="Antwort erhalten" count={stats.totalResponseReceived} total={stats.totalJobs} color="#8b5cf6" />
-            <StatusRow label="Vorstellungsgespräch" count={stats.totalInterviewing} total={stats.totalJobs} color="#06b6d4" />
-            <StatusRow label="Angebot / Zusage" count={stats.totalOffer} total={stats.totalJobs} color="#10b981" />
-            <StatusRow label="Abgesagt" count={stats.totalRejected} total={stats.totalJobs} color="#ef4444" />
+            <StatusRow label={getStatusMeta('interested', t).label} count={stats.totalInterested} total={stats.totalJobs} color="#94a3b8" />
+            <StatusRow label={getStatusMeta('applied', t).label} count={stats.totalApplied} total={stats.totalJobs} color="#3b82f6" />
+            <StatusRow label={getStatusMeta('response_received', t).label} count={stats.totalResponseReceived} total={stats.totalJobs} color="#8b5cf6" />
+            <StatusRow label={getStatusMeta('interviewing', t).label} count={stats.totalInterviewing} total={stats.totalJobs} color="#06b6d4" />
+            <StatusRow label={getStatusMeta('offer', t).label} count={stats.totalOffer} total={stats.totalJobs} color="#10b981" />
+            <StatusRow label={getStatusMeta('rejected', t).label} count={stats.totalRejected} total={stats.totalJobs} color="#ef4444" />
           </div>
         </div>
       </div>
@@ -293,10 +295,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
               <Trophy size={26} style={{ color: '#facc15' }} />
-              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>Erreichte Badges</h2>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 700 }}>{t('stats.tab_badges')}</h2>
             </div>
             <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8' }}>
-              Schalte stufenweise Auszeichnungen und geheime Erfolge frei.
+              {t('stats.badges_unlocked', { unlocked: unlockedCount, total: badges.length })}
             </p>
           </div>
           <div style={{
@@ -317,12 +319,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
 
         {/* Category Filters */}
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <FilterPill label="Alle" count={badges.length} active={activeCategory === 'all'} onClick={() => setActiveCategory('all')} />
-          <FilterPill label="Freigeschaltet" count={unlockedCount} active={activeCategory === 'unlocked'} onClick={() => setActiveCategory('unlocked')} />
-          <FilterPill label="Bewerbungen" active={activeCategory === 'applications'} onClick={() => setActiveCategory('applications')} />
-          <FilterPill label="Resilienz" active={activeCategory === 'resilience'} onClick={() => setActiveCategory('resilience')} />
-          <FilterPill label="Erfolge" active={activeCategory === 'success'} onClick={() => setActiveCategory('success')} />
-          <FilterPill label="Geheim 🕵️" active={activeCategory === 'secret'} onClick={() => setActiveCategory('secret')} />
+          <FilterPill label={t('sidebar.filter_all')} count={badges.length} active={activeCategory === 'all'} onClick={() => setActiveCategory('all')} />
+          <FilterPill label={t('stats.badges_unlocked', { unlocked: unlockedCount, total: badges.length }).split(':')[0]} count={unlockedCount} active={activeCategory === 'unlocked'} onClick={() => setActiveCategory('unlocked')} />
+          <FilterPill label={t('stats.cat_applications')} active={activeCategory === 'applications'} onClick={() => setActiveCategory('applications')} />
+          <FilterPill label={t('stats.cat_resilience')} active={activeCategory === 'resilience'} onClick={() => setActiveCategory('resilience')} />
+          <FilterPill label={t('stats.cat_success')} active={activeCategory === 'success'} onClick={() => setActiveCategory('success')} />
+          <FilterPill label={t('stats.cat_secret')} active={activeCategory === 'secret'} onClick={() => setActiveCategory('secret')} />
         </div>
 
         {/* Badges Grid */}
@@ -411,7 +413,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
                         fontWeight: 700,
                         color: isSecretLocked ? '#c084fc' : badge.isUnlocked ? '#f8fafc' : '#94a3b8',
                       }}>
-                        {isSecretLocked ? 'Geheimes Badge' : badge.title}
+                        {isSecretLocked ? t('stats.secret_badge_title') : badge.title}
                       </h4>
                       {badge.tierLabel && (
                         <span style={{
@@ -434,7 +436,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
                       color: isSecretLocked ? '#a855f7' : badge.isUnlocked ? '#cbd5e1' : '#64748b',
                       lineHeight: 1.35,
                     }}>
-                      {isSecretLocked ? 'Erfülle besondere Bedingungen, um dieses Geheimnis zu lüften!' : badge.description}
+                      {isSecretLocked ? t('stats.secret_badge_desc') : badge.description}
                     </p>
                   </div>
                 </div>
@@ -442,7 +444,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ jobs }) => {
                 {/* Progress bar */}
                 <div style={{ marginTop: 'auto', paddingTop: '4px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#94a3b8', marginBottom: '4px' }}>
-                    <span>{badge.isUnlocked ? 'Freigeschaltet 🎉' : isSecretLocked ? '??? Status' : 'Fortschritt'}</span>
+                    <span>{badge.isUnlocked ? t('stats.unlocked_status') : isSecretLocked ? t('stats.secret_status') : t('stats.progress')}</span>
                     <span>{isSecretLocked ? '?' : `${badge.currentValue} / ${badge.targetValue}`}</span>
                   </div>
                   <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.06)', borderRadius: '3px', overflow: 'hidden' }}>

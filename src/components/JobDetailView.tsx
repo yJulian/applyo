@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Building2,
   ExternalLink,
@@ -32,8 +33,9 @@ import {
   JobMetadata,
   JobFile,
   ApplicationStatus,
+  getStatusMeta,
+  getExperienceMeta,
   STATUS_LABELS,
-  EXPERIENCE_LABELS,
   CardSectionConfig,
   DEFAULT_CARD_SECTIONS,
 } from '../types/job';
@@ -76,6 +78,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   feedbackThresholdWeeks = 6,
   cardLayoutConfig,
 }) => {
+  const { t, i18n } = useTranslation();
   const [notes, setNotes] = useState(job?.notes || '');
   const [isSavedNotes, setIsSavedNotes] = useState(false);
   const [files, setFiles] = useState<JobFile[]>([]);
@@ -117,9 +120,9 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
         <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px' }}>
           <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '460px', border: '1px solid rgba(245, 158, 11, 0.4)' }}>
             <Folder size={56} color="#f59e0b" style={{ opacity: 0.8, marginBottom: '20px' }} />
-            <h2 style={{ fontSize: '1.4rem', marginBottom: '10px', color: '#f59e0b' }}>Zugriff auf Ordner freigeben</h2>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '10px', color: '#f59e0b' }}>{t('sidebar.grant_title')}</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
-              Der Browser benötigt nach dem Neuladen der Seite deine einmalige Bestätigung per Klick, um auf den Ordner <strong>"{currentDirName}"</strong> auf deiner Festplatte zuzugreifen.
+              {t('sidebar.grant_desc', { name: currentDirName })}
             </p>
             <button
               onClick={onGrantPermission}
@@ -135,7 +138,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
               }}
             >
               <Folder size={18} />
-              <span>Zugriff auf '{currentDirName}' freigeben</span>
+              <span>{t('sidebar.grant_btn')}</span>
             </button>
           </div>
         </main>
@@ -147,13 +150,13 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
         <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px' }}>
           <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '460px' }}>
             <Folder size={56} color="var(--accent-primary)" style={{ opacity: 0.6, marginBottom: '20px' }} />
-            <h2 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>Bitte zuerst einen Ordner auswählen</h2>
+            <h2 style={{ fontSize: '1.4rem', marginBottom: '10px' }}>{t('board.no_folder_title')}</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '24px' }}>
-              Wähle bitte deinen Arbeitsordner auf der Festplatte aus, um Bewerbungen zu laden oder neue Stellen-Ordner anzulegen.
+              {t('board.no_folder_desc')}
             </p>
             <button onClick={onSelectDirectory} className="btn btn-primary" style={{ width: '100%', gap: '10px', padding: '12px', fontSize: '0.95rem' }}>
               <Folder size={18} />
-              <span>Lokalen Arbeitsordner wählen</span>
+              <span>{t('sidebar.select_folder_btn')}</span>
             </button>
           </div>
         </main>
@@ -164,9 +167,9 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
       <main style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', padding: '40px' }}>
         <div className="glass-panel" style={{ padding: '48px', borderRadius: 'var(--radius-xl)', textAlign: 'center', maxWidth: '420px' }}>
           <Briefcase size={54} color="var(--accent-primary)" style={{ opacity: 0.5, marginBottom: '16px' }} />
-          <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Keine Bewerbung ausgewählt</h2>
+          <h2 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>{t('job_detail.no_job_selected')}</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            Klicke in der linken Liste auf eine Stelle oder erstelle oben rechts mit "+ Stelle hinzufügen" eine neue Bewerbung.
+            {t('job_detail.no_job_desc')}
           </p>
         </div>
       </main>
@@ -174,7 +177,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   }
 
   const latestFeedback = getLatestFeedbackDate(job);
-  const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks);
+  const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks, t, i18n.language);
 
   const handleSetFeedbackToday = () => {
     const updated = pushFeedbackTimestamp(job, new Date().toISOString());
@@ -315,8 +318,8 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
     return <File size={18} color="var(--text-muted)" />;
   };
 
-  const statusMeta = STATUS_LABELS[job.status] || STATUS_LABELS.interested;
-  const expMeta = EXPERIENCE_LABELS[job.experienceLevel] || EXPERIENCE_LABELS.none;
+  const statusMeta = getStatusMeta(job.status, t);
+  const expMeta = getExperienceMeta(job.experienceLevel, t);
 
   return (
     <main style={{ flex: 1, overflowY: 'auto', padding: '24px' }}>
@@ -660,7 +663,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       <div>
                         <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Clock size={18} color="var(--accent-cyan)" />
-                          Letzte Rückmeldung verwalten
+                          {t('card_sections.feedback')}
                         </h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                           {feedbackBadge ? (
@@ -682,7 +685,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                             </span>
                           ) : (
                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                              Noch keine Rückmeldung zu dieser Stelle erfasst.
+                              {t('job_detail.no_feedback_yet')}
                             </span>
                           )}
                         </div>
@@ -694,20 +697,20 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                           onClick={handleSetFeedbackToday}
                           className="btn btn-primary"
                           style={{ gap: '6px', fontSize: '0.825rem', padding: '8px 14px' }}
-                          title="Rückmeldung auf das heutige Datum setzen"
+                          title={t('job_detail.feedback_today')}
                         >
                           <Calendar size={15} />
-                          <span>Rückmeldung heute</span>
+                          <span>{t('job_detail.feedback_today')}</span>
                         </button>
 
                         <button
                           onClick={() => setShowDatePicker(!showDatePicker)}
                           className="btn btn-secondary"
                           style={{ gap: '6px', fontSize: '0.825rem', padding: '8px 14px' }}
-                          title="Datum und Uhrzeit manuell auswählen"
+                          title={t('job_detail.pick_datetime')}
                         >
                           <CalendarPlus size={15} color="var(--accent-cyan)" />
-                          <span>Datum & Uhrzeit wählen</span>
+                          <span>{t('job_detail.pick_datetime')}</span>
                         </button>
 
                         {job.feedbackHistory && job.feedbackHistory.length > 0 && (
@@ -715,10 +718,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                             onClick={handleUndoFeedback}
                             className="btn btn-secondary"
                             style={{ gap: '4px', fontSize: '0.825rem', padding: '8px 12px', color: '#f87171', borderColor: 'rgba(248, 113, 113, 0.3)' }}
-                            title="Letzten Stempel löschen (Rückgängig)"
+                            title={t('job_detail.undo_feedback')}
                           >
                             <RotateCcw size={14} />
-                            <span>Rückgängig ({job.feedbackHistory.length})</span>
+                            <span>{t('job_detail.undo_feedback')}</span>
                           </button>
                         )}
                       </div>
@@ -740,7 +743,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                         }}
                       >
                         <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          Datum & Uhrzeit wählen:
+                          {t('job_detail.pick_datetime')}:
                         </label>
                         <input
                           type="datetime-local"
@@ -755,14 +758,14 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                           className="btn btn-primary"
                           style={{ fontSize: '0.8rem', padding: '6px 14px' }}
                         >
-                          Speichern
+                          {t('add_modal.save')}
                         </button>
                         <button
                           onClick={() => setShowDatePicker(false)}
                           className="btn btn-secondary"
                           style={{ fontSize: '0.8rem', padding: '6px 12px' }}
                         >
-                          Abbrechen
+                          {t('add_modal.cancel')}
                         </button>
                       </div>
                     )}
@@ -785,10 +788,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       <div>
                         <h3 style={{ fontSize: '1.05rem', color: '#34d399', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <Wand2 size={18} color="#34d399" />
-                          KI Bewerbungsdokumente (Lebenslauf & Anschreiben Editor)
+                          {t('job_detail.ai_documents_title')}
                         </h3>
                         <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '620px' }}>
-                          Erstelle und bearbeite maßgeschneiderte Bewerbungsdokumente für diese Stelle mit KI-Unterstützung, Live-Vorschau und PDF-Export.
+                          {t('job_detail.ai_documents_desc')}
                         </p>
                       </div>
 
@@ -804,7 +807,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                           }}
                         >
                           <Sparkles size={16} />
-                          <span>📄 Lebenslauf Editor</span>
+                          <span>📄 {t('job_detail.cv_editor')}</span>
                         </button>
 
                         <button
@@ -818,7 +821,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                           }}
                         >
                           <Sparkles size={16} />
-                          <span>✉️ Anschreiben Editor</span>
+                          <span>✉️ {t('job_detail.cover_letter_editor')}</span>
                         </button>
                       </div>
                     </div>
@@ -845,10 +848,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       <div>
                         <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <FolderOpen size={18} color="var(--accent-cyan)" />
-                          Dokumente & Ordner
+                          {t('card_sections.documents')}
                         </h3>
                         <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                          Dateien (z.B. Lebenslauf.md, Anschreiben) einfach hierher hineinziehen (Drag & Drop)
+                          {t('job_detail.drag_files_here')}
                         </span>
                       </div>
 
@@ -866,13 +869,13 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                           style={{ gap: '6px', fontSize: '0.8rem', padding: '6px 12px' }}
                         >
                           <Plus size={15} color="var(--accent-cyan)" />
-                          <span>Dokument hinzufügen</span>
+                          <span>{t('job_detail.add_document')}</span>
                         </button>
                       </div>
                     </div>
 
                     {isLoadingFiles ? (
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Lade Ordnerdateien...</p>
+                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('job_detail.loading_files')}</p>
                     ) : files.length === 0 ? (
                       <div
                         style={{
@@ -886,10 +889,10 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                       >
                         <Upload size={28} style={{ marginBottom: '8px', opacity: 0.6, color: 'var(--accent-cyan)' }} />
                         <p style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                          {isDraggingOver ? 'Datei jetzt loslassen zum Speichern!' : 'Dateien per Drag & Drop hierher ziehen'}
+                          {isDraggingOver ? t('job_detail.drop_file_now') : t('job_detail.drag_drop_hint')}
                         </p>
                         <span style={{ fontSize: '0.75rem', display: 'block', marginTop: '4px' }}>
-                          Oder klicke oben auf "+ Dokument hinzufügen" oder "Lebenslauf.md anpassen".
+                          {t('job_detail.drag_drop_subhint')}
                         </span>
                       </div>
                     ) : (
@@ -933,9 +936,9 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                               : 'none';
 
                             const displayName = isCVFile
-                              ? 'Lebenslauf'
+                              ? t('nav.cv_editor')
                               : isCLFile
-                              ? 'Anschreiben'
+                              ? t('nav.cover_letter_editor')
                               : file.name;
 
                             return (
@@ -959,7 +962,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                                       {displayName}
                                     </span>
                                     <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                                      {formatFileSize(file.size)} • Geändert: {new Date(file.lastModified).toLocaleDateString('de-DE')}
+                                      {formatFileSize(file.size)} • {t('job_detail.updated')}: {new Date(file.lastModified).toLocaleDateString()}
                                     </span>
                                   </div>
                                 </div>
@@ -978,14 +981,14 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                                     title="In Applyo ansehen oder bearbeiten"
                                   >
                                     <Eye size={13} color={highlightColor || undefined} />
-                                    <span>{isSpecialFile ? 'Im Editor öffnen' : file.name.endsWith('.md') || file.name.endsWith('.txt') ? 'Ansehen & Editieren' : 'Öffnen'}</span>
+                                    <span>{isSpecialFile ? t('job_detail.open_in_editor') : file.name.endsWith('.md') || file.name.endsWith('.txt') ? t('job_detail.view_edit') : t('job_detail.open_file')}</span>
                                   </button>
 
                                   <button
                                     onClick={() => handleDeleteFile(file.name)}
                                     className="btn-icon"
                                     style={{ width: '28px', height: '28px', color: '#f87171' }}
-                                    title="Löschen"
+                                    title={t('job_detail.delete_job')}
                                   >
                                     <Trash2 size={13} />
                                   </button>
@@ -1004,7 +1007,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                   <div key="summary" className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-lg)' }}>
                     <h3 style={{ fontSize: '1rem', color: '#a5b4fc', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <FileText size={18} color="var(--accent-primary)" />
-                      Zusammenfassung
+                      {t('card_sections.summary')}
                     </h3>
                     <p style={{ color: 'var(--text-main)', lineHeight: 1.6, fontSize: '0.925rem' }}>{job.summary}</p>
                   </div>
@@ -1052,8 +1055,8 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                         <div>
                           <h3 style={{ fontSize: '1.05rem', color: job.requiresWorkExperience ? '#fb7185' : '#34d399' }}>
                             {job.requiresWorkExperience
-                              ? 'Vorherige Anstellung in einer Firma zwingend erforderlich'
-                              : 'Direkter Einstieg als Junior / Absolvent ohne bisherige Firmen-Anstellung möglich'}
+                              ? t('job_detail.experience_req_title')
+                              : t('job_detail.experience_junior_title')}
                           </h3>
                           <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                             {job.experienceDetails || expMeta.label}
@@ -1078,7 +1081,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                     <div className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-lg)' }}>
                       <h3 style={{ fontSize: '1rem', color: '#818cf8', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <ListTodo size={18} color="#818cf8" />
-                        Aufgaben & Verantwortung
+                        {t('job_detail.tasks_header')}
                       </h3>
                       <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {job.tasks && job.tasks.length > 0 ? (
@@ -1089,7 +1092,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                             </li>
                           ))
                         ) : (
-                          <li style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Keine Aufgaben aufgeführt.</li>
+                          <li style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>{t('job_detail.no_tasks')}</li>
                         )}
                       </ul>
                     </div>
@@ -1098,7 +1101,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                     <div className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-lg)' }}>
                       <h3 style={{ fontSize: '1rem', color: '#34d399', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <CheckCircle2 size={18} color="#34d399" />
-                        Was du mitbringen musst
+                        {t('job_detail.req_header')}
                       </h3>
                       <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         {job.requirements && job.requirements.length > 0 ? (
@@ -1109,7 +1112,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                             </li>
                           ))
                         ) : (
-                          <li style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Keine Anforderungen aufgeführt.</li>
+                          <li style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>{t('job_detail.no_reqs')}</li>
                         )}
                       </ul>
                     </div>
@@ -1120,7 +1123,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                 if (!job.benefits || job.benefits.length === 0) return null;
                 return (
                   <div key="benefits" className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-lg)' }}>
-                    <h3 style={{ fontSize: '1rem', color: '#fbbf24', marginBottom: '10px' }}>Benefits & Vorteile</h3>
+                    <h3 style={{ fontSize: '1rem', color: '#fbbf24', marginBottom: '10px' }}>{t('job_detail.benefits_header')}</h3>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                       {job.benefits.map((b, idx) => (
                         <span
@@ -1145,16 +1148,16 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                 return (
                   <div key="notes" className="glass-panel" style={{ padding: '20px', borderRadius: 'var(--radius-lg)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)' }}>Notizen & Notizen zum Gespräch</h3>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)' }}>{t('job_detail.notes_header')}</h3>
                       <button onClick={handleSaveNotes} className="btn btn-secondary" style={{ gap: '6px', padding: '6px 12px', fontSize: '0.8rem' }}>
                         <Save size={14} color={isSavedNotes ? '#34d399' : undefined} />
-                        <span>{isSavedNotes ? 'Gespeichert!' : 'Notizen speichern'}</span>
+                        <span>{isSavedNotes ? t('job_detail.notes_saved') : t('job_detail.save_notes')}</span>
                       </button>
                     </div>
                     <textarea
                       className="input-field"
                       rows={5}
-                      placeholder="Ergänze hier persönliche Notizen, Kontakte, Interviewfragen oder Erinnerungen..."
+                      placeholder={t('job_detail.notes_placeholder')}
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
                       style={{ resize: 'vertical', lineHeight: 1.5 }}
