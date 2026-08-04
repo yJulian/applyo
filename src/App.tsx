@@ -12,6 +12,7 @@ import { AIAssistantDrawer } from './components/AIAssistantDrawer';
 import { CVEditorModal } from './components/CVEditorModal';
 import { CoverLetterEditorModal } from './components/CoverLetterEditorModal';
 import { StatsView } from './components/StatsView';
+import { LegalModal } from './components/LegalModal';
 
 import { JobMetadata, ApplicationStatus, ExperienceLevel, AISettings, StatusHistoryEntry } from './types/job';
 import { fileSystemService } from './services/storage/fileSystem';
@@ -51,7 +52,14 @@ export default function App() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCVEditorOpen, setIsCVEditorOpen] = useState(false);
   const [isCoverLetterEditorOpen, setIsCoverLetterEditorOpen] = useState(false);
+  const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [legalTab, setLegalTab] = useState<'impressum' | 'datenschutz'>('impressum');
   const [isFabHovered, setIsFabHovered] = useState(false);
+
+  const handleOpenLegal = (tab: 'impressum' | 'datenschutz' = 'impressum') => {
+    setLegalTab(tab);
+    setIsLegalModalOpen(true);
+  };
 
   const [aiSettings, setAiSettings] = useState<AISettings>(aiService.getSettings());
 
@@ -227,6 +235,7 @@ export default function App() {
             onSelectDirectory={handleSelectDirectory}
             onGrantPermission={handleGrantPermission}
             feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
+            onOpenLegal={handleOpenLegal}
           />
 
           <JobDetailView
@@ -300,6 +309,13 @@ export default function App() {
         onSettingsSaved={(newSettings: AISettings) => {
           setAiSettings(newSettings);
         }}
+        onOpenLegal={handleOpenLegal}
+      />
+
+      <LegalModal
+        isOpen={isLegalModalOpen}
+        onClose={() => setIsLegalModalOpen(false)}
+        initialTab={legalTab}
       />
 
       <CVEditorModal

@@ -18,6 +18,7 @@ interface SidebarProps {
   onSelectDirectory: () => void;
   onGrantPermission: () => void;
   feedbackThresholdWeeks?: number;
+  onOpenLegal?: (tab?: 'impressum' | 'datenschutz') => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -35,6 +36,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSelectDirectory,
   onGrantPermission,
   feedbackThresholdWeeks = 6,
+  onOpenLegal,
 }) => {
   const [groupByCompany, setGroupByCompany] = useState<boolean>(true);
   const [sortBy, setSortBy] = useState<'date' | 'rating' | 'knowledge'>('date');
@@ -586,6 +588,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
             })}
           </div>
         )}
+      </div>
+
+      {/* Legal Footer Links */}
+      <div
+        style={{
+          padding: '10px 14px',
+          borderTop: '1px solid var(--border-color)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          fontSize: '0.72rem',
+          color: 'var(--text-muted)',
+          background: 'rgba(15, 23, 42, 0.2)',
+          flexShrink: 0,
+        }}
+      >
+        <button
+          onClick={() => onOpenLegal?.('impressum')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            padding: 0,
+            fontSize: 'inherit',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+        >
+          Impressum
+        </button>
+        <span style={{ opacity: 0.4 }}>•</span>
+        <button
+          onClick={() => onOpenLegal?.('datenschutz')}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--text-muted)',
+            cursor: 'pointer',
+            padding: 0,
+            fontSize: 'inherit',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
+          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+        >
+          Datenschutz
+        </button>
       </div>
     </aside>
   );

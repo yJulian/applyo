@@ -8,9 +8,10 @@ interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSettingsSaved: (settings: AISettings) => void;
+  onOpenLegal?: (tab?: 'impressum' | 'datenschutz') => void;
 }
 
-export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSettingsSaved }) => {
+export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSettingsSaved, onOpenLegal }) => {
   const [activeTab, setActiveTab] = useState<'profile' | 'feedback' | 'layout' | 'ai'>('profile');
   const [settings, setSettings] = useState<AISettings>(() => aiService.getSettings());
   const [profile, setProfile] = useState<UserProfile>({
@@ -788,6 +789,27 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
             <span>Speichern</span>
           )}
         </button>
+
+        {/* Legal Links Footer */}
+        <div style={{ marginTop: '12px', display: 'flex', justifyContent: 'center', gap: '12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+          <button
+            onClick={() => onOpenLegal?.('impressum')}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, fontSize: 'inherit' }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+          >
+            Impressum
+          </button>
+          <span>•</span>
+          <button
+            onClick={() => onOpenLegal?.('datenschutz')}
+            style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0, fontSize: 'inherit' }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = '#a5b4fc')}
+            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
+          >
+            Datenschutzerklärung
+          </button>
+        </div>
       </div>
     </div>
   );
