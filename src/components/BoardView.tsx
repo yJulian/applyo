@@ -5,13 +5,9 @@ import {
   MapPin,
   CircleDollarSign,
   GripVertical,
-  ChevronRight,
   Folder,
   Unlock,
   X,
-  Clock,
-  Star,
-  Tag,
 } from 'lucide-react';
 import {
   JobMetadata,
@@ -19,9 +15,7 @@ import {
   ExperienceLevel,
   getStatusMeta,
   getExperienceMeta,
-  STATUS_LABELS,
 } from '../types/job';
-import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
 interface BoardViewProps {
   jobs: JobMetadata[];
@@ -99,37 +93,31 @@ export const BoardView: React.FC<BoardViewProps> = ({
     setColumnSearches((prev) => ({ ...prev, [status]: query }));
   };
 
-  // Helper to render experience level badge using standard CSS tag classes
+  // Helper to render experience level dot indicator
   const renderExperienceDot = (expLevel: ExperienceLevel) => {
     const meta = getExperienceMeta(expLevel, t);
-    let className = 'badge tag-none';
-    let label = t('experience.none_badge');
+    let dotColor = '#94a3b8'; // grauer Punkt = keine Ahnung / k.A.
 
     if (expLevel === 'required') {
-      className = 'badge tag-required';
-      label = t('experience.required');
+      dotColor = '#ef4444'; // roter Punkt = erforderlich
     } else if (expLevel === 'junior') {
-      className = 'badge tag-junior';
-      label = t('experience.junior');
+      dotColor = '#10b981'; // grüner Punkt = junior
     } else if (expLevel === 'desired') {
-      className = 'badge tag-desired';
-      label = t('experience.desired');
+      dotColor = '#f59e0b'; // gelber/amber Punkt = gewünscht
     }
 
     return (
-      <span
-        className={className}
+      <div
         style={{
-          fontSize: '0.675rem',
-          height: '20px',
-          minHeight: '20px',
-          padding: '0 8px',
-          borderRadius: '12px',
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          backgroundColor: dotColor,
+          boxShadow: `0 0 6px ${dotColor}`,
+          flexShrink: 0,
         }}
         title={meta.label}
-      >
-        {label}
-      </span>
+      />
     );
   };
 
@@ -454,8 +442,6 @@ export const BoardView: React.FC<BoardViewProps> = ({
                 ) : (
                   columnJobs.map((job) => {
                     const isDraggingThis = draggedJobId === job.id;
-                    const latestFeedback = getLatestFeedbackDate(job);
-                    const feedbackBadge = getFeedbackBadgeInfo(latestFeedback, feedbackThresholdWeeks, t, i18n.language);
 
                     return (
                       <div
@@ -480,7 +466,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                           position: 'relative',
                         }}
                       >
-                        {/* Top: Drag handle & Company + Red/Green/Yellow Dot Indicator */}
+                        {/* Top: Drag handle & Company + Red/Green/Yellow/Gray Dot Indicator */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
                             <GripVertical size={14} color="var(--text-dim)" style={{ flexShrink: 0, cursor: 'grab' }} />
@@ -548,142 +534,6 @@ export const BoardView: React.FC<BoardViewProps> = ({
                             )}
                           </div>
                         )}
-
-                        {/* Tags / Badges Bar (Rating, Vorwissen 0-9, Custom Tags, Feedback) */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginTop: '2px' }}>
-                          {job.personalRating ? (
-                            <span
-                              className="badge badge-amber"
-                              style={{
-                                fontSize: '0.7rem',
-                                height: '22px',
-                                minHeight: '22px',
-                                padding: '0 8px',
-                              }}
-                            >
-                              <Star size={10} fill="#fbbf24" color="#fbbf24" />
-                              <span>{job.personalRating}/5</span>
-                            </span>
-                          ) : null}
-
-                          {(() => {
-                            if (job.priorKnowledgeLevel === undefined || job.priorKnowledgeLevel === null) return null;
-                            const level = job.priorKnowledgeLevel;
-                            let badgeClass = 'badge badge-sky';
-
-                            if (level === 0) {
-                              badgeClass = 'badge badge-emerald';
-                            } else if (level >= 8) {
-                              badgeClass = 'badge badge-rose';
-                            }
-
-                            return (
-                              <span
-                                className={badgeClass}
-                                style={{
-                                  fontSize: '0.7rem',
-                                  height: '22px',
-                                  minHeight: '22px',
-                                  padding: '0 8px',
-                                }}
-                                title={level >= 8 ? t('experience.required_tooltip') : (level === 0 ? t('experience.none_tooltip') : t('experience.knowledge_tooltip'))}
-                              >
-                                🧠 {level}/9
-                              </span>
-                            );
-                          })()}
-
-                          {(job.customTags || []).map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className="badge"
-                              style={{
-                                background: 'rgba(139, 92, 246, 0.15)',
-                                color: '#c084fc',
-                                border: '1px solid rgba(192, 132, 252, 0.3)',
-                                fontSize: '0.7rem',
-                                height: '22px',
-                                minHeight: '22px',
-                                padding: '0 8px',
-                              }}
-                            >
-                              <Tag size={10} />
-                              <span>{tag}</span>
-                            </span>
-                          ))}
-
-                          {feedbackBadge && (
-                            <span
-                              className="badge"
-                              style={{
-                                background: feedbackBadge.bg,
-                                color: feedbackBadge.color,
-                                border: `1px solid ${feedbackBadge.border}`,
-                                fontSize: '0.7rem',
-                                height: '22px',
-                                minHeight: '22px',
-                                padding: '0 8px',
-                              }}
-                            >
-                              <Clock size={11} />
-                              {feedbackBadge.shortLabel}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Bottom Bar: Status Selector & Details button */}
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            paddingTop: '8px',
-                            borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <select
-                            value={job.status}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              onUpdateJob({
-                                ...job,
-                                status: e.target.value as ApplicationStatus,
-                                updatedDate: new Date().toISOString(),
-                              });
-                            }}
-                            style={{
-                              backgroundColor: '#0f172a',
-                              color: statusMeta.color,
-                              border: `1px solid ${statusMeta.color}60`,
-                              borderRadius: '12px',
-                              padding: '2px 8px',
-                              fontSize: '0.7rem',
-                              fontWeight: 600,
-                              outline: 'none',
-                              cursor: 'pointer',
-                            }}
-                          >
-                            {Object.entries(STATUS_LABELS).map(([k]) => (
-                              <option key={k} value={k}>
-                                {getStatusMeta(k as ApplicationStatus, t).label}
-                              </option>
-                            ))}
-                          </select>
-
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelectJob(job);
-                              onOpenDetailModal(job);
-                            }}
-                            className="btn-icon"
-                            style={{ width: '26px', height: '26px', borderRadius: '6px' }}
-                            title={t('board.open_details')}
-                          >
-                            <ChevronRight size={14} color="var(--text-muted)" />
-                          </button>
-                        </div>
                       </div>
                     );
                   })

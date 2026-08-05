@@ -244,21 +244,16 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
         <div className="wco-right">
           <button
             onClick={onOpenAddModal}
-            onMouseEnter={() => setIsAddHovered(true)}
-            onMouseLeave={() => setIsAddHovered(false)}
             className="wco-bare-btn"
             title={t('nav.add_job_title')}
+            style={{ padding: '0 8px' }}
           >
             <Plus size={15} color="#38bdf8" style={{ flexShrink: 0 }} />
             <span style={{
               fontSize: '0.72rem', fontWeight: 600,
               color: '#38bdf8',
               whiteSpace: 'nowrap',
-              maxWidth: isAddHovered ? '110px' : '0px',
-              opacity: isAddHovered ? 1 : 0,
-              marginLeft: isAddHovered ? '5px' : '0px',
-              overflow: 'hidden',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              marginLeft: '5px',
             }}>
               {t('nav.add_job')}
             </span>
@@ -309,6 +304,7 @@ const StandardNavbar: React.FC<NavbarProps> = ({
   const { t } = useTranslation();
   const [isFolderHovered, setIsFolderHovered] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
+  const [isAddHovered, setIsAddHovered] = useState(false);
 
   return (
     <header className="glass-panel" style={{ borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none', padding: '12px 24px', zIndex: 10 }}>
@@ -416,9 +412,31 @@ const StandardNavbar: React.FC<NavbarProps> = ({
           </button>
 
           {/* Add Job Button */}
-          <button onClick={onOpenAddModal} className="btn btn-primary" style={{ padding: '8px 14px', fontSize: '0.825rem', gap: '6px' }} title={t('nav.add_job_title')}>
-            <Plus size={16} />
-            <span>{t('nav.add_job')}</span>
+          <button
+            onClick={onOpenAddModal}
+            onMouseEnter={() => setIsAddHovered(true)}
+            onMouseLeave={() => setIsAddHovered(false)}
+            style={{
+              height: '38px', borderRadius: '19px',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              paddingLeft: '14px',
+              paddingRight: '14px',
+              background: isAddHovered ? 'rgba(56, 189, 248, 0.25)' : 'rgba(56, 189, 248, 0.12)',
+              border: '1px solid rgba(56, 189, 248, 0.4)',
+              cursor: 'pointer', overflow: 'hidden', whiteSpace: 'nowrap',
+              transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            title={t('nav.add_job_title')}
+          >
+            <Plus size={16} color="#38bdf8" style={{ flexShrink: 0 }} />
+            <span style={{
+              fontSize: '0.8rem', fontWeight: 600, color: '#38bdf8', whiteSpace: 'nowrap',
+              opacity: 1,
+              marginLeft: '8px',
+              display: 'inline-block', verticalAlign: 'middle',
+            }}>
+              {t('nav.add_job')}
+            </span>
           </button>
         </div>
       </div>
