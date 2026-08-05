@@ -1,6 +1,12 @@
 import React from 'react';
-import { CVData, CVStyleOptions, CVExperience, CVEducation, CVSkillCategory, CVProject } from '../../types/cv';
+import { CVData, CVStyleOptions, CVExperience, CVEducation } from '../../types/cv';
 import { Mail, Phone, MapPin, Briefcase, GraduationCap, Code2, FolderGit2, Globe, Flag } from 'lucide-react';
+import {
+  getExpPosition, getExpSummary, getExpHighlights,
+  getEduDegree, getEduDesc,
+  getSkillCat, getSkillList,
+  getProjTitle, getProjDesc, getProjTech,
+} from '../../utils/cvVersioning';
 
 interface CVRendererProps {
   data: CVData;
@@ -22,21 +28,6 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
   const visibleEducation = (data.education || []).filter(e => !e.hidden);
   const visibleSkills = (data.skillCategories || []).filter(s => !s.hidden);
   const visibleProjects = (data.projects || []).filter(p => !p.hidden);
-
-  // Helper functions to resolve 2-tier text (Global vs Tailored)
-  const getExpPosition = (e: CVExperience) => e.activeVersion === 'global' ? e.position : (e.tailoredPosition || e.position);
-  const getExpSummary = (e: CVExperience) => e.activeVersion === 'global' ? e.summary : (e.tailoredSummary || e.summary);
-  const getExpHighlights = (e: CVExperience) => e.activeVersion === 'global' ? e.highlights : (e.tailoredHighlights || e.highlights);
-
-  const getEduDegree = (e: CVEducation) => e.activeVersion === 'global' ? e.degree : (e.tailoredDegree || e.degree);
-  const getEduDesc = (e: CVEducation) => e.activeVersion === 'global' ? e.description : (e.tailoredDescription || e.description);
-
-  const getSkillCat = (s: CVSkillCategory) => s.activeVersion === 'global' ? s.category : (s.tailoredCategory || s.category);
-  const getSkillList = (s: CVSkillCategory) => s.activeVersion === 'global' ? s.skills : (s.tailoredSkills || s.skills);
-
-  const getProjTitle = (p: CVProject) => p.activeVersion === 'global' ? p.title : (p.tailoredTitle || p.title);
-  const getProjDesc = (p: CVProject) => p.activeVersion === 'global' ? p.description : (p.tailoredDescription || p.description);
-  const getProjTech = (p: CVProject) => p.activeVersion === 'global' ? p.techStack : (p.tailoredTechStack || p.techStack);
 
   const getExpDuration = (e: CVExperience) => {
     const end = e.endDate ? e.endDate : (e.isCurrent ? 'Heute' : '');
