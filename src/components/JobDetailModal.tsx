@@ -13,6 +13,7 @@ interface JobDetailModalProps {
   onGrantPermission: () => void;
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
+  onArchiveJob?: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
   feedbackThresholdWeeks?: number;
   cardLayoutConfig?: CardSectionConfig[];
@@ -28,6 +29,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   onGrantPermission,
   onUpdateJob,
   onDeleteJob,
+  onArchiveJob,
   onOpenAIAssistant,
   feedbackThresholdWeeks = 6,
   cardLayoutConfig,
@@ -104,6 +106,10 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               onDeleteJob(deletedJob);
               onClose();
             }}
+            onArchiveJob={onArchiveJob ? (archivedJob) => {
+              onArchiveJob(archivedJob);
+              onClose();
+            } : undefined}
             onOpenAIAssistant={onOpenAIAssistant}
             feedbackThresholdWeeks={feedbackThresholdWeeks}
             cardLayoutConfig={cardLayoutConfig}

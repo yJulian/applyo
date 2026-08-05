@@ -29,6 +29,7 @@
   "sidebar": {
     "search_placeholder": "Search company, title, or skill...",
     "filter_all": "All",
+    "filter_archived": "Archived",
     "exp_filter_all": "Filter: All jobs",
     "exp_junior": "🟢 Junior / Entry Level",
     "exp_required": "🔴 Experience Required",
@@ -269,7 +270,13 @@
     "view_edit": "View & Edit",
     "open_file": "Open",
     "no_job_selected": "No job selected",
-    "no_job_desc": "Please select an application from the sidebar."
+    "no_job_desc": "Please select an application from the sidebar.",
+    "last_info_received": "Last info received: {{time}}",
+    "last_info_none": "No info received yet",
+    "mark_now": "Now",
+    "archive_job": "Archive",
+    "unarchive_job": "Restore from archive",
+    "archived_badge": "Archived"
   },
   "add_job": {
     "modal_title": "Add New Application",
@@ -430,5 +437,12 @@
     "overdue_short": "⚠️ Long ago ({{weeks}} wks)",
     "normal_label": "💬 Response: {{date}}",
     "normal_short": "💬 Response: {{date}}"
+  },
+  "time_ago": {
+    "just_now": "just now",
+    "hours": "{{count}} hr(s) ago",
+    "days": "{{count}} day(s) ago",
+    "weeks": "{{count}} wk(s) ago",
+    "months": "{{count}} mo(s) ago"
   }
 }

@@ -29,6 +29,7 @@
   "sidebar": {
     "search_placeholder": "Firma, Titel oder Skill suchen...",
     "filter_all": "Alle",
+    "filter_archived": "Archiviert",
     "exp_filter_all": "Filter: Alle Stellen",
     "exp_junior": "🟢 Junior / Ohne Vorerfahrung",
     "exp_required": "🔴 Erfahrung erforderlich",
@@ -269,7 +270,13 @@
     "view_edit": "Ansehen & Editieren",
     "open_file": "Öffnen",
     "no_job_selected": "Keine Bewerbung ausgewählt",
-    "no_job_desc": "Bitte wähle eine Bewerbung in der linken Leiste aus."
+    "no_job_desc": "Bitte wähle eine Bewerbung in der linken Leiste aus.",
+    "last_info_received": "Letzte Info erhalten: {{time}}",
+    "last_info_none": "Noch keine Info erhalten",
+    "mark_now": "Jetzt",
+    "archive_job": "Archivieren",
+    "unarchive_job": "Aus Archiv wiederherstellen",
+    "archived_badge": "Archiviert"
   },
   "add_job": {
     "modal_title": "Neue Bewerbung hinzufügen",
@@ -430,5 +437,12 @@
     "overdue_short": "⚠️ Lange her ({{weeks}} Wo.)",
     "normal_label": "💬 Rückmeldung: {{date}}",
     "normal_short": "💬 Rückmeldung: {{date}}"
+  },
+  "time_ago": {
+    "just_now": "gerade eben",
+    "hours": "vor {{count}} Std.",
+    "days": "vor {{count}} Tag(en)",
+    "weeks": "vor {{count}} Woche(n)",
+    "months": "vor {{count}} Monat(en)"
   }
 }

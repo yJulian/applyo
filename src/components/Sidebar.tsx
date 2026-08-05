@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock, Clock, Star, Tag, ArrowUpDown } from 'lucide-react';
+import { Search, Building2, Filter, Layers, ChevronRight, Briefcase, Folder, Unlock, Clock, Star, Tag, ArrowUpDown, Archive } from 'lucide-react';
 import { JobMetadata, ApplicationStatus, ExperienceLevel, getStatusMeta, getExperienceMeta } from '../types/job';
 import { getLatestFeedbackDate, getFeedbackBadgeInfo } from '../utils/feedback';
 
@@ -8,8 +8,8 @@ interface SidebarProps {
   jobs: JobMetadata[];
   selectedJobId: string | null;
   onSelectJob: (job: JobMetadata) => void;
-  selectedStatusFilter: ApplicationStatus | 'all';
-  onSelectStatusFilter: (status: ApplicationStatus | 'all') => void;
+  selectedStatusFilter: ApplicationStatus | 'all' | 'archived';
+  onSelectStatusFilter: (status: ApplicationStatus | 'all' | 'archived') => void;
   selectedExpFilter: ExperienceLevel | 'all';
   onSelectExpFilter: (exp: ExperienceLevel | 'all') => void;
   searchQuery: string;
@@ -94,15 +94,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
 
   // Apply filters & sorting
+  const isArchivedFilter = selectedStatusFilter === 'archived';
   const filteredJobs = jobs
     .filter((job) => {
+      // Archivierte Stellen sind nur sichtbar, wenn der "Archiviert"-Filter aktiv ist
+      if (isArchivedFilter ? !job.archived : job.archived) return false;
+
       const matchesSearch =
         job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.tasks.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (job.customTags || []).some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      const matchesStatus = selectedStatusFilter === 'all' || job.status === selectedStatusFilter;
+      const matchesStatus = isArchivedFilter || selectedStatusFilter === 'all' || job.status === selectedStatusFilter;
       const matchesExp = selectedExpFilter === 'all' || job.experienceLevel === selectedExpFilter;
 
       return matchesSearch && matchesStatus && matchesExp;
@@ -127,7 +131,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return acc;
   }, {});
 
-  const statusOptions: Array<{ id: ApplicationStatus | 'all'; label: string }> = [
+  const statusOptions: Array<{ id: ApplicationStatus | 'all' | 'archived'; label: string }> = [
     { id: 'all', label: t('sidebar.filter_all') },
     { id: 'interested', label: getStatusMeta('interested', t).label },
     { id: 'applied', label: getStatusMeta('applied', t).label },
@@ -135,7 +139,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'interviewing', label: getStatusMeta('interviewing', t).label },
     { id: 'offer', label: getStatusMeta('offer', t).label },
     { id: 'rejected', label: getStatusMeta('rejected', t).label },
+    { id: 'archived', label: t('sidebar.filter_archived') },
   ];
+
+  const archivedCount = jobs.filter((j) => j.archived).length;
 
   return (
     <aside
@@ -192,6 +199,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           {statusOptions.map((s) => {
             const isActive = selectedStatusFilter === s.id;
+            const isArchivedOption = s.id === 'archived';
             return (
               <button
                 key={s.id}
@@ -201,20 +209,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   }
                 }}
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
                   padding: '5px 12px',
                   borderRadius: '16px',
                   fontSize: '0.75rem',
                   fontWeight: 600,
                   whiteSpace: 'nowrap',
                   cursor: isMouseDown ? 'grabbing' : 'pointer',
-                  border: isActive ? '1px solid var(--accent-primary)' : '1px solid var(--border-color)',
-                  background: isActive ? 'rgba(99, 102, 241, 0.25)' : 'rgba(255, 255, 255, 0.04)',
+                  border: isActive
+                    ? `1px solid ${isArchivedOption ? '#34d399' : 'var(--accent-primary)'}`
+                    : isArchivedOption ? '1px dashed rgba(148, 163, 184, 0.3)' : '1px solid var(--border-color)',
+                  background: isActive
+                    ? (isArchivedOption ? 'rgba(52, 211, 153, 0.2)' : 'rgba(99, 102, 241, 0.25)')
+                    : 'rgba(255, 255, 255, 0.04)',
                   color: isActive ? '#ffffff' : 'var(--text-muted)',
                   transition: 'all 0.15s ease',
                   flexShrink: 0,
                 }}
               >
+                {isArchivedOption && <Archive size={11} />}
                 {s.label}
+                {isArchivedOption && archivedCount > 0 && ` (${archivedCount})`}
               </button>
             );
           })}

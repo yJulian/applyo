@@ -28,6 +28,8 @@ import {
   Star,
   Tag,
   X,
+  Archive,
+  ArchiveRestore,
 } from 'lucide-react';
 import {
   JobMetadata,
@@ -47,6 +49,7 @@ import {
   pushFeedbackTimestamp,
   popFeedbackTimestamp,
   getFeedbackBadgeInfo,
+  getTimeAgo,
 } from '../utils/feedback';
 
 interface JobDetailViewProps {
@@ -57,6 +60,7 @@ interface JobDetailViewProps {
   onGrantPermission: () => void;
   onUpdateJob: (updated: JobMetadata) => void;
   onDeleteJob: (job: JobMetadata) => void;
+  onArchiveJob?: (job: JobMetadata) => void;
   onOpenAIAssistant: () => void;
   onOpenCVEditor?: () => void;
   onOpenCoverLetterEditor?: () => void;
@@ -72,6 +76,7 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
   onGrantPermission,
   onUpdateJob,
   onDeleteJob,
+  onArchiveJob,
   onOpenAIAssistant: _onOpenAIAssistant,
   onOpenCVEditor,
   onOpenCoverLetterEditor,
@@ -326,22 +331,57 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
       <div style={{ maxWidth: '1000px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         {/* Header Card */}
         <div className="glass-panel" style={{ padding: '24px', borderRadius: 'var(--radius-lg)', position: 'relative' }}>
-          {/* Top-Right Delete Button */}
-          <button
-            onClick={() => onDeleteJob(job)}
-            className="btn-icon"
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              color: '#f87171',
-              borderColor: 'rgba(248,113,113,0.3)',
-              background: 'rgba(248, 113, 113, 0.08)',
-            }}
-            title="Bewerbung löschen"
-          >
-            <Trash2 size={16} />
-          </button>
+          {/* Top-Right Action Buttons: Archive & Delete */}
+          <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '8px' }}>
+            {onArchiveJob && (
+              <button
+                onClick={() => onArchiveJob(job)}
+                className="btn-icon"
+                style={{
+                  color: '#94a3b8',
+                  borderColor: 'var(--border-color)',
+                  background: 'rgba(255,255,255,0.03)',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#fbbf24';
+                  e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.4)';
+                  e.currentTarget.style.background = 'rgba(245, 158, 11, 0.12)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = '#94a3b8';
+                  e.currentTarget.style.borderColor = 'var(--border-color)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                }}
+                title={job.archived ? t('job_detail.unarchive_job') : t('job_detail.archive_job')}
+              >
+                {job.archived ? <ArchiveRestore size={16} /> : <Archive size={16} />}
+              </button>
+            )}
+            <button
+              onClick={() => onDeleteJob(job)}
+              className="btn-icon"
+              style={{
+                color: '#94a3b8',
+                borderColor: 'var(--border-color)',
+                background: 'rgba(255,255,255,0.03)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#f87171';
+                e.currentTarget.style.borderColor = 'rgba(248,113,113,0.4)';
+                e.currentTarget.style.background = 'rgba(248, 113, 113, 0.12)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#94a3b8';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+              }}
+              title="Bewerbung löschen"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
 
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
             <div style={{ paddingRight: '40px' }}>
@@ -350,11 +390,25 @@ export const JobDetailView: React.FC<JobDetailViewProps> = ({
                   <Building2 size={18} />
                   {job.company}
                 </span>
-                {job.relativePath && (
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '8px' }}>
-                    📁 {job.relativePath}
+                {job.archived && (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem', color: '#34d399', background: 'rgba(52, 211, 153, 0.12)', border: '1px solid rgba(52, 211, 153, 0.3)', padding: '2px 8px', borderRadius: '8px' }}>
+                    <Archive size={11} />
+                    {t('job_detail.archived_badge')}
                   </span>
                 )}
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', color: 'var(--text-dim)', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '8px' }}>
+                  <Clock size={12} />
+                  {latestFeedback
+                    ? t('job_detail.last_info_received', { time: getTimeAgo(latestFeedback, t).label })
+                    : t('job_detail.last_info_none')}
+                  <button
+                    onClick={handleSetFeedbackToday}
+                    style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'var(--accent-cyan)', cursor: 'pointer', fontSize: '0.68rem', fontWeight: 700, padding: '1px 7px', borderRadius: '5px', lineHeight: 1.6 }}
+                    title={t('job_detail.mark_now')}
+                  >
+                    {t('job_detail.mark_now')}
+                  </button>
+                </span>
               </div>
 
               <h1 style={{ fontSize: '1.8rem', lineHeight: 1.2, marginBottom: '14px' }}>{job.title}</h1>

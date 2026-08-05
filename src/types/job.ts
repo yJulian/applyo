@@ -42,6 +42,8 @@ export interface JobMetadata {
   personalRating?: number; // 1-5 Sterne für persönliche Rangliste
   customTags?: string[]; // Eigene benutzerdefinierte Tags
   statusHistory?: StatusHistoryEntry[]; // Automatische Protokollierung von Statusänderungen
+  archived?: boolean; // Ausgeblendet aus Board/Kalender/Statistik, nur noch unter "Archiviert" gelistet
+  archivedDate?: string; // Zeitpunkt der Archivierung
 }
 
 export interface JobFile {

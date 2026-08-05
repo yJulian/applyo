@@ -43,7 +43,7 @@ export default function App() {
   }, []);
 
   // Filters
-  const [selectedStatusFilter, setSelectedStatusFilter] = useState<ApplicationStatus | 'all'>('all');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<ApplicationStatus | 'all' | 'archived'>('all');
   const [selectedExpFilter, setSelectedExpFilter] = useState<ExperienceLevel | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -191,6 +191,19 @@ export default function App() {
     }
   };
 
+  const handleArchiveJob = async (job: JobMetadata) => {
+    const jobToSave: JobMetadata = {
+      ...job,
+      archived: !job.archived,
+      archivedDate: !job.archived ? new Date().toISOString() : undefined,
+    };
+    setJobs((prev) => prev.map((j) => (j.id === jobToSave.id ? jobToSave : j)));
+    await fileSystemService.saveJob(jobToSave);
+  };
+
+  // Board, Kalender & Statistik zeigen nur aktive (nicht archivierte) Stellen
+  const activeJobs = jobs.filter((j) => !j.archived);
+
   const selectedJob = jobs.find((j) => j.id === selectedJobId) || null;
 
   // Dynamic Browser Tab Title: Applyo: [Name des Jobs]
@@ -248,6 +261,7 @@ export default function App() {
             onGrantPermission={handleGrantPermission}
             onUpdateJob={handleUpdateJob}
             onDeleteJob={handleDeleteJob}
+            onArchiveJob={handleArchiveJob}
             onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
             onOpenCVEditor={() => setIsCVEditorOpen(true)}
             onOpenCoverLetterEditor={() => setIsCoverLetterEditorOpen(true)}
@@ -258,7 +272,7 @@ export default function App() {
       ) : viewMode === 'board' ? (
         <div key="board" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <BoardView
-            jobs={jobs}
+            jobs={activeJobs}
             selectedJobId={selectedJobId}
             onSelectJob={(j) => setSelectedJobId(j.id)}
             onUpdateJob={handleUpdateJob}
@@ -281,7 +295,7 @@ export default function App() {
       ) : viewMode === 'calendar' ? (
         <div key="calendar" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <CalendarView
-            jobs={jobs}
+            jobs={activeJobs}
             currentDirName={currentDirName}
             needsPermission={needsPermission}
             onSelectDirectory={handleSelectDirectory}
@@ -294,7 +308,7 @@ export default function App() {
         </div>
       ) : (
         <div key="stats" className={transitionClass} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <StatsView jobs={jobs} />
+          <StatsView jobs={activeJobs} />
         </div>
       )}
 
@@ -346,6 +360,7 @@ export default function App() {
         onGrantPermission={handleGrantPermission}
         onUpdateJob={handleUpdateJob}
         onDeleteJob={handleDeleteJob}
+        onArchiveJob={handleArchiveJob}
         onOpenAIAssistant={() => setIsAIDrawerOpen(true)}
         feedbackThresholdWeeks={aiSettings.feedbackThresholdWeeks}
         cardLayoutConfig={aiSettings.cardLayoutConfig}

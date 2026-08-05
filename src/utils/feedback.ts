@@ -74,6 +74,39 @@ export function formatFeedbackDate(dateIsoString: string, locale: string = 'de-D
   }
 }
 
+export interface TimeAgoInfo {
+  value: number;
+  unit: 'minutes' | 'hours' | 'days' | 'weeks' | 'months';
+  label: string;
+}
+
+/**
+ * Formats how long ago the given ISO date string was, picking the coarsest
+ * sensible unit (hours -> days -> weeks -> months) instead of always weeks.
+ */
+export function getTimeAgo(dateIsoString: string, t?: (key: string, opts?: any) => string): TimeAgoInfo {
+  const diffMs = Math.max(0, Date.now() - new Date(dateIsoString).getTime());
+  const minutes = Math.floor(diffMs / (1000 * 60));
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const weeks = Math.floor(days / 7);
+  const months = Math.floor(days / 30);
+
+  if (months >= 1) {
+    return { value: months, unit: 'months', label: t ? t('time_ago.months', { count: months }) : `vor ${months} Monat${months === 1 ? '' : 'en'}` };
+  }
+  if (weeks >= 1) {
+    return { value: weeks, unit: 'weeks', label: t ? t('time_ago.weeks', { count: weeks }) : `vor ${weeks} Woche${weeks === 1 ? '' : 'n'}` };
+  }
+  if (days >= 1) {
+    return { value: days, unit: 'days', label: t ? t('time_ago.days', { count: days }) : `vor ${days} Tag${days === 1 ? '' : 'en'}` };
+  }
+  if (hours >= 1) {
+    return { value: hours, unit: 'hours', label: t ? t('time_ago.hours', { count: hours }) : `vor ${hours} Stunde${hours === 1 ? '' : 'n'}` };
+  }
+  return { value: minutes, unit: 'minutes', label: t ? t('time_ago.just_now') : 'gerade eben' };
+}
+
 export interface FeedbackBadgeInfo {
   hasFeedback: boolean;
   isOverdue: boolean;
