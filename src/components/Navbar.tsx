@@ -192,7 +192,6 @@ const WCOTitlebar: React.FC<NavbarProps> = ({
   const { t } = useTranslation();
   const [isFolderHovered, setIsFolderHovered] = useState(false);
   const [isSettingsHovered, setIsSettingsHovered] = useState(false);
-  const [isAddHovered, setIsAddHovered] = useState(false);
 
   return (
     <>

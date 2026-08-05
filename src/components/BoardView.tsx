@@ -59,9 +59,9 @@ export const BoardView: React.FC<BoardViewProps> = ({
   onSelectDirectory,
   onGrantPermission,
   onOpenDetailModal,
-  feedbackThresholdWeeks = 6,
+  feedbackThresholdWeeks: _feedbackThresholdWeeks = 6,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   // Drag & Drop State
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<ApplicationStatus | null>(null);
