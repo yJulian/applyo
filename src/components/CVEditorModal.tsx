@@ -18,12 +18,12 @@ import {
   Loader2,
   Check,
   Send,
-  Upload,
   Eye,
   EyeOff,
   GripVertical,
   ArrowUp,
   ArrowDown,
+  ChevronDown,
 } from 'lucide-react';
 import { JobMetadata } from '../types/job';
 import { CVData, CVStyleOptions, DEFAULT_CV_STYLE, CVTemplateId, CVAccentColor } from '../types/cv';
@@ -34,11 +34,9 @@ import { pdfExporter } from '../services/export/pdfExporter';
 import { CVRenderer } from './cv-templates/CVRenderer';
 import {
   getExpPosition, getExpSummary, getExpHighlights,
-  getEduDegree, getEduDesc,
+  getEduDegree,
   getSkillCat, getSkillList,
-  getProjTitle, getProjDesc, getProjTech,
 } from '../utils/cvVersioning';
-
 interface CVEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -58,6 +56,7 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [styleOptions, setStyleOptions] = useState<CVStyleOptions>(DEFAULT_CV_STYLE);
   const [activeTab, setActiveTab] = useState<'profile' | 'experiences' | 'skills' | 'education' | 'projects'>('profile');
+  const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
   
   // Loading & Saving States
   const [isGenerating, setIsGenerating] = useState(false);
@@ -215,18 +214,6 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
     return merged;
   };
 
-  // Sync current items back to master global libraries
-  const syncToGlobalProfile = async (data: CVData) => {
-    const profile = await profileService.getProfile();
-    await profileService.saveProfile({
-      ...profile,
-      globalExperiences: data.experiences || [],
-      globalEducation: data.education || [],
-      globalSkillCategories: data.skillCategories || [],
-      globalProjects: data.projects || [],
-    });
-  };
-
   // Initial Load
   useEffect(() => {
     if (!isOpen) return;
@@ -266,7 +253,6 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
       // Always merge with global master profile libraries so items from all resumes are available
       if (loadedCV && profile) {
         loadedCV = mergeWithGlobalProfile(loadedCV, profile);
-        await syncToGlobalProfile(loadedCV);
       }
 
       setCvData(loadedCV);
@@ -274,10 +260,6 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
     }
 
     initCV();
-    // Reload only on a real job switch (by id), not on incidental re-renders
-    // where `selectedJob` is a new object reference for the same job — that
-    // used to reload Lebenslauf.json from disk and discard unsaved edits.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, selectedJob?.id]);
 
   if (!isOpen) return null;
@@ -325,15 +307,11 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
       // Persist current style inside the CV Data JSON
       const dataToSave: CVData = { ...cvData, styleOptions };
 
-      // Save style & master libraries globally
+      // Save style preference
       const profile = await profileService.getProfile();
       await profileService.saveProfile({
         ...profile,
         lastUsedCVStyle: styleOptions,
-        globalExperiences: cvData.experiences || [],
-        globalEducation: cvData.education || [],
-        globalSkillCategories: cvData.skillCategories || [],
-        globalProjects: cvData.projects || [],
       });
 
       // 1. Save JSON representation
@@ -344,7 +322,7 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
 **${cvData.header.title}**
 E-Mail: ${cvData.header.email} | Tel: ${cvData.header.phone} | Ort: ${cvData.header.location}
 
-## Profile & Zusammenfassung
+## Profil & Zusammenfassung
 ${cvData.summary}
 
 ## Berufserfahrung
@@ -388,29 +366,6 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
     }
   };
 
-  // Handle JSON Import
-  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        let parsed = JSON.parse(evt.target?.result as string) as CVData;
-        const profile = await profileService.getProfile();
-        parsed = mergeWithGlobalProfile(parsed, profile);
-        await syncToGlobalProfile(parsed);
-
-        setCvData(parsed);
-        if (parsed.styleOptions) {
-          handleStyleChange(parsed.styleOptions);
-        }
-        aiService.notifyUser('✅ Lebenslauf.json (inkl. Vorlage & globale Bibliothek) erfolgreich geladen!');
-      } catch (err) {
-        aiService.notifyUser('Fehler beim Einlesen der JSON-Datei.');
-      }
-    };
-    reader.readAsText(file);
-  };
 
   // Action Buttons
   const accentColors: CVAccentColor[] = ['#6366f1', '#10b981', '#06b6d4', '#8b5cf6', '#f43f5e', '#f59e0b'];
@@ -454,24 +409,127 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
               <FileText size={20} color="#fff" />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>{t('cv_editor.title')}</h2>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('cv_editor.subtitle')}</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>{t('cv_editor.title')}</h2>
+                <span
+                  style={{
+                    fontSize: '0.625rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                    background: 'rgba(6, 182, 212, 0.15)',
+                    color: 'rgba(6, 182, 212, 0.85)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                    textTransform: 'uppercase',
+                    userSelect: 'none',
+                    lineHeight: 1,
+                  }}
+                >
+                  BETA
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Template & Color Selector Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* Template Selector */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.04)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
-              <Layout size={14} color="var(--accent-cyan)" />
-              <select
-                value={styleOptions.templateId}
-                onChange={(e) => handleStyleChange({ ...styleOptions, templateId: e.target.value as CVTemplateId })}
-                style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.775rem', cursor: 'pointer', outline: 'none' }}
+            {/* Custom Styled Template Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setIsTemplateMenuOpen(!isTemplateMenuOpen)}
+                className="btn btn-secondary"
+                style={{
+                  gap: '8px',
+                  fontSize: '0.8rem',
+                  padding: '7px 12px',
+                  cursor: 'pointer',
+                  borderColor: isTemplateMenuOpen ? 'var(--accent-cyan)' : undefined,
+                  boxShadow: isTemplateMenuOpen ? '0 0 12px rgba(6, 182, 212, 0.25)' : undefined,
+                }}
               >
-                <option value="modern_glass">Modern Glass</option>
-                <option value="minimal_clean">Minimal Clean</option>
-              </select>
+                <Layout size={14} color="var(--accent-cyan)" />
+                <span>
+                  {styleOptions.templateId === 'modern_glass' && 'Modern Glass'}
+                  {styleOptions.templateId === 'minimal_clean' && 'Minimal Clean'}
+                </span>
+                <ChevronDown
+                  size={14}
+                  style={{
+                    transform: isTemplateMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                    color: 'var(--text-muted)',
+                  }}
+                />
+              </button>
+
+              {isTemplateMenuOpen && (
+                <>
+                  <div
+                    onClick={() => setIsTemplateMenuOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 6px)',
+                      left: 0,
+                      zIndex: 100,
+                      background: 'rgba(15, 23, 42, 0.95)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.15)',
+                      padding: '6px',
+                      minWidth: '200px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                    }}
+                  >
+                    {[
+                      { id: 'modern_glass', name: 'Modern Glass', desc: 'Glaseffekt, Akzentfarben & modern' },
+                      { id: 'minimal_clean', name: 'Minimal Clean', desc: 'Schlicht, hochlesbar & elegant' },
+                    ].map((tmpl) => {
+                      const isSelected = styleOptions.templateId === tmpl.id;
+                      return (
+                        <button
+                          key={tmpl.id}
+                          onClick={() => {
+                            handleStyleChange({ ...styleOptions, templateId: tmpl.id as CVTemplateId });
+                            setIsTemplateMenuOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+                            color: isSelected ? 'var(--accent-cyan)' : 'var(--text-main)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: isSelected ? 700 : 500 }}>{tmpl.name}</div>
+                            <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>{tmpl.desc}</div>
+                          </div>
+                          {isSelected && <Check size={14} color="var(--accent-cyan)" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Accent Color Swatches */}
@@ -506,16 +564,6 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
               {isGenerating ? <Loader2 size={14} className="spin-icon" /> : <Sparkles size={14} color="var(--accent-primary)" />}
               <span>{t('cv_editor.ai_regenerate')}</span>
             </button>
-
-            <label
-              className="btn btn-secondary"
-              style={{ gap: '6px', fontSize: '0.8rem', padding: '7px 12px', cursor: 'pointer' }}
-              title="Bestehende Lebenslauf.json Datei von der Festplatte öffnen"
-            >
-              <Upload size={14} color="var(--accent-cyan)" />
-              <span>JSON Laden</span>
-              <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
-            </label>
 
             <button
               onClick={handleSaveToDirectory}
@@ -558,19 +606,19 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
               {/* Accordion Tabs Header */}
               <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '8px', borderBottom: '1px solid var(--border-color)', marginBottom: '12px', flexShrink: 0 }}>
                 <button onClick={() => setActiveTab('profile')} className={`btn ${activeTab === 'profile' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <User size={12} /> Profil
+                  <User size={12} /> {t('cv_editor.tab_profile')}
                 </button>
                 <button onClick={() => setActiveTab('experiences')} className={`btn ${activeTab === 'experiences' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <Briefcase size={12} /> Erfahrung
+                  <Briefcase size={12} /> {t('cv_editor.tab_experiences')}
                 </button>
                 <button onClick={() => setActiveTab('education')} className={`btn ${activeTab === 'education' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <GraduationCap size={12} /> Bildung
+                  <GraduationCap size={12} /> {t('cv_editor.tab_education')}
                 </button>
                 <button onClick={() => setActiveTab('skills')} className={`btn ${activeTab === 'skills' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <Code2 size={12} /> Skills
+                  <Code2 size={12} /> {t('cv_editor.tab_skills')}
                 </button>
                 <button onClick={() => setActiveTab('projects')} className={`btn ${activeTab === 'projects' ? 'btn-primary' : 'btn-secondary'}`} style={{ padding: '5px 10px', fontSize: '0.75rem', gap: '4px' }}>
-                  <FolderGit2 size={12} /> Projekte
+                  <FolderGit2 size={12} /> {t('cv_editor.tab_projects')}
                 </button>
               </div>
 
@@ -578,33 +626,81 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
               <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '4px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 {activeTab === 'profile' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      ℹ Personendaten (<strong style={{ color: '#fff' }}>{cvData.header.fullName}</strong>, <strong style={{ color: '#fff' }}>{cvData.header.email}</strong>, <strong style={{ color: '#fff' }}>{cvData.header.phone}</strong>) werden aus deinem globalen Profil übernommen.
+                    {/* Header Personendaten Inputs */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                      <div>
+                        <label style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '3px' }}>
+                          Vollständiger Name
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ fontSize: '0.8rem' }}
+                          value={cvData.header.fullName || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, fullName: e.target.value } })}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '3px' }}>
+                          E-Mail
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ fontSize: '0.8rem' }}
+                          value={cvData.header.email || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, email: e.target.value } })}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '3px' }}>
+                          Telefon
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ fontSize: '0.8rem' }}
+                          value={cvData.header.phone || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, phone: e.target.value } })}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '3px' }}>
+                          Wohnort
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ fontSize: '0.8rem' }}
+                          value={cvData.header.location || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, location: e.target.value } })}
+                        />
+                      </div>
                     </div>
 
                     <div>
                       <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                        Angestrebter Stellentitel
+                        {t('cv_editor.target_title')}
                       </label>
                       <input
                         type="text"
                         className="input-field"
                         placeholder="z.B. Senior Fullstack Developer & Cloud Architect"
-                        value={cvData.header.title}
+                        value={cvData.header.title || ''}
                         onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, title: e.target.value } })}
                       />
                     </div>
 
                     <div>
                       <label style={{ fontSize: '0.775rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '4px' }}>
-                        Professionelle Zusammenfassung
+                        {t('cv_editor.prof_summary')}
                       </label>
                       <textarea
-                        rows={6}
+                        rows={5}
                         className="input-field"
                         style={{ lineHeight: 1.5, resize: 'vertical' }}
                         placeholder="Kurze Zusammenfassung deines Werdegangs und deiner Schwerpunkte..."
-                        value={cvData.summary}
+                        value={cvData.summary || ''}
                         onChange={(e) => setCvData({ ...cvData, summary: e.target.value })}
                       />
                     </div>
@@ -612,20 +708,20 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                     {/* Links & Zusätzliche Kopfdaten-Toggles */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px', padding: '10px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                       <span style={{ fontSize: '0.775rem', fontWeight: 700, color: 'var(--accent-cyan)' }}>
-                        Kopfdaten & Online-Profile im Lebenslauf
+                        {t('cv_editor.header_profiles')}
                       </span>
 
                       {/* Staatsbürgerschaft */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>Staatsbürgerschaft</label>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>{t('cv_editor.citizenship')}</label>
                           <button
                             type="button"
                             onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showCitizenship: !(cvData.header.showCitizenship ?? Boolean(cvData.header.citizenship)) } })}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showCitizenship ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
                           >
                             {cvData.header.showCitizenship ? <Eye size={13} /> : <EyeOff size={13} />}
-                            {cvData.header.showCitizenship ? 'Sichtbar' : 'Ausgeblendet'}
+                            {cvData.header.showCitizenship ? t('cv_editor.visible') : t('cv_editor.hidden')}
                           </button>
                         </div>
                         <input
@@ -640,14 +736,14 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                       {/* LinkedIn */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>LinkedIn</label>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>{t('cv_editor.linkedin')}</label>
                           <button
                             type="button"
                             onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showLinkedin: !(cvData.header.showLinkedin ?? Boolean(cvData.header.linkedin)) } })}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showLinkedin ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
                           >
                             {cvData.header.showLinkedin ? <Eye size={13} /> : <EyeOff size={13} />}
-                            {cvData.header.showLinkedin ? 'Sichtbar' : 'Ausgeblendet'}
+                            {cvData.header.showLinkedin ? t('cv_editor.visible') : t('cv_editor.hidden')}
                           </button>
                         </div>
                         <input
@@ -662,14 +758,14 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                       {/* GitHub */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>GitHub</label>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>{t('cv_editor.github')}</label>
                           <button
                             type="button"
                             onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showGithub: !(cvData.header.showGithub ?? Boolean(cvData.header.github)) } })}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showGithub ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
                           >
                             {cvData.header.showGithub ? <Eye size={13} /> : <EyeOff size={13} />}
-                            {cvData.header.showGithub ? 'Sichtbar' : 'Ausgeblendet'}
+                            {cvData.header.showGithub ? t('cv_editor.visible') : t('cv_editor.hidden')}
                           </button>
                         </div>
                         <input
@@ -684,14 +780,14 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                       {/* XING */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>XING</label>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>{t('cv_editor.xing')}</label>
                           <button
                             type="button"
                             onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showXing: !(cvData.header.showXing ?? Boolean(cvData.header.xing)) } })}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showXing ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
                           >
                             {cvData.header.showXing ? <Eye size={13} /> : <EyeOff size={13} />}
-                            {cvData.header.showXing ? 'Sichtbar' : 'Ausgeblendet'}
+                            {cvData.header.showXing ? t('cv_editor.visible') : t('cv_editor.hidden')}
                           </button>
                         </div>
                         <input
@@ -706,14 +802,14 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                       {/* Website */}
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>Website / Portfolio</label>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-main)', fontWeight: 600 }}>{t('cv_editor.website')}</label>
                           <button
                             type="button"
                             onClick={() => setCvData({ ...cvData, header: { ...cvData.header, showWebsite: !(cvData.header.showWebsite ?? Boolean(cvData.header.website)) } })}
                             style={{ background: 'none', border: 'none', cursor: 'pointer', color: cvData.header.showWebsite ? 'var(--accent-emerald)' : 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.7rem' }}
                           >
                             {cvData.header.showWebsite ? <Eye size={13} /> : <EyeOff size={13} />}
-                            {cvData.header.showWebsite ? 'Sichtbar' : 'Ausgeblendet'}
+                            {cvData.header.showWebsite ? t('cv_editor.visible') : t('cv_editor.hidden')}
                           </button>
                         </div>
                         <input
@@ -731,9 +827,10 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                 {activeTab === 'experiences' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                     {cvData.experiences.map((exp, idx) => {
-                      const isGlobalMode = exp.activeVersion === 'global';
-                      const currentPosition = getExpPosition(exp);
-                      const currentHighlights = getExpHighlights(exp) || [];
+                      const isGlobalMode = exp.activeVersion === 'global' || !exp.activeVersion;
+                      const currentPosition = isGlobalMode ? exp.position : (exp.tailoredPosition ?? exp.position);
+                      const currentSummary = isGlobalMode ? (exp.summary || '') : (exp.tailoredSummary ?? exp.summary ?? '');
+                      const currentHighlights = isGlobalMode ? (exp.highlights || []) : (exp.tailoredHighlights ?? exp.highlights ?? []);
                       const isDraggingThis = draggedItem?.category === 'experiences' && draggedItem?.index === idx;
 
                       return (
@@ -761,7 +858,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               >
                                 <GripVertical size={16} />
                               </div>
-                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Station #{idx + 1}</span>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: exp.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>{t('cv_editor.station')} #{idx + 1}</span>
                               <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
                                 <button
                                   onClick={() => moveItem('experiences', idx, 'up')}
@@ -791,9 +888,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, experiences: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: isGlobalMode ? 'var(--accent-cyan)' : 'transparent', color: isGlobalMode ? '#000' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
-                                  title="Globale Vorlage bearbeiten"
+                                  title={t('cv_editor.mode_global_tooltip')}
                                 >
-                                  🌐 Global
+                                  {t('cv_editor.mode_global')}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -802,9 +899,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, experiences: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: !isGlobalMode ? 'var(--accent-primary)' : 'transparent', color: !isGlobalMode ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
-                                  title="KI-angepassten Text für diese Stelle bearbeiten"
+                                  title={t('cv_editor.mode_tailored_tooltip')}
                                 >
-                                  ✨ KI
+                                  {t('cv_editor.mode_tailored')}
                                 </button>
                               </div>
 
@@ -816,10 +913,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                 }}
                                 className={`btn ${exp.hidden ? 'btn-secondary' : 'btn-primary'}`}
                                 style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                                title={exp.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
                               >
                                 {exp.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                                <span>{exp.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                                <span>{exp.hidden ? t('cv_editor.hidden') : t('cv_editor.active')}</span>
                               </button>
                               <button
                                 onClick={() => {
@@ -827,7 +923,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                   setCvData({ ...cvData, experiences: filtered });
                                 }}
                                 style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                                title="Löschen"
+                                title={t('cv_editor.delete')}
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -838,7 +934,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             type="text"
                             className="input-field"
                             style={{ marginBottom: '6px', fontSize: '0.8rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Position (Global)' : 'Position (KI-angepasst für Stelle)'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.position')} (Global)` : `${t('cv_editor.position')} (KI-angepasst)`}
                             value={currentPosition}
                             onChange={(e) => {
                               const updated = [...cvData.experiences];
@@ -850,18 +946,41 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               setCvData({ ...cvData, experiences: updated });
                             }}
                           />
-                          <input type="text" className="input-field" style={{ marginBottom: '6px', fontSize: '0.8rem' }} placeholder="Unternehmen" value={exp.company} onChange={(e) => {
-                            const updated = [...cvData.experiences];
-                            updated[idx].company = e.target.value;
-                            setCvData({ ...cvData, experiences: updated });
-                          }} />
+
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
-                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2021)" value={exp.startDate || ''} onChange={(e) => {
+                            <input
+                              type="text"
+                              className="input-field"
+                              style={{ fontSize: '0.8rem' }}
+                              placeholder={t('cv_editor.company')}
+                              value={exp.company}
+                              onChange={(e) => {
+                                const updated = [...cvData.experiences];
+                                updated[idx].company = e.target.value;
+                                setCvData({ ...cvData, experiences: updated });
+                              }}
+                            />
+                            <input
+                              type="text"
+                              className="input-field"
+                              style={{ fontSize: '0.8rem' }}
+                              placeholder={t('cv_editor.location')}
+                              value={exp.location || ''}
+                              onChange={(e) => {
+                                const updated = [...cvData.experiences];
+                                updated[idx].location = e.target.value;
+                                setCvData({ ...cvData, experiences: updated });
+                              }}
+                            />
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '6px' }}>
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder={t('cv_editor.from')} value={exp.startDate || ''} onChange={(e) => {
                               const updated = [...cvData.experiences];
                               updated[idx].startDate = e.target.value;
                               setCvData({ ...cvData, experiences: updated });
                             }} />
-                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. Heute)" value={exp.endDate || ''} onChange={(e) => {
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder={t('cv_editor.to')} value={exp.endDate || ''} onChange={(e) => {
                               const updated = [...cvData.experiences];
                               const val = e.target.value;
                               updated[idx].endDate = val;
@@ -874,11 +993,31 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               setCvData({ ...cvData, experiences: updated });
                             }} />
                           </div>
+
+                          {/* Jobbeschreibung / Kurzbeschreibung (summary) */}
                           <textarea
                             rows={2}
                             className="input-field"
+                            style={{ marginBottom: '6px', fontSize: '0.75rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
+                            placeholder={isGlobalMode ? `${t('cv_editor.job_summary')} (Global)...` : `${t('cv_editor.job_summary')} (KI-angepasst)...`}
+                            value={currentSummary}
+                            onChange={(e) => {
+                              const updated = [...cvData.experiences];
+                              if (isGlobalMode) {
+                                updated[idx].summary = e.target.value;
+                              } else {
+                                updated[idx].tailoredSummary = e.target.value;
+                              }
+                              setCvData({ ...cvData, experiences: updated });
+                            }}
+                          />
+
+                          {/* Stichpunkte & Erfolge (highlights) */}
+                          <textarea
+                            rows={3}
+                            className="input-field"
                             style={{ fontSize: '0.75rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Stichpunkte (Global)...' : 'Stichpunkte (KI-angepasst)...'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.highlights')} (Global)...` : `${t('cv_editor.highlights')} (KI-angepasst)...`}
                             value={currentHighlights.join('\n')}
                             onChange={(e) => {
                               const updated = [...cvData.experiences];
@@ -904,21 +1043,19 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                           startDate: '2023',
                           endDate: 'Heute',
                           isCurrent: true,
+                          summary: 'Jobbeschreibung',
                           highlights: ['Aufgabe / Erfolg'],
                           hidden: false,
+                          activeVersion: 'global' as const,
                         };
                         const updatedList = [...cvData.experiences, newExp];
-                        setCvData({ ...cvData, experiences: updatedList });
-
-                        // Sync globally to userProfile
-                        profileService.getProfile().then(p => {
-                          profileService.saveProfile({ ...p, globalExperiences: updatedList });
-                        });
+                        const updatedCV = { ...cvData, experiences: updatedList };
+                        setCvData(updatedCV);
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Erfahrung hinzufügen (auch global)
+                      <Plus size={13} /> {t('cv_editor.add_experience')}
                     </button>
                   </div>
                 )}
@@ -926,9 +1063,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                 {activeTab === 'education' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {cvData.education.map((edu, idx) => {
-                      const isGlobalMode = edu.activeVersion === 'global';
-                      const currentDegree = getEduDegree(edu);
-                      const currentDescription = getEduDesc(edu) || '';
+                      const isGlobalMode = edu.activeVersion === 'global' || !edu.activeVersion;
+                      const currentDegree = isGlobalMode ? edu.degree : (edu.tailoredDegree ?? edu.degree);
+                      const currentDescription = isGlobalMode ? (edu.description || '') : (edu.tailoredDescription ?? edu.description ?? '');
                       const isDraggingThis = draggedItem?.category === 'education' && draggedItem?.index === idx;
 
                       return (
@@ -956,7 +1093,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               >
                                 <GripVertical size={16} />
                               </div>
-                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Abschluss #{idx + 1}</span>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: edu.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>{t('cv_editor.degree')} #{idx + 1}</span>
                               <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
                                 <button
                                   onClick={() => moveItem('education', idx, 'up')}
@@ -985,8 +1122,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, education: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: isGlobalMode ? 'var(--accent-cyan)' : 'transparent', color: isGlobalMode ? '#000' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
+                                  title={t('cv_editor.mode_global_tooltip')}
                                 >
-                                  🌐 Global
+                                  {t('cv_editor.mode_global')}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -995,8 +1133,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, education: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: !isGlobalMode ? 'var(--accent-primary)' : 'transparent', color: !isGlobalMode ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
+                                  title={t('cv_editor.mode_tailored_tooltip')}
                                 >
-                                  ✨ KI
+                                  {t('cv_editor.mode_tailored')}
                                 </button>
                               </div>
 
@@ -1010,7 +1149,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                 style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
                               >
                                 {edu.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                                <span>{edu.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                                <span>{edu.hidden ? t('cv_editor.hidden') : t('cv_editor.active')}</span>
                               </button>
                               <button
                                 onClick={() => {
@@ -1018,12 +1157,13 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                   setCvData({ ...cvData, education: filtered });
                                 }}
                                 style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
+                                title={t('cv_editor.delete')}
                               >
                                 <Trash2 size={13} />
                               </button>
                             </div>
                           </div>
-                          <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }} placeholder={isGlobalMode ? 'Abschluss (Global)' : 'Abschluss (KI-angepasst)'} value={currentDegree} onChange={(e) => {
+                          <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }} placeholder={isGlobalMode ? `${t('cv_editor.degree')} (Global)` : `${t('cv_editor.degree')} (KI-angepasst)`} value={currentDegree} onChange={(e) => {
                             const updated = [...cvData.education];
                             if (isGlobalMode) {
                               updated[idx].degree = e.target.value;
@@ -1032,18 +1172,25 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             }
                             setCvData({ ...cvData, education: updated });
                           }} />
-                          <input type="text" className="input-field" style={{ marginBottom: '4px', fontSize: '0.8rem' }} placeholder="Institution / Hochschule" value={edu.institution} onChange={(e) => {
-                            const updated = [...cvData.education];
-                            updated[idx].institution = e.target.value;
-                            setCvData({ ...cvData, education: updated });
-                          }} />
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '4px' }}>
-                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Von (z.B. 2017)" value={edu.startDate} onChange={(e) => {
+                            <input type="text" className="input-field" style={{ fontSize: '0.8rem' }} placeholder={t('cv_editor.institution')} value={edu.institution} onChange={(e) => {
+                              const updated = [...cvData.education];
+                              updated[idx].institution = e.target.value;
+                              setCvData({ ...cvData, education: updated });
+                            }} />
+                            <input type="text" className="input-field" style={{ fontSize: '0.8rem' }} placeholder={t('cv_editor.field_of_study')} value={edu.fieldOfStudy || ''} onChange={(e) => {
+                              const updated = [...cvData.education];
+                              updated[idx].fieldOfStudy = e.target.value;
+                              setCvData({ ...cvData, education: updated });
+                            }} />
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '4px' }}>
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder={t('cv_editor.from')} value={edu.startDate} onChange={(e) => {
                               const updated = [...cvData.education];
                               updated[idx].startDate = e.target.value;
                               setCvData({ ...cvData, education: updated });
                             }} />
-                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder="Bis (z.B. 2021)" value={edu.endDate} onChange={(e) => {
+                            <input type="text" className="input-field" style={{ fontSize: '0.75rem' }} placeholder={t('cv_editor.to')} value={edu.endDate} onChange={(e) => {
                               const updated = [...cvData.education];
                               updated[idx].endDate = e.target.value;
                               setCvData({ ...cvData, education: updated });
@@ -1053,7 +1200,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             rows={2}
                             className="input-field"
                             style={{ fontSize: '0.75rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Beschreibung / Fokus / Thesis (Global)...' : 'Beschreibung / Fokus / Thesis (KI-angepasst)...'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.edu_description')} (Global)...` : `${t('cv_editor.edu_description')} (KI-angepasst)...`}
                             value={currentDescription}
                             onChange={(e) => {
                               const updated = [...cvData.education];
@@ -1078,19 +1225,18 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                           fieldOfStudy: 'Fachrichtung',
                           startDate: '2019',
                           endDate: '2022',
+                          description: 'Abschlussarbeiten & Schwerpunkte',
                           hidden: false,
+                          activeVersion: 'global' as const,
                         };
                         const updatedList = [...cvData.education, newEdu];
-                        setCvData({ ...cvData, education: updatedList });
-
-                        profileService.getProfile().then(p => {
-                          profileService.saveProfile({ ...p, globalEducation: updatedList });
-                        });
+                        const updatedCV = { ...cvData, education: updatedList };
+                        setCvData(updatedCV);
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Bildung hinzufügen (auch global)
+                      <Plus size={13} /> {t('cv_editor.add_education')}
                     </button>
                   </div>
                 )}
@@ -1098,9 +1244,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                 {activeTab === 'skills' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {cvData.skillCategories.map((cat, idx) => {
-                      const isGlobalMode = cat.activeVersion === 'global';
-                      const currentCategory = getSkillCat(cat);
-                      const currentSkills = getSkillList(cat) || [];
+                      const isGlobalMode = cat.activeVersion === 'global' || !cat.activeVersion;
+                      const currentCategory = isGlobalMode ? cat.category : (cat.tailoredCategory ?? cat.category);
+                      const currentSkills = isGlobalMode ? (cat.skills || []) : (cat.tailoredSkills ?? cat.skills ?? []);
                       const isDraggingThis = draggedItem?.category === 'skills' && draggedItem?.index === idx;
 
                       return (
@@ -1128,7 +1274,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               >
                                 <GripVertical size={16} />
                               </div>
-                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cat.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Kategorie #{idx + 1}</span>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: cat.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>{t('cv_editor.category')} #{idx + 1}</span>
                               <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
                                 <button
                                   onClick={() => moveItem('skills', idx, 'up')}
@@ -1158,9 +1304,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, skillCategories: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: isGlobalMode ? 'var(--accent-cyan)' : 'transparent', color: isGlobalMode ? '#000' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
-                                  title="Globale Vorlage bearbeiten"
+                                  title={t('cv_editor.mode_global_tooltip')}
                                 >
-                                  🌐 Global
+                                  {t('cv_editor.mode_global')}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -1169,9 +1315,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, skillCategories: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: !isGlobalMode ? 'var(--accent-primary)' : 'transparent', color: !isGlobalMode ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
-                                  title="KI-angepassten Text für diese Stelle bearbeiten"
+                                  title={t('cv_editor.mode_tailored_tooltip')}
                                 >
-                                  ✨ KI
+                                  {t('cv_editor.mode_tailored')}
                                 </button>
                               </div>
 
@@ -1183,10 +1329,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                 }}
                                 className={`btn ${cat.hidden ? 'btn-secondary' : 'btn-primary'}`}
                                 style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                                title={cat.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
                               >
                                 {cat.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                                <span>{cat.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                                <span>{cat.hidden ? t('cv_editor.hidden') : t('cv_editor.active')}</span>
                               </button>
                               <button
                                 onClick={() => {
@@ -1194,7 +1339,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                   setCvData({ ...cvData, skillCategories: filtered });
                                 }}
                                 style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                                title="Löschen"
+                                title={t('cv_editor.delete')}
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -1204,7 +1349,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             type="text"
                             className="input-field"
                             style={{ marginBottom: '6px', fontWeight: 700, fontSize: '0.8rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Kategorie (Global)' : 'Kategorie (KI-angepasst für Stelle)'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.category_name')} (Global)` : `${t('cv_editor.category_name')} (KI-angepasst)`}
                             value={currentCategory}
                             onChange={(e) => {
                               const updated = [...cvData.skillCategories];
@@ -1220,7 +1365,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             rows={2}
                             className="input-field"
                             style={{ fontSize: '0.775rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Kommagetrennte Skills (Global)...' : 'Kommagetrennte Skills (KI-angepasst)...'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.skills_comma')} (Global)...` : `${t('cv_editor.skills_comma')} (KI-angepasst)...`}
                             value={currentSkills.join(', ')}
                             onChange={(e) => {
                               const updated = [...cvData.skillCategories];
@@ -1244,18 +1389,16 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                           category: 'Neue Skill-Kategorie',
                           skills: ['Skill A', 'Skill B'],
                           hidden: false,
+                          activeVersion: 'global' as const,
                         };
                         const updatedList = [...cvData.skillCategories, newCat];
-                        setCvData({ ...cvData, skillCategories: updatedList });
-
-                        profileService.getProfile().then(p => {
-                          profileService.saveProfile({ ...p, globalSkillCategories: updatedList });
-                        });
+                        const updatedCV = { ...cvData, skillCategories: updatedList };
+                        setCvData(updatedCV);
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Skill-Kategorie hinzufügen (auch global)
+                      <Plus size={13} /> {t('cv_editor.add_skill')}
                     </button>
                   </div>
                 )}
@@ -1263,10 +1406,10 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                 {activeTab === 'projects' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {(cvData.projects || []).map((proj, idx) => {
-                      const isGlobalMode = proj.activeVersion === 'global';
-                      const currentTitle = getProjTitle(proj);
-                      const currentDescription = getProjDesc(proj) || '';
-                      const currentTechStack = getProjTech(proj) || [];
+                      const isGlobalMode = proj.activeVersion === 'global' || !proj.activeVersion;
+                      const currentTitle = isGlobalMode ? proj.title : (proj.tailoredTitle ?? proj.title);
+                      const currentDescription = isGlobalMode ? (proj.description || '') : (proj.tailoredDescription ?? proj.description ?? '');
+                      const currentTechStack = isGlobalMode ? (proj.techStack || []) : (proj.tailoredTechStack ?? proj.techStack ?? []);
                       const isDraggingThis = draggedItem?.category === 'projects' && draggedItem?.index === idx;
 
                       return (
@@ -1294,7 +1437,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               >
                                 <GripVertical size={16} />
                               </div>
-                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: proj.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>Projekt #{idx + 1}</span>
+                              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: proj.hidden ? 'var(--text-muted)' : 'var(--accent-cyan)' }}>{t('cv_editor.project')} #{idx + 1}</span>
                               <div style={{ display: 'flex', gap: '2px', marginLeft: '2px' }}>
                                 <button
                                   onClick={() => moveItem('projects', idx, 'up')}
@@ -1324,9 +1467,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, projects: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: isGlobalMode ? 'var(--accent-cyan)' : 'transparent', color: isGlobalMode ? '#000' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
-                                  title="Globale Vorlage bearbeiten"
+                                  title={t('cv_editor.mode_global_tooltip')}
                                 >
-                                  🌐 Global
+                                  {t('cv_editor.mode_global')}
                                 </button>
                                 <button
                                   onClick={() => {
@@ -1335,9 +1478,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                     setCvData({ ...cvData, projects: updated });
                                   }}
                                   style={{ padding: '2px 6px', fontSize: '0.65rem', borderRadius: '4px', border: 'none', background: !isGlobalMode ? 'var(--accent-primary)' : 'transparent', color: !isGlobalMode ? '#fff' : '#94a3b8', cursor: 'pointer', fontWeight: 700 }}
-                                  title="KI-angepassten Text für diese Stelle bearbeiten"
+                                  title={t('cv_editor.mode_tailored_tooltip')}
                                 >
-                                  ✨ KI
+                                  {t('cv_editor.mode_tailored')}
                                 </button>
                               </div>
 
@@ -1349,10 +1492,9 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                 }}
                                 className={`btn ${proj.hidden ? 'btn-secondary' : 'btn-primary'}`}
                                 style={{ padding: '2px 7px', fontSize: '0.7rem', gap: '4px' }}
-                                title={proj.hidden ? 'Für diesen Lebenslauf anzeigen' : 'Für diesen Lebenslauf ausblenden'}
                               >
                                 {proj.hidden ? <EyeOff size={12} color="#94a3b8" /> : <Eye size={12} />}
-                                <span>{proj.hidden ? 'Ausgeblendet' : 'Aktiv'}</span>
+                                <span>{proj.hidden ? t('cv_editor.hidden') : t('cv_editor.active')}</span>
                               </button>
                               <button
                                 onClick={() => {
@@ -1360,7 +1502,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                                   setCvData({ ...cvData, projects: filtered });
                                 }}
                                 style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', padding: '2px' }}
-                                title="Löschen"
+                                title={t('cv_editor.delete')}
                               >
                                 <Trash2 size={13} />
                               </button>
@@ -1370,7 +1512,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             type="text"
                             className="input-field"
                             style={{ marginBottom: '4px', fontSize: '0.8rem', fontWeight: 700, border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Projektname (Global)' : 'Projektname (KI-angepasst für Stelle)'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.project_name')} (Global)` : `${t('cv_editor.project_name')} (KI-angepasst)`}
                             value={currentTitle}
                             onChange={(e) => {
                               const updated = [...(cvData.projects || [])];
@@ -1382,11 +1524,23 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                               setCvData({ ...cvData, projects: updated });
                             }}
                           />
+                          <input
+                            type="text"
+                            className="input-field"
+                            style={{ marginBottom: '4px', fontSize: '0.75rem' }}
+                            placeholder={t('cv_editor.project_link')}
+                            value={proj.link || ''}
+                            onChange={(e) => {
+                              const updated = [...(cvData.projects || [])];
+                              updated[idx].link = e.target.value;
+                              setCvData({ ...cvData, projects: updated });
+                            }}
+                          />
                           <textarea
                             rows={2}
                             className="input-field"
                             style={{ marginBottom: '4px', fontSize: '0.775rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Kurze Beschreibung (Global)' : 'Kurze Beschreibung (KI-angepasst)'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.project_desc')} (Global)` : `${t('cv_editor.project_desc')} (KI-angepasst)`}
                             value={currentDescription}
                             onChange={(e) => {
                               const updated = [...(cvData.projects || [])];
@@ -1402,7 +1556,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                             type="text"
                             className="input-field"
                             style={{ fontSize: '0.75rem', border: isGlobalMode ? '1px solid rgba(6, 182, 212, 0.4)' : '1px solid rgba(99, 102, 241, 0.4)' }}
-                            placeholder={isGlobalMode ? 'Tech-Stack (Global, z.B. React, TypeScript)' : 'Tech-Stack (KI-angepasst)'}
+                            placeholder={isGlobalMode ? `${t('cv_editor.tech_stack')} (Global)` : `${t('cv_editor.tech_stack')} (KI-angepasst)`}
                             value={currentTechStack.join(', ')}
                             onChange={(e) => {
                               const updated = [...(cvData.projects || [])];
@@ -1427,18 +1581,16 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                           description: 'Beschreibung des Projekts',
                           techStack: ['React', 'TypeScript'],
                           hidden: false,
+                          activeVersion: 'global' as const,
                         };
                         const updatedList = [...(cvData.projects || []), newProj];
-                        setCvData({ ...cvData, projects: updatedList });
-
-                        profileService.getProfile().then(p => {
-                          profileService.saveProfile({ ...p, globalProjects: updatedList });
-                        });
+                        const updatedCV = { ...cvData, projects: updatedList };
+                        setCvData(updatedCV);
                       }}
                       className="btn btn-secondary"
                       style={{ fontSize: '0.75rem', gap: '4px' }}
                     >
-                      <Plus size={13} /> Projekt hinzufügen (auch global)
+                      <Plus size={13} /> {t('cv_editor.add_project')}
                     </button>
                   </div>
                 )}
@@ -1448,16 +1600,16 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
               <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--border-color)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                   <Wand2 size={13} color="var(--accent-primary)" />
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)' }}>KI-Assistent: Lebenslauf verfeinern</span>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--accent-primary)' }}>{t('cv_editor.ai_refine_title')}</span>
                 </div>
 
                 {/* Action Chips */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginBottom: '8px' }}>
                   <button onClick={() => handleApplyRefine('Formuliere die Zusammenfassung und Erfolge prägnanter und professioneller')} className="badge" style={{ cursor: 'pointer', fontSize: '0.7rem', background: 'rgba(99, 102, 241, 0.15)', color: '#a5b4fc', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-                    ✨ Formulierungen schärfen
+                    {t('cv_editor.refine_chip_concise')}
                   </button>
                   <button onClick={() => handleApplyRefine('Hebe relevante technische Kenntnisse und Projekte stärker hervor')} className="badge" style={{ cursor: 'pointer', fontSize: '0.7rem', background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                    ✨ Tech-Skills betonen
+                    {t('cv_editor.refine_chip_tech')}
                   </button>
                 </div>
 
@@ -1467,7 +1619,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                     type="text"
                     className="input-field"
                     style={{ fontSize: '0.775rem', padding: '6px 10px' }}
-                    placeholder="Anweisung an KI z.B. 'Kürze den Text für 1-Seite'..."
+                    placeholder={t('cv_editor.refine_placeholder')}
                     value={refinePrompt}
                     onChange={(e) => setRefinePrompt(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleApplyRefine()}

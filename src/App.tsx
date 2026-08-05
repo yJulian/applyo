@@ -347,7 +347,6 @@ export default function App() {
         onClose={() => setIsCoverLetterEditorOpen(false)}
         jobs={jobs}
         selectedJob={selectedJob}
-        onSelectJob={(j) => setSelectedJobId(j.id)}
       />
 
       <JobDetailModal

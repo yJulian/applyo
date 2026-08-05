@@ -15,8 +15,8 @@ import {
   Loader2,
   Check,
   Send,
-  Upload,
   Mail,
+  ChevronDown,
 } from 'lucide-react';
 import { JobMetadata } from '../types/job';
 import {
@@ -37,7 +37,6 @@ interface CoverLetterEditorModalProps {
   onClose: () => void;
   jobs: JobMetadata[];
   selectedJob: JobMetadata | null;
-  onSelectJob?: (job: JobMetadata) => void;
 }
 
 export const CoverLetterEditorModal: React.FC<CoverLetterEditorModalProps> = ({
@@ -45,13 +44,13 @@ export const CoverLetterEditorModal: React.FC<CoverLetterEditorModalProps> = ({
   onClose,
   jobs,
   selectedJob,
-  onSelectJob,
 }) => {
   const { t } = useTranslation();
 
   const [coverLetterData, setCoverLetterData] = useState<CoverLetterData | null>(null);
   const [styleOptions, setStyleOptions] = useState<CoverLetterStyleOptions>(DEFAULT_COVER_LETTER_STYLE);
   const [activeTab, setActiveTab] = useState<'sender_recipient' | 'meta_salutation' | 'content'>('sender_recipient');
+  const [isTemplateMenuOpen, setIsTemplateMenuOpen] = useState(false);
 
   // Loading & Saving States
   const [isGenerating, setIsGenerating] = useState(false);
@@ -206,25 +205,7 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
     }
   };
 
-  // Handle JSON Import
-  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (evt) => {
-      try {
-        const parsed = JSON.parse(evt.target?.result as string) as CoverLetterData;
-        setCoverLetterData(parsed);
-        if (parsed.styleOptions) {
-          handleStyleChange(parsed.styleOptions);
-        }
-        aiService.notifyUser('✅ Anschreiben.json erfolgreich geladen!');
-      } catch (err) {
-        aiService.notifyUser('Fehler beim Einlesen der JSON-Datei.');
-      }
-    };
-    reader.readAsText(file);
-  };
+
 
   const accentColors: CoverLetterAccentColor[] = ['#6366f1', '#10b981', '#06b6d4', '#8b5cf6', '#f43f5e', '#f59e0b'];
 
@@ -288,72 +269,127 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
                 <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>
                   AI Anschreiben Editor
                 </h2>
-                {jobs.length > 0 && (
-                  <select
-                    value={selectedJob?.id || ''}
-                    onChange={(e) => {
-                      const found = jobs.find((j) => j.id === e.target.value);
-                      if (found && onSelectJob) {
-                        onSelectJob(found);
-                      }
-                    }}
-                    style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1px solid var(--border-color)',
-                      borderRadius: '6px',
-                      color: 'var(--text-main)',
-                      fontSize: '0.775rem',
-                      padding: '2px 8px',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {jobs.map((j) => (
-                      <option key={j.id} value={j.id}>
-                        {j.company} — {j.title}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <span
+                  style={{
+                    fontSize: '0.625rem',
+                    fontWeight: 800,
+                    letterSpacing: '0.06em',
+                    padding: '2px 6px',
+                    borderRadius: '6px',
+                    background: 'rgba(6, 182, 212, 0.15)',
+                    color: 'rgba(6, 182, 212, 0.85)',
+                    border: '1px solid rgba(6, 182, 212, 0.3)',
+                    textTransform: 'uppercase',
+                    userSelect: 'none',
+                    lineHeight: 1,
+                  }}
+                >
+                  BETA
+                </span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                {t('cover_letter_editor.subtitle')}
-              </p>
             </div>
           </div>
 
           {/* Template & Color Selector Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {/* Template Selector */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                background: 'rgba(255,255,255,0.04)',
-                padding: '4px 8px',
-                borderRadius: '12px',
-                border: '1px solid var(--border-color)',
-              }}
-            >
-              <Layout size={14} color="var(--accent-cyan)" />
-              <select
-                value={styleOptions.templateId}
-                onChange={(e) =>
-                  handleStyleChange({ ...styleOptions, templateId: e.target.value as CoverLetterTemplateId })
-                }
+            {/* Custom Styled Template Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setIsTemplateMenuOpen(!isTemplateMenuOpen)}
+                className="btn btn-secondary"
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: 'var(--text-main)',
-                  fontSize: '0.775rem',
+                  gap: '8px',
+                  fontSize: '0.8rem',
+                  padding: '7px 12px',
                   cursor: 'pointer',
-                  outline: 'none',
+                  borderColor: isTemplateMenuOpen ? 'var(--accent-cyan)' : undefined,
+                  boxShadow: isTemplateMenuOpen ? '0 0 12px rgba(6, 182, 212, 0.25)' : undefined,
                 }}
               >
-                <option value="modern_glass">Modern Glass</option>
-                <option value="minimal_clean">Minimal Clean</option>
-                <option value="classic_din">Klassisch (DIN 5008)</option>
-              </select>
+                <Layout size={14} color="var(--accent-cyan)" />
+                <span>
+                  {styleOptions.templateId === 'modern_glass' && 'Modern Glass'}
+                  {styleOptions.templateId === 'minimal_clean' && 'Minimal Clean'}
+                  {styleOptions.templateId === 'classic_din' && 'Klassisch (DIN)'}
+                </span>
+                <ChevronDown
+                  size={14}
+                  style={{
+                    transform: isTemplateMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                    color: 'var(--text-muted)',
+                  }}
+                />
+              </button>
+
+              {isTemplateMenuOpen && (
+                <>
+                  <div
+                    onClick={() => setIsTemplateMenuOpen(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 99 }}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 6px)',
+                      left: 0,
+                      zIndex: 100,
+                      background: 'rgba(15, 23, 42, 0.95)',
+                      backdropFilter: 'blur(16px)',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      borderRadius: '12px',
+                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(6, 182, 212, 0.15)',
+                      padding: '6px',
+                      minWidth: '210px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px',
+                    }}
+                  >
+                    {[
+                      { id: 'modern_glass', name: 'Modern Glass', desc: 'Glaseffekt, Akzentfarben & modern' },
+                      { id: 'minimal_clean', name: 'Minimal Clean', desc: 'Schlicht, hochlesbar & elegant' },
+                      { id: 'classic_din', name: 'Klassisch (DIN 5008)', desc: 'Klassisches Briefformat nach DIN' },
+                    ].map((tmpl) => {
+                      const isSelected = styleOptions.templateId === tmpl.id;
+                      return (
+                        <button
+                          key={tmpl.id}
+                          onClick={() => {
+                            handleStyleChange({ ...styleOptions, templateId: tmpl.id as CoverLetterTemplateId });
+                            setIsTemplateMenuOpen(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: isSelected ? 'rgba(6, 182, 212, 0.15)' : 'transparent',
+                            color: isSelected ? 'var(--accent-cyan)' : 'var(--text-main)',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            transition: 'background 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isSelected) e.currentTarget.style.background = 'transparent';
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: isSelected ? 700 : 500 }}>{tmpl.name}</div>
+                            <div style={{ fontSize: '0.675rem', color: 'var(--text-muted)' }}>{tmpl.desc}</div>
+                          </div>
+                          {isSelected && <Check size={14} color="var(--accent-cyan)" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Accent Color Swatches */}
@@ -392,16 +428,6 @@ ${coverLetterData.content.signatureName || coverLetterData.sender.fullName}
               )}
               <span>{t('cv_editor.ai_regenerate')}</span>
             </button>
-
-            <label
-              className="btn btn-secondary"
-              style={{ gap: '6px', fontSize: '0.8rem', padding: '7px 12px', cursor: 'pointer' }}
-              title="Bestehende Anschreiben.json Datei von der Festplatte öffnen"
-            >
-              <Upload size={14} color="var(--accent-cyan)" />
-              <span>JSON Laden</span>
-              <input type="file" accept=".json" onChange={handleImportJSON} style={{ display: 'none' }} />
-            </label>
 
             <button
               onClick={handleSaveToDirectory}

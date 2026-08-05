@@ -451,10 +451,88 @@ Erstelle nun das angepasste JSON für den Lebenslauf:`;
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0]) as CVData;
+
+        // Map experiences to preserve global fields from userProfile and assign AI output to tailored fields
+        const experiences = (userProfile.globalExperiences && userProfile.globalExperiences.length > 0)
+          ? userProfile.globalExperiences.map((ge, idx) => {
+              const aiExp = (parsed.experiences || [])[idx] || (parsed.experiences || []).find(e => e.company?.toLowerCase() === ge.company.toLowerCase());
+              return {
+                ...ge,
+                tailoredPosition: aiExp ? (aiExp.tailoredPosition || aiExp.position || ge.position) : ge.position,
+                tailoredSummary: aiExp ? (aiExp.tailoredSummary || aiExp.summary || ge.summary) : ge.summary,
+                tailoredHighlights: aiExp ? (aiExp.tailoredHighlights || aiExp.highlights || ge.highlights) : ge.highlights,
+                activeVersion: 'tailored' as const,
+              };
+            })
+          : (parsed.experiences || fallback.experiences).map(e => ({
+              ...e,
+              tailoredPosition: e.tailoredPosition || e.position,
+              tailoredSummary: e.tailoredSummary || e.summary,
+              tailoredHighlights: e.tailoredHighlights || e.highlights,
+              activeVersion: 'tailored' as const,
+            }));
+
+        const education = (userProfile.globalEducation && userProfile.globalEducation.length > 0)
+          ? userProfile.globalEducation.map((gedu, idx) => {
+              const aiEdu = (parsed.education || [])[idx] || (parsed.education || []).find(e => e.institution?.toLowerCase() === gedu.institution.toLowerCase());
+              return {
+                ...gedu,
+                tailoredDegree: aiEdu ? (aiEdu.tailoredDegree || aiEdu.degree || gedu.degree) : gedu.degree,
+                tailoredDescription: aiEdu ? (aiEdu.tailoredDescription || aiEdu.description || gedu.description) : gedu.description,
+                activeVersion: 'tailored' as const,
+              };
+            })
+          : (parsed.education || fallback.education).map(e => ({
+              ...e,
+              tailoredDegree: e.tailoredDegree || e.degree,
+              tailoredDescription: e.tailoredDescription || e.description,
+              activeVersion: 'tailored' as const,
+            }));
+
+        const skillCategories = (userProfile.globalSkillCategories && userProfile.globalSkillCategories.length > 0)
+          ? userProfile.globalSkillCategories.map((gcat, idx) => {
+              const aiCat = (parsed.skillCategories || [])[idx] || (parsed.skillCategories || []).find(c => c.category?.toLowerCase() === gcat.category.toLowerCase());
+              return {
+                ...gcat,
+                tailoredCategory: aiCat ? (aiCat.tailoredCategory || aiCat.category || gcat.category) : gcat.category,
+                tailoredSkills: aiCat ? (aiCat.tailoredSkills || aiCat.skills || gcat.skills) : gcat.skills,
+                activeVersion: 'tailored' as const,
+              };
+            })
+          : (parsed.skillCategories || fallback.skillCategories).map(c => ({
+              ...c,
+              tailoredCategory: c.tailoredCategory || c.category,
+              tailoredSkills: c.tailoredSkills || c.skills,
+              activeVersion: 'tailored' as const,
+            }));
+
+        const projects = (userProfile.globalProjects && userProfile.globalProjects.length > 0)
+          ? userProfile.globalProjects.map((gproj, idx) => {
+              const aiProj = (parsed.projects || [])[idx] || (parsed.projects || []).find(p => p.title?.toLowerCase() === gproj.title.toLowerCase());
+              return {
+                ...gproj,
+                tailoredTitle: aiProj ? (aiProj.tailoredTitle || aiProj.title || gproj.title) : gproj.title,
+                tailoredDescription: aiProj ? (aiProj.tailoredDescription || aiProj.description || gproj.description) : gproj.description,
+                tailoredTechStack: aiProj ? (aiProj.tailoredTechStack || aiProj.techStack || gproj.techStack) : gproj.techStack,
+                activeVersion: 'tailored' as const,
+              };
+            })
+          : (parsed.projects || fallback.projects).map(p => ({
+              ...p,
+              tailoredTitle: p.tailoredTitle || p.title,
+              tailoredDescription: p.tailoredDescription || p.description,
+              tailoredTechStack: p.tailoredTechStack || p.techStack,
+              activeVersion: 'tailored' as const,
+            }));
+
         return {
           ...fallback,
           ...parsed,
           header: { ...fallback.header, ...(parsed.header || {}) },
+          experiences,
+          education,
+          skillCategories,
+          projects,
         };
       }
       return fallback;
