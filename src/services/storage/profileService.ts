@@ -11,6 +11,7 @@ export interface UserProfile {
   email: string;
   phone: string;
   location: string;
+  address?: string;
   citizenship?: string;
   website?: string;
   github?: string;
@@ -31,6 +32,7 @@ export const DEFAULT_PROFILE: UserProfile = {
   email: 'julian@example.com',
   phone: '+49 170 1234567',
   location: 'Deutschland',
+  address: 'Musterstraße 12, 10115 Berlin',
   citizenship: 'Deutsch',
   website: '',
   github: 'github.com/mustermann',

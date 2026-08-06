@@ -21,7 +21,8 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
   const headingScale = fontSize === 'small' ? '1.1rem' : fontSize === 'large' ? '1.4rem' : '1.25rem';
   const fontFamily = "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif";
 
-  const isMinimal = templateId === 'minimal_clean';
+  const isMinimal = templateId === 'minimal_clean' || templateId === 'minimal_clean_briefkopf';
+  const isBriefkopf = templateId === 'minimal_clean_briefkopf';
 
   // Filter out items that are toggled off / hidden for this specific resume
   const visibleExperiences = (data.experiences || []).filter(e => !e.hidden);
@@ -84,6 +85,37 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
         {/* --- HEADER --- */}
         {isMinimal ? (
           <div style={{ borderBottom: `2px solid ${accentColor}`, paddingBottom: '16px', marginBottom: '20px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+            {/* Briefkopf Absenderadresse (untereinander wie beim Anschreiben, ohne Label oben rechts) */}
+            {isBriefkopf && (
+              <div
+                style={{
+                  marginBottom: '16px',
+                  paddingBottom: '12px',
+                  borderBottom: `1px solid ${accentColor}30`,
+                  fontSize: '0.85rem',
+                  color: '#475569',
+                  lineHeight: 1.45,
+                }}
+              >
+                <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.95rem' }}>
+                  {data.header.fullName}
+                </div>
+                {data.header.address ? (
+                  <div style={{ color: '#475569', marginTop: '2px' }}>
+                    {data.header.address.includes('\n')
+                      ? data.header.address.split('\n').map((line, i) => <div key={i}>{line}</div>)
+                      : data.header.address.includes(',')
+                      ? data.header.address.split(',').map((part, i) => <div key={i}>{part.trim()}</div>)
+                      : <div>{data.header.address}</div>
+                    }
+                  </div>
+                ) : (
+                  <div style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: '0.8rem', marginTop: '2px' }}>
+                    Adresse in Einstellungen festlegen
+                  </div>
+                )}
+              </div>
+            )}
             <h1 style={{ fontSize: '2.1rem', fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.02em' }}>
               {data.header.fullName}
             </h1>
@@ -93,7 +125,7 @@ export const CVRenderer: React.FC<CVRendererProps> = ({ data, options, targetId 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', fontSize: '0.8rem', color: '#64748b' }}>
               {data.header.email && <a href={`mailto:${data.header.email}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'inherit', textDecoration: 'none' }}><Mail size={13} color={accentColor} />{data.header.email}</a>}
               {data.header.phone && <a href={`tel:${data.header.phone}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'inherit', textDecoration: 'none' }}><Phone size={13} color={accentColor} />{data.header.phone}</a>}
-              {data.header.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} color={accentColor} />{data.header.location}</span>}
+              {!isBriefkopf && data.header.location && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><MapPin size={13} color={accentColor} />{data.header.location}</span>}
               {data.header.citizenship && (data.header.showCitizenship ?? true) && <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Flag size={13} color={accentColor} />{data.header.citizenship}</span>}
               {data.header.linkedin && (data.header.showLinkedin ?? true) && (
                 <a href={data.header.linkedin.startsWith('http') ? data.header.linkedin : `https://${data.header.linkedin}`} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: accentColor, textDecoration: 'none', fontWeight: 600 }}>

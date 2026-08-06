@@ -4,6 +4,7 @@ export interface CVHeader {
   email: string;
   phone: string;
   location: string;
+  address?: string;
   citizenship?: string;
   showCitizenship?: boolean;
   website?: string;
@@ -87,7 +88,7 @@ export interface CVData {
   styleOptions?: CVStyleOptions;
 }
 
-export type CVTemplateId = 'modern_glass' | 'minimal_clean';
+export type CVTemplateId = 'modern_glass' | 'minimal_clean' | 'minimal_clean_briefkopf';
 
 export type CVAccentColor = '#6366f1' | '#10b981' | '#06b6d4' | '#8b5cf6' | '#f43f5e' | '#f59e0b';
 

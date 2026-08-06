@@ -35,6 +35,7 @@ export function buildFallbackCV(profile: UserProfile, job: JobMetadata | null): 
       email: profile.email || 'kontakt@beispiel.de',
       phone: profile.phone || '+49 170 1234567',
       location: profile.location || 'Deutschland',
+      address: profile.address || '',
       citizenship: profile.citizenship || '',
       showCitizenship: Boolean(profile.citizenship),
       linkedin: profile.linkedin || '',

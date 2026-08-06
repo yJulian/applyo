@@ -149,6 +149,7 @@ export const CVEditorModal: React.FC<CVEditorModalProps> = ({
     merged.header.email = profile.email || merged.header.email;
     merged.header.phone = profile.phone || merged.header.phone;
     merged.header.location = profile.location || merged.header.location;
+    merged.header.address = profile.address ?? merged.header.address;
     merged.header.citizenship = profile.citizenship ?? merged.header.citizenship;
     merged.header.website = profile.website ?? merged.header.website;
     merged.header.github = profile.github ?? merged.header.github;
@@ -452,6 +453,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                 <span>
                   {styleOptions.templateId === 'modern_glass' && 'Modern Glass'}
                   {styleOptions.templateId === 'minimal_clean' && 'Minimal Clean'}
+                  {styleOptions.templateId === 'minimal_clean_briefkopf' && (t('cv_editor.template_minimal_briefkopf') || 'Minimal Clean (Briefkopf)')}
                 </span>
                 <ChevronDown
                   size={14}
@@ -490,6 +492,7 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                     {[
                       { id: 'modern_glass', name: 'Modern Glass', desc: 'Glaseffekt, Akzentfarben & modern' },
                       { id: 'minimal_clean', name: 'Minimal Clean', desc: 'Schlicht, hochlesbar & elegant' },
+                      { id: 'minimal_clean_briefkopf', name: t('cv_editor.template_minimal_briefkopf') || 'Minimal Clean (Briefkopf)', desc: t('cv_editor.template_minimal_briefkopf_desc') || 'Schlicht mit Absender-Briefkopf & Adresse' },
                     ].map((tmpl) => {
                       const isSelected = styleOptions.templateId === tmpl.id;
                       return (
@@ -674,6 +677,19 @@ ${cvData.education.map(edu => `- **${getEduDegree(edu)}** (${edu.institution}, $
                           style={{ fontSize: '0.8rem' }}
                           value={cvData.header.location || ''}
                           onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, location: e.target.value } })}
+                        />
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <label style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: '3px' }}>
+                          {t('cv_editor.address') || 'Adresse (Briefkopf)'}
+                        </label>
+                        <input
+                          type="text"
+                          className="input-field"
+                          style={{ fontSize: '0.8rem' }}
+                          placeholder="z.B. Musterstraße 12, 10115 Berlin"
+                          value={cvData.header.address || ''}
+                          onChange={(e) => setCvData({ ...cvData, header: { ...cvData.header, address: e.target.value } })}
                         />
                       </div>
                     </div>

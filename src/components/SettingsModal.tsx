@@ -282,6 +282,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
               </div>
               <div>
                 <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
+                  {t('settings.address')}
+                </label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Musterstraße 12, 10115 Berlin"
+                  value={profile.address || ''}
+                  onChange={(e) => setProfile({ ...profile, address: e.target.value })}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>
                   {t('settings.citizenship')}
                 </label>
                 <input
