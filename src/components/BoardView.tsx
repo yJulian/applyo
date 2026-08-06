@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
@@ -62,9 +62,46 @@ export const BoardView: React.FC<BoardViewProps> = ({
   feedbackThresholdWeeks: _feedbackThresholdWeeks = 6,
 }) => {
   const { t } = useTranslation();
-  // Drag & Drop State
+  // Drag & Drop State for Cards
   const [draggedJobId, setDraggedJobId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<ApplicationStatus | null>(null);
+
+  // Mouse Drag-to-Scroll refs & state for horizontal panning
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isMouseDownRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+  const [isMouseDown, setIsMouseDown] = useState(false);
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return;
+
+    const target = e.target as HTMLElement;
+    if (target.closest('input, button, textarea, a, select, [draggable="true"]')) {
+      return;
+    }
+
+    if (!containerRef.current) return;
+
+    isMouseDownRef.current = true;
+    startXRef.current = e.clientX;
+    scrollLeftRef.current = containerRef.current.scrollLeft;
+    setIsMouseDown(true);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isMouseDownRef.current || !containerRef.current) return;
+
+    const dx = e.clientX - startXRef.current;
+    containerRef.current.scrollLeft = scrollLeftRef.current - dx;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    if (isMouseDownRef.current) {
+      isMouseDownRef.current = false;
+      setIsMouseDown(false);
+    }
+  };
 
   // Per-column search query & expand states
   const [columnSearches, setColumnSearches] = useState<Record<ApplicationStatus, string>>({
@@ -250,9 +287,13 @@ export const BoardView: React.FC<BoardViewProps> = ({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', width: '100%' }}>
 
-
       {/* Kanban Board Columns Container */}
       <div
+        ref={containerRef}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUpOrLeave}
+        onMouseLeave={handleMouseUpOrLeave}
         className="no-scrollbar"
         style={{
           flex: 1,
@@ -262,6 +303,8 @@ export const BoardView: React.FC<BoardViewProps> = ({
           overflowX: 'auto',
           overflowY: 'hidden',
           alignItems: 'stretch',
+          cursor: isMouseDown ? 'grabbing' : 'grab',
+          userSelect: isMouseDown ? 'none' : 'auto',
         }}
       >
         {BOARD_COLUMNS.map((statusKey) => {
@@ -278,7 +321,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
               onDragLeave={(e) => handleDragLeave(e, statusKey)}
               onDrop={(e) => handleDrop(e, statusKey)}
               style={{
-                width: '320px',
+                flex: '1 1 320px',
                 minWidth: '320px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -287,7 +330,7 @@ export const BoardView: React.FC<BoardViewProps> = ({
                 border: isDropTarget ? '2px dashed var(--accent-primary)' : '1px solid var(--border-color)',
                 backdropFilter: 'blur(12px)',
                 boxShadow: isDropTarget ? '0 0 25px rgba(99, 102, 241, 0.3)' : '0 4px 20px rgba(0, 0, 0, 0.3)',
-                transition: 'all 0.2s ease',
+                transition: 'background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease',
                 overflow: 'hidden',
               }}
             >
